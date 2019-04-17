@@ -1,5 +1,10 @@
-- name: leonids
-  descr: "Bacon ipsum dolor sit amet doner meatball jowl short ribs, chicken prosciutto salami frankfurter. Pig drumstick turducken short ribs, brisket meatloaf ham hock shankle andouille corned beef strip steak. Venison ham bresaola strip steak. Pork belly ribeye prosciutto t-bone."
+# - name: leonids
+#   descr: "Bacon ipsum dolor sit amet doner meatball jowl short ribs, chicken prosciutto salami frankfurter. Pig drumstick turducken short ribs, brisket meatloaf ham hock shankle andouille corned beef strip steak. Venison ham bresaola strip steak. Pork belly ribeye prosciutto t-bone."
+#   image: pong.png
+#   github: https://github.com/renyuanz/leonids
+#   demo : kei890.iptime.org
+
+- name: PHP 쇼핑몰
+  descr: "PHP를 이용해 간단한 쇼핑물을 제작했습니다. 쿠키를 이용한 장바구니 기능과 관리자 홈페이지와 사용자 홈페이지를 분리 함으로써 효율적인 관리가 되게끔 하였고, 로그인과 회원가입등 기능을 구현했습니다. 주로 사용한 언어는 PHP , HTML , JS 이고, DB는 MySQL 입니다."
   image: pong.png
-  github: https://github.com/renyuanz/leonids
-  demo : kei890.iptime.org
+  demo : http://kei890.iptime.org/php1/main.php
