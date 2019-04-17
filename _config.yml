@@ -36,7 +36,7 @@ owner:
   name: 민동현
   avatar: profile.jpg
   job: "Back End Developer"
-  bio: "Dream Cometrue"
+  bio: "개발자"
   email: mindonghyeon890@gmail.com
   disqus-shortname : daeakin
   twitter: #username
@@ -48,7 +48,7 @@ owner:
     ad-client:
     ad-slot:
   bing-verify:
-  github: #username
+  github: https://github.com #username
   gitlab: #username
   stackoverflow: #123456/username   from a "http://stackoverflow.com/users/123456/username" link
   linkedin: #username
