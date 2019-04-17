@@ -4,7 +4,7 @@ title: Spring Validator
 categories: [Spring]
 comments: true
 image:
-  feature: /img/validation.jpg
+  feature: validation.jpg
 ---
 # 스프링에서 유효성 검사하기 (Spring Validator) 
 
