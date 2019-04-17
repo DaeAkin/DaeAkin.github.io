@@ -1,3 +1,9 @@
+---
+layout: post
+title: MockMvc
+categories: [Spring]
+comments: true
+---
 ## 시작하기 전
 
 이 글은 JUnit Test 및 Mock에 대한 이해도가 있으신 분들에게만 추천 드립니다.
