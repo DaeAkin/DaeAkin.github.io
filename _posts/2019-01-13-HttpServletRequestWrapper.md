@@ -1,3 +1,10 @@
+---
+layout: post
+title:  HttpServletRequestWrapper
+categories: [Spring]
+comments: true
+---
+
 ## HttpServletRequestWrapper
 
 요즘 웹 애플리케이션에서는 보안을 위한 다양한 방법이 존재한다. 어떠한 요청을 처리하기 전에 이 사용자가 권한을 가지고 있는지 확인하기 위해 해당 메소드가 호출되기전에 권한 인증을 하게 된다. 나는 JWT를 이용해서 token 인증 방식을 이용했는데, 메소드를 호출하기전에 token을 인증하는 방식이다. 클라이언트는 헤더나 request 객체에 담아 token의 값을 서버로 보낸다.
