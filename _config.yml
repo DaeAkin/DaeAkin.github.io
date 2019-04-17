@@ -5,7 +5,7 @@
 #
 title: Donghyon's Blog
 email: mindonghyeon890@gmail.com
-description: A simple and awesome blog theme powered by jekyll.
+description: Dream Cometrue
 url: https://DaeAkin.github.io # the base hostname & protocol for your site
 keywords: ["blog", "jekyll"]
 
@@ -14,7 +14,7 @@ keywords: ["blog", "jekyll"]
 # Jekyll configuration
 ####################################
 #
-timezone:          Europe/Paris
+timezone:         asia/seoul
 markdown:          kramdown
 highlighter:       rouge
 excerpt_separator: <!--more-->
@@ -33,11 +33,11 @@ kramdown:
 ####################################
 #
 owner:
-  name: Leonids
-  avatar: leonids-logo.png
-  job: "A jekyll theme"
-  bio: "A simple and awesome blog theme powered by jekyll."
-  email:
+  name: Donghyeon Min
+  avatar: profile.jpg
+  job: "Back End Developer"
+  bio: "Dream Cometrue"
+  email: mindonghyeon890@gmail.com
   disqus-shortname:
   twitter: #username
   facebook: #username
