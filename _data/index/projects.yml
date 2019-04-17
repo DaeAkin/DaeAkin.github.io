@@ -10,22 +10,22 @@
   image: pong.png
   github : https://github.com/DaeAkin/TodoRestful
   demo : https://youtu.be/jqvN6vVDmZs
-   Date : 2019.02.14 ~ 2019.02.24
+   date : 2019.02.14 ~ 2019.02.24
 
 - name: 스프링을 이용한 게시판
   descr: "MVC 패턴과 디자인패턴 AOP 등등 Spring의 특성을 살려 게시판을 만들었습니다. 프론트 개발은 주로 부트스트랩을 사용했습니다. 사용한 언어는 JAVA JSP AJAX HTML JS XML 이고 DB는 MySQL 입니다."
   image: pong.png
   demo : http://kei890.iptime.org:8080/test4/board/list
-  Date : 2018.03 ~ 2018.06
+  date : 2018.03 ~ 2018.06
 
 - name: PHP 쇼핑몰
   descr: "PHP를 이용해 간단한 쇼핑물을 제작했습니다. 쿠키를 이용한 장바구니 기능과 관리자 홈페이지와 사용자 홈페이지를 분리 함으로써 효율적인 관리가 되게끔 하였고, 로그인과 회원가입등 기능을 구현했습니다. 주로 사용한 언어는 PHP , HTML , JS 이고, DB는 MySQL 입니다."
   image: pong.png
   demo : http://kei890.iptime.org/php1/main.php
-   Date : 2018.03 ~ 2018.06
+   date : 2018.03 ~ 2018.06
 
 - name: PHP 쇼핑몰(관리자페이지)
   descr: "PHP 쇼핑몰을 제어하기위한 관리자 홈페이지 입니다."
   image: pong.png
   demo : http://kei890.iptime.org/php1/admin/login.html
-  Date: 2018.03 ~ 2018.06
+  date: 2018.03 ~ 2018.06
