@@ -1,3 +1,12 @@
+---
+layout: post
+title: 자바 메일 보내기
+categories: [Spring]
+comments: true
+image:
+
+  feature: Mail.png
+---
 # 자바 메일 보내기 
 
 
