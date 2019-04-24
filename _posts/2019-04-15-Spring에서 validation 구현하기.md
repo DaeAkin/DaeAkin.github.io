@@ -350,6 +350,7 @@ public class MemberValidator implements Validator {
 
 	@Override
 	public boolean supports(Class<?> clazz) {
+        // 타입이 안맞으면 invalid target for Validator 오류가 뜬다!
 		return MemberDto.class.equals(clazz);
 	}
 
