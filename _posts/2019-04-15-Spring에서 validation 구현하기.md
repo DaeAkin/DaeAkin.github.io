@@ -36,6 +36,25 @@ controller 클래스안에 `@InitBinder` 어노테이션을 이용해서 설정�
 
 
 
+## 환경설정
+
+```xml
+<!-- hibernate-validator 5~6 버전대랑 javax.validation 1.x.x는 호환이 안된다. -->
+<dependency>
+       <groupId>org.hibernate.validator</groupId>
+    <artifactId>hibernate-validator</artifactId>
+    <version>6.0.10.Final</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/javax.validation/validation-api -->
+<dependency>
+    <groupId>javax.validation</groupId>
+    <artifactId>validation-api</artifactId>
+    <version>2.0.1.Final</version>
+</dependency>
+```
+
+
+
 ## 들어가며
 
 검증기를 사용하는 방법은 두가지가 있습니다.
