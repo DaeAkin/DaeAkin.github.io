@@ -78,7 +78,7 @@ ModelAndView 문서를 한번 봐보자.
 
 컨트롤러에서 View와 Model 코드를 작성했음에도 불구하고,
 
-Validator가 먼저 실행되어 View 와 Model이 null이 되게된다.
+<u>Validator가 먼저 실행되어 View 와 Model이 null이 되게된다.</u>
 
 그래서 Validator에 의해 null 값이 있는 것들을 잡아내서 Exception을 뿜어준다.
 
