@@ -1,4 +1,4 @@
-```
+---
 layout: post
 title: ModelAndView와 Validator의 충돌
 categories: [Spring]
@@ -6,7 +6,7 @@ comments: true
 image:
 
   feature: 충돌.png
-```
+---
 
 # ModelAndView와 Validator의 충돌
 
