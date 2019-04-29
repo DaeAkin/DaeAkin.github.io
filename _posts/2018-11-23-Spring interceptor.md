@@ -21,7 +21,7 @@ HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다.
 
 그러나 서블릿 필터는 커스텀 전처리기를 이용해서 핸들러가 실행되는걸 막아준다.
 
-(즉 컨트롤러를 실행하기전에 어떠한 조건에 의해서 막아준다는 의미)
+(즉 컨트롤러를 실행하기전에 어떠한 조건에 따라 요청을 진행할지 말지 막아준다는 )
 
 서블릿 필터는 request 와 response 오브젝트를 다룰 때 강력하다.
 
@@ -35,11 +35,14 @@ HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다.
 
 인터셉터를 이해하기 위해서는 *HandlerMapping* 을 잘 알아야한다.  *HandlerMapping* 는 URL에 관련된 메소드인데,
 
-*DispatchServlet* 이 요청을 처리할 때 호출 할 수 있는 메소드이다.
+<u>*DispatchServlet*</u> 이 요청을 처리할 때 호출 할 수 있는 메소드이다.
 
-그리고 *DispatcherServlet* 는 실제 메소드를 호출하기 위해서 *HandlerAdapter* 를 사용한다.
+그리고 <u>*DispatcherServlet*</u> 는 실제 메소드를 호출하기 위해서 *HandlerAdapter* 를 사용한다.
 
-​	이제 전반적인 context 설정파일을 이해해보자. 요청을 처리하기 전이나,후 처리를 완료하기전 (view단이 렌더링 될때)
+
+​	이제 전반적인 context 설정파일을 이해해보자.
+
+요청을 처리하기 전이나,후 처리를 완료하기전(view단이 렌더링 될때)
 
 어떠한 동작을 수행하기 위해 *HandlerInterceptor* 를 이용하게 된다.
 
@@ -72,12 +75,14 @@ HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다.
 - afterCompletion() : 요청을 끝내고 , view가 생성될때 호출된다.
 
 > *HandlerInterceptor* 와 *HandlerInterceptorAdapter의* 주요 차이점은
+
 전자는 위에 언급한 3가지 메소드를 override를 해야하고,
+
 반면에 후자는 필요한 메소드만 구현하면 된다는 차이점이 있다.
 
 
 
-아래는 *preHandle()*을 간단하게 구현한 모습이다
+> 아래는 *preHandle()*을 간단하게 구현한 모습이다
 
 ```java
 @Override
@@ -94,7 +99,7 @@ return 값은 만약 요청이 핸들러에 의해 계속 진행댄다면 **true
 
 
 
-다음은 *postHandle()*을 구현한 것이다.
+> 다음은 *postHandle()*을 구현한 것이다.
 
 ```java
 @Override
@@ -111,7 +116,7 @@ public void postHandle(
 
 
 
-마지막으로 우리가 구현해야하는 메소드는 *afterCompletion()*이다.
+> 마지막으로 우리가 구현해야하는 메소드는 *afterCompletion()*이다.
 
 ```java
 @Override
@@ -249,7 +254,7 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
   }
   ```
 
-- **Method *afterCompletion()***
+- > **Method *afterCompletion()***
 
   ​	만약에 어떠한 exception이 생기면 요청이 끝나고 뷰가 렌더링 될 때, request , response 데이타에 대한 exception 정보를 얻을 수 있다.
 
@@ -295,7 +300,7 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
 
 
 
-  web.xml
+  > web.xml
 
   ```xml
     <servlet>
