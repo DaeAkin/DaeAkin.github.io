@@ -6,7 +6,8 @@ comments: true
 ---
 
 # Spring Interceptor
-수정중인 게시물입니다.
+
+
 
 
 ## 소개
@@ -14,13 +15,34 @@ comments: true
 이번 포스팅은 Spring MVC *HandlerInterceptor* 를 이해하고 올바르게 사용하는 법을 알아 볼 것이다.
 
 
+## 개요 
+
+HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다. 
+
+그러나 서블릿 필터는 커스텀 전처리기를 이용해서 핸들러가 실행되는걸 막아준다.
+
+(즉 컨트롤러를 실행하기전에 어떠한 조건에 의해서 막아준다는 의미)
+
+서블릿 필터는 request 와 response 오브젝트를 다룰 때 강력하다.
+
+기본적인 가이드라인에 따르면 특히 기본적인 핸들러를 분리하거나, 인증체크 같은
+
+핸들러 전처리기 작업에 관련된 작업이면 HandlerInterceptor을 구현하는 것이 가장 좋다.
+
+그와 반대로 필터는 multipart forms이나 GZIP 압축같은 request content 또는 view content를 핸들링할때가 알맞다.
 
 ## Spring MVC Handler
 
 인터셉터를 이해하기 위해서는 *HandlerMapping* 을 잘 알아야한다.  *HandlerMapping* 는 URL에 관련된 메소드인데,
+
 *DispatchServlet* 이 요청을 처리할 때 호출 할 수 있는 메소드이다.
+
 그리고 *DispatcherServlet* 는 실제 메소드를 호출하기 위해서 *HandlerAdapter* 를 사용한다.
-​	이제 전반적인 context 설정파일을 이해해보자. 요청을 처리하기 전이나,후 처리를 완료하기전 (view단이 렌더링 될때) 어떠한 동작을 수행하기 위해 *HandlerInterceptor* 를 이용하게 된다.
+
+​	이제 전반적인 context 설정파일을 이해해보자. 요청을 처리하기 전이나,후 처리를 완료하기전 (view단이 렌더링 될때)
+
+어떠한 동작을 수행하기 위해 *HandlerInterceptor* 를 이용하게 된다.
+
 인터셉터는 중복되는 관심 또는 반복되는 핸들러 코드 (예를 들어 로깅작업)을 처리하기위해 사용된다.
 
 
@@ -49,7 +71,9 @@ comments: true
 - postHandle() : 핸들러가 실행되고 나서 호출된다.
 - afterCompletion() : 요청을 끝내고 , view가 생성될때 호출된다.
 
-> *HandlerInterceptor* 와 *HandlerInterceptorAdapter의* 주요 차이점은 전자는 위에 언급한 3가지 메소드를 override를 해야하고, 반면에 후자는 필요한 메소드만 구현하면 된다는 차이점이 있다.
+> *HandlerInterceptor* 와 *HandlerInterceptorAdapter의* 주요 차이점은
+전자는 위에 언급한 3가지 메소드를 override를 해야하고,
+반면에 후자는 필요한 메소드만 구현하면 된다는 차이점이 있다.
 
 
 
@@ -101,7 +125,12 @@ public void afterCompletion(
 
 view가 성공적으로 생성되면, 요청과 관련된 추가적인 작업을 이용할 수 있다.
 
-(다시정리)마지막으로 숙지해야할 사항은 *HandlerInterceptor*는 *@Controller* 어노테이션이 붙은 어떠한 클래스에 인터셉터를 등록할 수 있는 책임을 가진 *DefaultAnnotationHandlerMapping* 빈에 등록되어있다. 거기에다가 웹 어플리케이션에 인터셉터의 수를 특정할 수 있다.
+마지막으로 숙지해야할 사항은 *HandlerInterceptor*는 *@Controller* 어노테이션이 붙은
+어떠한 클래스에 인터셉터를 등록할 수 있는 책임을 가진 *DefaultAnnotationHandlerMapping* 빈에 등록되어있다.
+거기에다가 웹 어플리케이션에 인터셉터의 수를 특정할 수 있다.
+다른방법도 이용가능한데,
+`<mvc:interceptor>` 을 이용해서 인터셉터를 등록해줄 수 있다.
+이 포스트는 후자를 이용할 것이다.       
 
 
 
@@ -281,7 +310,10 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
   ```
 
   web.xml보면 컨텍스트설정파일위치를 *DispatcherServlet* 가지고 있다. 
+  
   *DispatcherServlet이* 가지고 있는 설정파일위치에 bean을 작성해줘야 정상적으로 작동이된다.
+  
+  반드시 *DispatcherServlet* 에 등록된 context에 interceptor를 정의해줘야 한다는걸 잊지말자!
 
 
 
