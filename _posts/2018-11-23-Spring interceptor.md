@@ -40,7 +40,9 @@ HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다.
 그리고 <u>*DispatcherServlet*</u> 는 실제 메소드를 호출하기 위해서 *HandlerAdapter* 를 사용한다.
 
 
-​	이제 전반적인 context 설정파일을 이해해보자.
+
+
+이제 전반적인 context 설정파일을 이해해보자.
 
 요청을 처리하기 전이나,후 처리를 완료하기전(view단이 렌더링 될때)
 
@@ -70,17 +72,19 @@ HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다.
 
 *HandlerInterceptor* 는 3가지 메인 메소드가 있다 :
 
-- prehandle() : 실제 핸들러가 실행되기전에 호출된다, 그러나 view는 아직 생성되지 않음.
-- postHandle() : 핸들러가 실행되고 나서 호출된다.
-- afterCompletion() : 요청을 끝내고 , view가 생성될때 호출된다.
+- #### prehandle() : 실제 핸들러가 실행되기전에 호출된다, 그러나 view는 아직 생성되지 않음.
+- #### postHandle() : 핸들러가 실행되고 나서 호출된다.
+- #### afterCompletion() : 요청을 끝내고 , view가 생성될때 호출된다.
 
-> *HandlerInterceptor* 와 *HandlerInterceptorAdapter의* 주요 차이점은
-전자는 위에 언급한 3가지 메소드를 override를 해야하고,
-반면에 후자는 필요한 메소드만 구현하면 된다는 차이점이 있다.
+> #### HandlerInterceptor* 와 *HandlerInterceptorAdapter의* 주요 차이점은
+>
+> #### 전자는 위에 언급한 3가지 메소드를 override를 해야하고,
+>
+> #### 반면에 후자는 필요한 메소드만 구현하면 된다는 차이점이 있다.
 
 
 
-> 아래는 *preHandle()*을 간단하게 구현한 모습이다
+> #### 아래는 *preHandle()*을 간단하게 구현한 모습이다
 
 ```java
 @Override
@@ -95,9 +99,9 @@ public boolean preHandle(
 
 return 값은 만약 요청이 핸들러에 의해 계속 진행댄다면 **true** 값을 주고 그게 아니라면 **false를** 준다.
 
+#### 
 
-
-> 다음은 *postHandle()*을 구현한 것이다.
+> #### 다음은 *postHandle()*을 구현한 것이다.
 
 ```java
 @Override
@@ -160,7 +164,7 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
 
 
 
-- Method *preHandle()*
+- #### Method *preHandle()*
 
   이 메소드는 요청을 처리하기전에 호출된다. **return true**로 설정하면 프레임워크에게 추가요청을 허용해준다. (아니면 다음 인터셉터에게) 
   만약 **false** 설정하면 요청이 처리됬고, 더 이상 추가 요청을 하지 않는다라고 가정하게된다.
@@ -232,7 +236,7 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
 
 
 
-- **Method *PostHandle()***
+- #### **Method *PostHandle()***
 
   이 메소드는 *DispatcherServlet*이 아직 view를 렌더를 하지 않았지만, *HandlerAdapter*가 핸들러를 호출할때 실행된다.
 
@@ -252,7 +256,7 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
   }
   ```
 
-- > **Method *afterCompletion()***
+- > #### **Method *afterCompletion()***
 
   ​	만약에 어떠한 exception이 생기면 요청이 끝나고 뷰가 렌더링 될 때, request , response 데이타에 대한 exception 정보를 얻을 수 있다.
 
@@ -270,35 +274,54 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
 
 
 
-- **설정**
+> #### 설정하기
 
-  인터셉터를 스프링 설정에 적용하려면 ,  *WebMvcConfigurer*를 구현한 *WebConfig* 클래스 안에 있는 *addInterceptors()* 메소드를 오버라이드 해야만 한다. 
+인터셉터를 스프링 설정에 적용하려면 ,  *WebMvcConfigurer*를 구현한 *WebConfig* 클래스 안에 있는 *addInterceptors()* 메소드를 오버라이드 해야만 한다. 
 
-  ```java
-  @Override
-  public void addInterceptors(InterceptorRegistry registry) {
-      registry.addInterceptor(new LoggerInterceptor());
-  }
-  ```
-
-
+```java
+@Override
+public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(new LoggerInterceptor());
+}
+```
 
   아니면 XML 스프링 설정 파일을 수정해도 된다.
 
-  ```xml
-  <mvc:interceptors>
-      <bean id="loggerInterceptor" class="org.baeldung.web.interceptor.LoggerInterceptor"/>
-  </mvc:interceptors>
-  ```
+```xml
+<mvc:interceptors>
+    <bean id="loggerInterceptor" class="org.baeldung.web.interceptor.LoggerInterceptor"/>
+</mvc:interceptors>
+```
 
   설정을 활성화 하면 인터셉터는 활성화 되고, 애플리케이션의 모든 요청들은 적절히 로깅 될것이다.
 
   만약 여러개의 인터셉터들을 설정한다면 *PreHandle()* 메소드는 설정 순서에따라 실행돌 것이다. 반면에
   *postHandle()* 과 *afterCompletion()* 메소드는 역순으로 호출된다.
 
+만약 전체 메소드를 interceptor를 하지않고 해당하는 URL만 interceptor를 사용하고 싶다면 어떻게해야할까?
+
+```xml
+<mvc:interceptors>
+  <!-- global 인터셉터 -->
+    <bean id="loggerInterceptor" class="org.baeldung.web.interceptor.LoggerInterceptor"/>
+    <mvc:interceptor>
+        <mvc:mapping path="/somepath"/>
+        <bean class="com.somepath.interceptor.SomepathInterceptor" />
+    </mvc:interceptor>
+</mvc:interceptors>
+```
+
+다음과 같이 `<mvc:mapping path="/somepath"/>` 를 이용해서 URL을 적어주면 된다.
+
+명심해야할 것은 모든 path에게 동작이 가능하게 해놓은 global 인터셉터부터 작동한 후, 
+
+그 다음 path가 적힌 인터셉터가 작동한다는 점이다.
 
 
-  > web.xml
+
+이제 DispatcherServlce이 이 설정을 알 수 있도록 설정해보자!
+
+  > #### web.xml
 
   ```xml
     <servlet>
@@ -313,10 +336,10 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
   ```
 
   web.xml보면 컨텍스트설정파일위치를 *DispatcherServlet* 가지고 있다. 
-  
+
   *DispatcherServlet이* 가지고 있는 설정파일위치에 bean을 작성해줘야 정상적으로 작동이된다.
-  
-  반드시 *DispatcherServlet* 에 등록된 context에 interceptor를 정의해줘야 한다는걸 잊지말자!
+
+#####   <u>반드시 *DispatcherServlet* 에 등록된 context에 interceptor를 정의해줘야 한다는걸 잊지말자!</u>
 
 
 
