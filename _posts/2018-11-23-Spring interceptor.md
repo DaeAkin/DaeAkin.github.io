@@ -278,7 +278,11 @@ private static Logger log = LoggerFactory.getLogger(LoggerInterceptor.class);
 
 > #### 설정하기
 
-인터셉터를 스프링 설정에 적용하려면 ,  *WebMvcConfigurer*를 구현한 *WebConfig* 클래스 안에 있는 *addInterceptors()* 메소드를 오버라이드 해야만 한다. 
+인터셉터를 스프링 설정에 적용하려면 ,  `WebMvcConfigurer`를 구현한 *WebConfig* 클래스 안에 있는
+
+*addInterceptors()* 메소드를 오버라이드 해야만 한다. 
+
+> #### 클래스를 이용한 설정
 
 ```java
 @Override
@@ -288,6 +292,8 @@ public void addInterceptors(InterceptorRegistry registry) {
 ```
 
   아니면 XML 스프링 설정 파일을 수정해도 된다.
+
+> #### XML을 이용한 설정
 
 ```xml
 <mvc:interceptors>
@@ -301,6 +307,8 @@ public void addInterceptors(InterceptorRegistry registry) {
   *postHandle()* 과 *afterCompletion()* 메소드는 역순으로 호출된다.
 
 만약 전체 메소드를 interceptor를 하지않고 해당하는 URL만 interceptor를 사용하고 싶다면 어떻게해야할까?
+
+> #### 선택적으로 인터셉터 설정하기
 
 ```xml
 <mvc:interceptors>
@@ -326,23 +334,23 @@ public void addInterceptors(InterceptorRegistry registry) {
   > #### web.xml
 
   ```xml
-    <servlet>
-      <servlet-name>appServlet</servlet-name>
-      <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
-      <init-param>
-        <param-name>contextConfigLocation</param-name>
-        <param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
-      </init-param>
-      <load-on-startup>1</load-on-startup>
-    </servlet>
+<servlet>
+  <servlet-name>appServlet</servlet-name>
+  <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  <init-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+  </init-param>
+  <load-on-startup>1</load-on-startup>
+</servlet>
   ```
 
   web.xml보면 컨텍스트설정파일위치를 *DispatcherServlet* 가지고 있다. 
 
   *DispatcherServlet이* 가지고 있는 설정파일위치에 bean을 작성해줘야 정상적으로 작동이된다.
 
-#####   <u>반드시 *DispatcherServlet* 에 등록된 context에 interceptor를 정의해줘야 한다는걸 잊지말자!</u>
+#####   <u>반드시 DispatcherServlet 에 등록된 context에 interceptor를 정의해줘야 한다는걸 잊지말자!</u>
 
 
 
-  [![img](https://1.bp.blogspot.com/-LtOZGN6GCf4/W_aHMNFxBAI/AAAAAAAABEk/pLw8X0ZAC8AYQMHIadsLMMXjmBIviR_CACLcBGAs/s640/%25E1%2584%2589%25E1%2585%25B3%25E1%2584%258F%25E1%2585%25B3%25E1%2584%2585%25E1%2585%25B5%25E1%2586%25AB%25E1%2584%2589%25E1%2585%25A3%25E1%2586%25BA%2B2018-11-22%2B%25E1%2584%258B%25E1%2585%25A9%25E1%2584%2592%25E1%2585%25AE%2B7.34.31.png)](https://1.bp.blogspot.com/-LtOZGN6GCf4/W_aHMNFxBAI/AAAAAAAABEk/pLw8X0ZAC8AYQMHIadsLMMXjmBIviR_CACLcBGAs/s1600/%25E1%2584%2589%25E1%2585%25B3%25E1%2584%258F%25E1%2585%25B3%25E1%2584%2585%25E1%2585%25B5%25E1%2586%25AB%25E1%2584%2589%25E1%2585%25A3%25E1%2586%25BA%2B2018-11-22%2B%25E1%2584%258B%25E1%2585%25A9%25E1%2584%2592%25E1%2585%25AE%2B7.34.31.png)x	
+  [![img](https://1.bp.blogspot.com/-LtOZGN6GCf4/W_aHMNFxBAI/AAAAAAAABEk/pLw8X0ZAC8AYQMHIadsLMMXjmBIviR_CACLcBGAs/s640/%25E1%2584%2589%25E1%2585%25B3%25E1%2584%258F%25E1%2585%25B3%25E1%2584%2585%25E1%2585%25B5%25E1%2586%25AB%25E1%2584%2589%25E1%2585%25A3%25E1%2586%25BA%2B2018-11-22%2B%25E1%2584%258B%25E1%2585%25A9%25E1%2584%2592%25E1%2585%25AE%2B7.34.31.png)](https://1.bp.blogspot.com/-LtOZGN6GCf4/W_aHMNFxBAI/AAAAAAAABEk/pLw8X0ZAC8AYQMHIadsLMMXjmBIviR_CACLcBGAs/s1600/%25E1%2584%2589%25E1%2585%25B3%25E1%2584%258F%25E1%2585%25B3%25E1%2584%2585%25E1%2585%25B5%25E1%2586%25AB%25E1%2584%2589%25E1%2585%25A3%25E1%2586%25BA%2B2018-11-22%2B%25E1%2584%258B%25E1%2585%25A9%25E1%2584%2592%25E1%2585%25AE%2B7.34.31.png)	
