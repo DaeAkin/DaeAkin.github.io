@@ -75,9 +75,7 @@ HandlerInterceptor는 기본적으로 Servlet Filter와 비슷하다.
 - afterCompletion() : 요청을 끝내고 , view가 생성될때 호출된다.
 
 > *HandlerInterceptor* 와 *HandlerInterceptorAdapter의* 주요 차이점은
-
 전자는 위에 언급한 3가지 메소드를 override를 해야하고,
-
 반면에 후자는 필요한 메소드만 구현하면 된다는 차이점이 있다.
 
 
