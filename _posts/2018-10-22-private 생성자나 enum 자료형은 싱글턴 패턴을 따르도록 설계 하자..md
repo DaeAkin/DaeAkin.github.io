@@ -1,3 +1,9 @@
+---
+layout: post
+title: 싱글턴 패턴
+categories: [Design Pattern]
+comments: true
+---
 # private 생성자나 enum 자료형은 싱글턴 패턴을 따르도록 설계 하자.
 
 싱글턴은 객체를 하나만 만들 수 있는 클래스이다.
