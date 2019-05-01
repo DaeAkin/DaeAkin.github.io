@@ -10,7 +10,7 @@
   image: pong.png
   github : https://github.com/DaeAkin/TodoRestful
   demo : https://youtu.be/jqvN6vVDmZs
-   date: 2015 - 2020
+  date : 2015 - 2020
 
 - name: 스프링을 이용한 게시판
   descr: "MVC 패턴과 디자인패턴 AOP 등등 Spring의 특성을 살려 게시판을 만들었습니다. 프론트 개발은 주로 부트스트랩을 사용했습니다. 사용한 언어는 JAVA JSP AJAX HTML JS XML 이고 DB는 MySQL 입니다."
