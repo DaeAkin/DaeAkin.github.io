@@ -1,3 +1,10 @@
+---
+layout: post
+title: DI
+categories: [Spring]
+comments: true
+
+---
 # Dependecy Injection ( 의존성 주입 ) 
 
 Dependect Injection ( DI) 의존성 주입은 스프링의 특징이자 장점중 하나이며 구성요소간 의존 관계가 소스코드 내부에 아닌 외부 설정파일 등을 통해서 정의되는 디자인 패턴중에 하나이다.
