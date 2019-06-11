@@ -22,7 +22,7 @@ ArrayLIst에 비해 삽입과 삭제가 월등히 빠르다고 할 수 있습니
 
 LinkedList의 구조는 다음과 같습니다.
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image1.png?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image1.png?raw=true){: width="50%" height="50%" float="left"}
 
 LinkedList는 내부적으로 Node라는 객체를 갖고 있습니다. 
 
@@ -131,7 +131,7 @@ public boolean add(E element) {
 }
 ```
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image2.png?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image2.png?raw=true){: width="50%" height="50%" float="left"}
 
 `add()` 함수는 마지막 Node를 찾아 새로운 Node를 만들어 이어줘야 합니다. 
 
@@ -163,7 +163,7 @@ public Node getNode(int index) {
 }
 ```
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image3.png?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image3.png?raw=true){: width="50%" height="50%" float="left"}
 
 `get()` 함수는 해당 index 값 까지 node를 head부터 돌려서 해당 Node객체를 가져오면 됩니다.
 
@@ -244,11 +244,11 @@ public E remove(int index) {
 
 #### 1) 첫번째 노드를 삭제한다면 첫번 째 노드의 다음 노드가 head가 됩니다. 
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image4.png?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image4.png?raw=true){: width="50%" height="50%" float="left"}
 
 #### 2) 중간에 노드를 삭제한다면, 이전 노드와 다음 노드를 서로 이어줘야 합니다. 
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image5.png?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/linkedlist/image5.png?raw=true){: width="50%" height="50%" float="left"}
 
 ## 코드
 
