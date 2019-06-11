@@ -32,11 +32,11 @@ feature: ArrayList.png
 
 예를 들어 다음과 같이 ArrayList가 있다고 가정해보겠습니다.
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image1.jpeg?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image1.jpeg?raw=true){: width="50%" height="50%" float="left"}
 
 여기서 2번째 방에 있는 1의 값을 삭제해보겠습니다.
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image2.jpeg?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image2.jpeg?raw=true){: width="50%" height="50%" float="left"}
 
 이렇게 삭제하게 되면 배열의 연속적인 특징이 깨지게 됩니다. 
 
@@ -48,7 +48,7 @@ feature: ArrayList.png
 
 이렇게 말이죠!
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image3.gif?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image3.gif?raw=true){: width="50%" height="50%" float="left"}
 
 하지만 이렇게 `shift` 해주는 비용은 생각보다 작진 않습니다.
 
@@ -138,7 +138,7 @@ public boolean add(E element) {
 
 두배를 늘려주고, 원래있던 배열의 값들도 같이 복사해줘야 하는데, `arraycopy()` 메소드를 사용하시면 됩니다. 
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image4.jpeg?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image4.jpeg?raw=true){: width="50%" height="50%" float="left"}
 
 현재 제가만든 add함수는 항상 `True` 값을 리턴하게 됩니다.
 
@@ -224,7 +224,7 @@ remove는 간단합니다. 해당 index를 접근하여, 그 요소를 삭제한
 
 이런 현상을 막기위해서 삭제한 index로부터 뒤에 요소들을 앞으로 땡겨와야 합니다.
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image3.gif?raw=true)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/arraylist/image3.gif?raw=true){: width="50%" height="50%" float="left"}
 
 코드로 짜면 이렇게 됩니다.
 
