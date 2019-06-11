@@ -142,7 +142,6 @@ public boolean add(E element) {
 
 현재 제가만든 add함수는 항상 `True` 값을 리턴하게 됩니다.
 
-왜그럴까요?
 
 ## Get 함수 만들기
 
