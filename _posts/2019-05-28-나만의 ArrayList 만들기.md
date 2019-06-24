@@ -4,7 +4,7 @@ title: 나만의 ArrayList 만들어보기
 categories: [자료구조]
 comments: true
 image:
-feature: ArrayList.png
+    feature: ArrayList.png
 ---
 # 나만의 ArrayList 만들어보기
 

@@ -4,7 +4,7 @@ title: 나만의 LinkedList 만들어보기
 categories: [자료구조]
 comments: true
 image:
-feature: linkedlist.png
+    feature: linkedlist.png
 ---
 # LinkedList 만들기
 
