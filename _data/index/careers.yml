@@ -16,12 +16,12 @@
 #   job: Software Developer
 
 - name: 인덕대학교 컴퓨터소프트웨어학과
-  link: http://www.google.com/
+  link: http://www.induk.ac.kr
   date: 2015 - 2020
   job: 학생
   
-- name: SAP
-  link: https://www.sap.com/
-  date: 2010 - 2014
-  job: Software Developer
+- name: 주식회사 핸디소프트
+  link: http://www.handysoft.co.kr/
+  date: July 2017 - <i class="fa fa-clock-o" aria-hidden="true" title="Until Now"></i>
+  job: 기술운영 엔지니어
 
