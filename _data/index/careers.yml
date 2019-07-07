@@ -21,6 +21,6 @@
   job: 학생
 
 - name: 주식회사 핸디소프트
-   link: http://www.handysoft.co.kr/
+ #  link: http://www.handysoft.co.kr/
    date: July 2019 - <i class="fa fa-clock-o" aria-hidden="true" title="Until Now"></i>
    job: 기술운영 엔지니어
