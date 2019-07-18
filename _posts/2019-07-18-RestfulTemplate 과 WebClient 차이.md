@@ -23,9 +23,15 @@ Spring Boot 앱에서는 HTTP 동작을 수행하기 위한 다른 대안으로 
 
 ## RestfulTemplate과 WebClient 공통점
 
+------
+
 둘다 HTTP를 다룰때 사용 됩니다.
 
 ## RestfulTemplate과 WebClient 차이점 
+
+------
+
+
 
 |              | RestTemplate | WebClient |
 | ------------ | ------------ | --------- |
