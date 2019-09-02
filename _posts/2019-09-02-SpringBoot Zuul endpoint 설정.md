@@ -52,9 +52,15 @@ management:
 
 
 
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/zuul/image1.png?raw=true)
+
 이렇게 route 경로를 보지 못했지만. 모든 endpoints를 노출시키는 설정을 적용시키면
 
+(저의 8762포트는 zuul을 사용하는 포트입니다.)
 
+
+
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/zuul/image2.png?raw=true)
 
 이렇게 routes들이 나옵니다. (저는 한개만 등록했습니다.)
 
