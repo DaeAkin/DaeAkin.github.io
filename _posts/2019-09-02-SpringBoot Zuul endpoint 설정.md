@@ -5,6 +5,10 @@ categories: [MicroService]
 comments: true
 
 ---
+# SpringBoot Zuul endpoint 설정
+
+## 스프링부트 1버전대와 2버전대의 endpoint 차이
+
 스프링부트 버전 2부터는 버전 1.X에서 쓰던 endPoint에서 변경이 되었습니다.
 
 제가 공부하는 마이크로서비스 책은 스프링부트 1.X 버전대라 endPoint가 약간 다릅니다.
@@ -17,7 +21,7 @@ comments: true
 
 enabled 설정과 exposed 설정 두개를 해줘야 합니다.
 
-지금은 어플리케이션의 Spring Security의 존재와 설정에 상관 없이
+스프링부트 2버전부터는 어플리케이션의 Spring Security의 존재와 설정에 상관 없이
 
 `/health`와 `/info`의 endpoints만 노출되어 있습니다.
 
@@ -40,7 +44,7 @@ management.endpoints.web.exposure.include=*
 management.endpoints.web.exposure.exclude=env
 ```
 
-yml 방식
+## yml 방식
 
 ```
 management:
@@ -51,6 +55,8 @@ management:
 ```
 
 
+
+## Zuul의 Route 보기
 
 ![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/blog/zuul/image1.png?raw=true)
 
