@@ -1,5 +1,7 @@
 _site
 .sass-cache
-node_modules
+.directory
+Thumbs.db
+_drafts
+.ruby-version
 Gemfile.lock
-*.gem
