@@ -16,6 +16,12 @@ google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
 
 # Build settings
 markdown:           kramdown
+kramdown: # Add your google-analytics ID here to activate google analytics
+  auto_ids: true  google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
+  footnote_nr: 1  
+  entity_output: as_char  
+  toc_levels: 1..6  
+  enable_coderay: false
 paginate:           5
 paginate_path:      "/posts/page:num/"
 plugins:
