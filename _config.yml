@@ -1,71 +1,24 @@
-#
-###################################
-# Site wide configuration
-####################################
-#
-title: 민동현의 블로그
-email: mindonghyeon890@gmail.com
-description: Dream Cometrue
-url: https://daeakin.github.io/ # the base hostname & protocol for your site
-keywords: ["blog", "jekyll"]
+title:              Clean Blog
+email:              your-email@example.com
+description:        A Blog Theme by Start Bootstrap
+author:             Start Bootstrap
+baseurl:            "/startbootstrap-clean-blog-jekyll"
+url:                "https://blackrockdigital.github.io"
 
-#
-###################################
-# Jekyll configuration
-####################################
-#
-timezone:         asia/seoul
-markdown:          kramdown
-highlighter:       rouge
-excerpt_separator: <!--more-->
-permalink:         /articles/:year-:month/:title
+# Social Profiles
+twitter_username:   SBootstrap
+github_username:    BlackrockDigital
+facebook_username:  StartBootstrap
+linkedin_username:
 
-kramdown:
-  auto_ids: true
-  footnote_nr: 1
-  entity_output: as_char
-  toc_levels: 1..6
-  enable_coderay: false
+# Add your google-analytics ID here to activate google analytics
+google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
 
-#
-###################################
-# Site Owner configuration
-####################################
-#
-owner:
-  name: 민동현
-  avatar: profile.jpg
-  job: "Back End Developer"
-  bio: "개발자"
-  email: mindonghyeon890@gmail.com
-  disqus-shortname : daeakin
-  twitter: #username
-  facebook: #username
-  google:
-    plus: #username
-    analytics:
-    verify:
-    ad-client:
-    ad-slot:
-  bing-verify:
-  github: DaeAkin #username
-  gitlab: #username
-  stackoverflow: #123456/username   from a "http://stackoverflow.com/users/123456/username" link
-  linkedin: #username
-  skype: #username
-  xing: #username
-  instagram: #username
-  lastfm: #username
-  tumblr: #username
-  pinterest: #username
-  foursquare: #username
-  steam: #username
-  dribbble: #username
-  youtube: #username
-  soundcloud: #username
-  weibo: #username
-  flickr: #username
-  500px: #username
-  codepen: #username
-  reddit: #username
-  telegram: #username
+# Build settings
+markdown:           kramdown
+paginate:           5
+paginate_path:      "/posts/page:num/"
+plugins:
+  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-sitemap ## Uncomment this line to silently generate a sitemaps.org compliant sitemap for your Jekyll site
