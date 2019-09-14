@@ -25,3 +25,12 @@
 @import "pages/tags";
 @import "pages/archive";
 @import "pages/post";
+
+.row .col.m3 { width: 15%; margin-left: 0; }
+.row .col.m9 {
+    width: 85%;
+    }
+
+    .post-listing {
+    padding: 50px 60px 0;
+}

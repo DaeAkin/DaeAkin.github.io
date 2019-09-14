@@ -2,12 +2,12 @@
   * Grid
   */
 
-// Container
-.container {
-  margin: 0 auto;
-  max-width: 1280px;
-  width: 90%;
+
+.row .col.m3 {
+    width: 100%;
+    margin-left: 0;
 }
+
 @include media-query($medium-screen) {
   .container {
     width: 85%;
@@ -120,6 +120,8 @@
       }
 
     }
+
+
 
   }
 }
