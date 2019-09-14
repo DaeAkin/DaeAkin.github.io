@@ -4,10 +4,10 @@
 ####################################
 #
 title: 민동현의 블로그
-email: mindonghyeon890@gmail.com
+email: mindh890@gmail.com
 description: Dream Cometrue
 url: https://daeakin.github.io/ # the base hostname & protocol for your site
-keywords: ["blog", "jekyll"]
+keywords: ["민동현", "spring"]
 
 #
 ###################################
@@ -51,7 +51,7 @@ owner:
   github: DaeAkin #username
   gitlab: #username
   stackoverflow: #123456/username   from a "http://stackoverflow.com/users/123456/username" link
-  linkedin: #username
+  linkedin: 동현-민-736913183
   skype: #username
   xing: #username
   instagram: #username
@@ -68,4 +68,4 @@ owner:
   500px: #username
   codepen: #username
   reddit: #username
-  telegram: #username
+  telegram: DonghyeonMin
