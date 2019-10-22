@@ -1,6 +1,6 @@
 ---
 layout: post
-title: @OnetoMany Mapping 주의점
+title: OnetoMany Mapping 주의점
 categories: [JPA]
 comments: true
 
