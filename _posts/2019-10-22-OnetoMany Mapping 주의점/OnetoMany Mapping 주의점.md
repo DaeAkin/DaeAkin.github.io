@@ -25,7 +25,7 @@ delete 동작이 한번, insert 동작이 N번이 되는 현상이 있었습니�
 @NoArgsConstructor
 public class Board {
     @Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+  	@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "BOARD_ID")
     private Long id;
 
@@ -44,9 +44,13 @@ public class Board {
 }
 ```
 
+> ### NOTE
+>
 > 일대다에서 기본 Join 방법은 JoinTable 입니다. 
 >
 > 만약 JoinColumn을 사용할 계획이시라면 @JoinColumn 어노테이션을 작성하여 명시해줘야합니다.
+>
+> 위에 나와있는 Board 코드는 @JoinTable을 생략해도 됩니다.
 
 ### 1-2. Image
 
@@ -73,7 +77,7 @@ JPA가 그려준 ERD를 보면 다음과 같습니다.
 
 ### 1-3. ERD
 
-![](./img/ERD.png)
+![](./img/erd.png)
 
 @JoinTable 이용했기 때문에 board_image 테이블이 하나 더 만들어졌습니다.
 
