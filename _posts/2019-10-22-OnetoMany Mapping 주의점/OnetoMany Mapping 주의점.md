@@ -77,7 +77,7 @@ JPA가 그려준 ERD를 보면 다음과 같습니다.
 
 ### 1-3. ERD
 
-![](./img/erd.png)
+![](img/erd.png)
 
 @JoinTable 이용했기 때문에 board_image 테이블이 하나 더 만들어졌습니다.
 
