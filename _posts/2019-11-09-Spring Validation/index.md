@@ -33,7 +33,7 @@ Spring에서는 파라미터에 @Valid 어노테이션을 붙여주면 쉽게 �
 
 간단한 디자인은 BootStrap을 이용했습니다.
 
-![](image1.png)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/_posts/2019-11-09-Spring%20Validation/img/image1.png?raw=true)
 
 
 
@@ -233,7 +233,7 @@ MemberSaveRequest객체가 유효하지 않다면 violations 변수는 empty가 
 
 ## 8. PostMan으로 테스트하기
 
-![](img/image2.png)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/_posts/2019-11-09-Spring%20Validation/img/image2.png?raw=true)
 
 그렇다면 스프링에서는 유효성 검사에 실패하게되면 어떤 값들을 return 할까요?
 PostMan으로 값을 테스트하여 유효성 검사에 실패하도록 만들어보겠습니다.
@@ -369,11 +369,11 @@ error 발생시 동작할 코드나 함수를 적어주면 되는데, erros.defa
 
 ## 10. 유효성 테스트 - 이메일과 비밀번호를 빈칸으로 둘 경우
 
-![](./img/image3.png)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/_posts/2019-11-09-Spring%20Validation/img/image3.png?raw=true)
 
 ## 11. 회원가입이 된 경우
 
-![](./img/image4.png)
+![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/_posts/2019-11-09-Spring%20Validation/img/image4.png?raw=true)
 
 
 
