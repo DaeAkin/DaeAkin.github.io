@@ -233,7 +233,7 @@ MemberSaveRequest객체가 유효하지 않다면 violations 변수는 empty가 
 
 ## 8. PostMan으로 테스트하기
 
-![](./img/image2.png)
+![](img/image2.png)
 
 그렇다면 스프링에서는 유효성 검사에 실패하게되면 어떤 값들을 return 할까요?
 PostMan으로 값을 테스트하여 유효성 검사에 실패하도록 만들어보겠습니다.
