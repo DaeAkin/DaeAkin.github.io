@@ -377,6 +377,206 @@ error 발생시 동작할 코드나 함수를 적어주면 되는데, erros.defa
 
 
 
-이 포스트는 컨트롤러로 들어오는 파라미터의 대한 Validation만 검사해줬습니다. 
+지금까지는 컨트롤러로 들어오는 파라미터의 대한 Validation만 검사해줬습니다. 
 
-그러나 내부로직안에 유효성 검사에 의해 유효성 에러를 낼 수도 있습니다. 예를들어 음식주문과정에서 해당 메뉴가 품절이 되버리면 주문이 되지 않아야합니다. 이런상황에 내는 오류에 대해서는 시간이나면 이 포스팅에 업데이트 하겠습니다.
+만약 휴대폰번호가 유일해야하는 조건이 생긴다면 어떻게 해야할까요? 
+
+
+
+휴대폰번호가 이미 데이터베이스에 존재하는지 확인해주는 메소드와 서비스클래스를 만들겠습니다.
+
+## 12. 휴대폰 번호 중복검사
+
+### 12-1. MemberRepository
+
+```java
+@Repository
+public interface MemberRepository extends CrudRepository<Member,Long> {
+    Optional<Member> findByPhoneNumber(String phoneNumber);
+}
+```
+
+### 12-2. MemberService
+
+![](https://github.com/DaeAkin/spring-validation-example/blob/master/image/RuntimeException.png?raw=true)
+
+유효성검사에 실패하게되면 RuntimeException이 일어나 애플리케이션이 종료시키게 했습니다.
+
+그럼 중복된 휴대폰번호로 회원가입을 시켜보겠습니다.
+
+## 13. RuntimeException 이용 
+
+![](https://github.com/DaeAkin/spring-validation-example/blob/master/image/%EC%9E%98%EB%AA%BB%EB%90%9C%20RuntimeException.png?raw=true)
+
+회원가입한 사람은 500에러를 보게되며, UI에 아무것도 변화가 없습니다.
+
+일반 사용자가 이런 상황을 맞이한다면 좋지못한 UX가 될 것입니다.
+
+
+
+서버가 RuntimeException을 낸다면 어떤 값들이 응답으로 나오는지 알아보겠습니다.
+
+### 13-1. PostMan으로 RuntimeException 응답 알아보기.
+
+![](https://github.com/DaeAkin/spring-validation-example/blob/master/image/Postman%20RuntimeException.png?raw=true)
+
+
+
+컨트롤러에서 @Valid 어노테이션이 붙은 객체가 유효성 검사를 통과하지못하면 반환하는 응답하고 비슷한 것 같습니다.
+
+이 점을 이용해서 에러가 났을 경우 반환되는 필드들을 커스터마이징 해보겠습니다.
+
+
+
+## 14. ValidationExcpetion 이용하기.
+
+### 14-1. ValidationExcpetion
+
+```java
+/**
+ * errorCode : 1004 -> 화면전환 필요 및 Toast 메세지 필요
+ *
+ */
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class ValidationException extends RuntimeException{
+    private Long errorCode;
+    private String errorMessage;
+    private Error[] errors;
+
+    public ValidationException(Long errorCode, String errorMessage, String defaultMessage, String field){
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.errors = new Error[]{new Error(defaultMessage, field)};
+    }
+
+    public ValidationException(Long errorCode, String errorMessage) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+    }
+
+    public ValidationException(String errorMessage){
+        this.errorMessage = errorMessage;
+    }
+
+
+    public ValidationException(Error[] errors) {
+        this.errors = errors;
+    }
+
+    public Error[] getErrors() {
+        return errors;
+    }
+
+    public Long getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public static class Error {
+
+        private String defaultMessage;
+        private String field;
+
+        public Error(String defaultMessage, String field) {
+            this.defaultMessage = defaultMessage;
+            this.field = field;
+        }
+
+        public String getDefaultMessage() {
+            return defaultMessage;
+        }
+
+        public String getField() {
+            return field;
+        }
+    }
+}
+```
+
+
+
+먼저 커스텀된 Excpetion 객체가 필요합니다.
+
+### 14-2. ErrorAttributeConfig
+
+```java
+@Configuration
+public class ErrorAttributeConfig {
+    @Bean
+    public ErrorAttributes errorAttributes() {
+        return new DefaultErrorAttributes() {
+            @Override
+            public Map<String, Object> getErrorAttributes(WebRequest webRequest, boolean includeStackTrace) {
+                Map<String, Object> errorAttributes = super.getErrorAttributes(webRequest,includeStackTrace);
+                Throwable error = getError(webRequest);
+                if (error instanceof ValidationException) {
+                    errorAttributes.put("errors", 					((ValidationException)error).getErrors());
+                    errorAttributes.put("message", ((ValidationException)error).getErrorMessage());
+                    errorAttributes.put("errorCode", ((ValidationException)error).getErrorCode());
+                }
+                return errorAttributes;
+            }
+
+        };
+    }
+}
+```
+
+그 다음 커스터마이징을 할 필드들을 등록해주어야 합니다.
+
+여기서는 errors, message, errorCode를 커스터마이징 했습니다. 
+
+스프링 5.0부터는 Reactive를 지원하게 되서 패키지의 변경이 있습니다.
+
+Mono와 Webflux를 사용하지 않기때문에 servlet 패키지를 import 해주시면 됩니다.
+
+![](https://github.com/DaeAkin/spring-validation-example/blob/master/image/Reactive%20vs%20Servlet.png?raw=true)
+
+
+
+
+
+### 14.3 ValidationExcpetion을 적용한 MemberService
+
+다시 MemberService 클래스로 돌아가 RuntimeException 대신 ValidationException를 던지도록 해보겠습니다.
+
+```java
+@Service
+@AllArgsConstructor
+public class MemberService {
+
+    MemberRepository memberRepository;
+
+    @Transactional
+    public void phoneNumberValidationCheck(String phoneNumber){
+        Optional<Member> optionalMember = memberRepository.findByPhoneNumber(phoneNumber);
+        if(optionalMember.isPresent())
+            throw new ValidationException(1004L,"폰 번호 오류!.","이미 등록된 번호입니다.","phoneNumber");
+    }
+
+
+}
+```
+
+
+
+![](https://github.com/DaeAkin/spring-validation-example/blob/master/image/ValidationException%20%EC%82%AC%EC%9A%A9.png?raw=true)
+
+똑같이 폰번호를 중복시키면 이미 등록된 번호입니다. 라고 표시됩니다.
+
+UX의 수준이 더 높아졌습니다!
+
+
+
+## 15. PostMan ValidationExcpetion 응답알아보기
+
+![](https://github.com/DaeAkin/spring-validation-example/blob/master/image/Postman%20ValidationException.png?raw=true)
+
+
+
+웹으로 테스트를 했지만, 앱에서도 사용한다면 Toast 메세지로 defaultMessage를 보여줄 수도 있으며,
+
+필요하면 errorCode에 따라 앱의 화면이 전환을 해야하는지 규칙을 정할 수도 있습니다.
