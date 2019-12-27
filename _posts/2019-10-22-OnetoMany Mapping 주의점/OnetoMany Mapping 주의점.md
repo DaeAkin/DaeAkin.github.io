@@ -270,7 +270,7 @@ public class OnetoManyErrorTests {
 
 ### 5-2 Console 결과
 
-```ㅓㅁㅍㅁ
+```
 save 1 Board and 2 Image Start
 Hibernate: insert into board (title) values (?)
 Hibernate: insert into image (image_url) values (?)
