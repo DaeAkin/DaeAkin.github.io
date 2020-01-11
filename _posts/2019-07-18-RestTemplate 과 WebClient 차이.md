@@ -1,6 +1,6 @@
 ---
 layout: post
-title: RestfulTemplate 과 WebClient 차이
+title: RestTemplate 과 WebClient 차이
 categories: [Spring]
 comments: true
 
