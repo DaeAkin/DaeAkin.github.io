@@ -5,7 +5,7 @@ categories: [Spring]
 comments: true
 
 ---
-# RestfulTemplate vs WebClient
+# RestTemplate vs WebClient
 
 웹 어플리케이션에서 다른 서비스에게 HTTP로 호출하는 것은 공통 요구사항이 되었습니다.
 
@@ -21,13 +21,13 @@ Spring Boot 앱에서는 HTTP 동작을 수행하기 위한 다른 대안으로 
 
 공통 API를 제공하는 새로운 <u>reactive WebClient</u>를 사용할 수 있습니다.
 
-## RestfulTemplate과 WebClient 공통점
+## RestTemplate과 WebClient 공통점
 
 ------
 
 둘다 HTTP를 다룰때 사용 됩니다.
 
-## RestfulTemplate과 WebClient 차이점 
+## RestTemplate과 WebClient 차이점 
 
 ------
 
