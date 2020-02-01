@@ -293,3 +293,7 @@ Add one Image End
 ## 6. 참고자료
 
 https://stackoverflow.com/questions/24580527/hibernate-recreates-join-table-when-adding-to-list
+
+
+
+![](./img/test.png)
