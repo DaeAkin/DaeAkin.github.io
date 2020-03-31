@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 자바의 메모리 구조
+title: 자바의 Heap과 Stack
 categories: [Java]
 comments: true 
 ---
