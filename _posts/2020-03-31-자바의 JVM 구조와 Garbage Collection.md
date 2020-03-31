@@ -131,13 +131,13 @@ JVM 메모리와 GC활동을 모니터링 하기 위해 CUI 에서 jstat을 사�
 
 > 저는 현재 프로젝트 하고 있는 outstagram-discovery.jar 을 실행시켰습니다.
 
-```cmd
+```
 $ java -Xmx120m -Xms30m -Xmn10m -XX:PermSize=20m -XX:MaxPermSize=20m -XX:+UseSerialGC -jar outstagram-discovery.jar
 ```
 
 `jstat` 을 실행하려면 애플리케이션의 **프로세스 id**를 알고 있어야 합니다. 터미널을 열고 `ps -eaf | grep application.jar` 을 입력하시면 됩니다.
 
-```cmd
+```
 Donghyeonui-iMac:~ donghyeonmin$ ps -eaf | grep outstagram-discovery.jar
   501 32235 32069   0 11:29PM ttys008    0:20.42 /usr/bin/java -Xmx120m -Xms30m -Xmn10m -XX:PermSize=20m -XX:MaxPermSize=20m -XX:+UseSerialGC -jar outstagram-discovery.jar
   501 32331 32088   0 11:31PM ttys009    0:00.00 grep outstagram-discovery.jar
@@ -145,7 +145,7 @@ Donghyeonui-iMac:~ donghyeonmin$ ps -eaf | grep outstagram-discovery.jar
 
 여기서 프로세스 id는 32235입니다. jstat을 실행해보겠습니다.
 
-```cmd
+```
 Donghyeonui-iMac:~ donghyeonmin$ jstat -gc 32235 1000
  S0C    S1C    S0U    S1U      EC       EU        OC         OU       PC     PU    YGC     YGCT    FGC    FGCT     GCT
 1024.0 1024.0  0.0    0.0    8192.0   7933.3   42108.0    23401.3   20480.0 19990.9    157    0.274  40      1.381    1.654
