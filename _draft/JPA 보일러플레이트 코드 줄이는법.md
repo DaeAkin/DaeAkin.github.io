@@ -42,7 +42,7 @@ public class User {
 
 ```java
 @PostMapping("/join")
-public void joinUser(@RequestBody @Valid UserJoinRequest userJoinRequest) {
+public UserJoinResponse joinUser(@RequestBody @Valid UserJoinRequest userJoinRequest) {
 	return userService.joinUser(userJoinRequest);
 }
 ```
@@ -65,7 +65,72 @@ public class UserJoinRequest {
 
 
 그러나 Service 단에서, DAO로 데이터를 저장시키기 위해서 이 DTO를 Entity로 변환해주는 작업이 필요합니다.
+
+```java
+public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
+		User user =	userRepository.save(user); //??
+}
+```
+
 이 작업은 어떤 식으로 진행하는 것이 좋을까요?
+
+UserJoinRequest를 User Entity로 변환해주는 `책임`은 바로 UserJoinRequest에게 있습니다. 그렇기 때문에 UserJoinRequest가 User로 변환을 해주는 로직이 필요합니다.
+
+```java
+public class UserJoinRequest {
+    @NotBlank(message = "이메일을 다시 확인해주세요.")
+    String email;
+
+    @NotBlank(message = "비밀번호를 다시 확인해주세요.")
+    String password;
+
+    @NotBlank(message = "닉네임을 다시 확인해주세요.")
+    String nickname;
+
+    public User toEntity() {
+        return User.builder()
+                .email(email)
+                .nickname(nickname)
+                .password(password)
+                .build();
+    }
+}
+```
+
+toEntity() 함수에서 User 객체를 만들때는 builder 패턴을 이용했습니다.
+
+서비스 단에서는 다음과 같이 사용합니다.
+
+```java
+public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
+  	User saveUser = userJoinRequest.toEntity();
+		User user =	userRepository.save(user);
+}
+```
+
+정상적으로 User가 데이터베이스에 저장되었다면, 클라이언트에게 보내줄 데이터를 만들어 보겠습니다.
+
+저는 예제로 클라이언트에게 유저의 email을 클라이언트에게 보내보겠습니다. 
+현재 서비스단의 `joinUser()` 함수의 리턴 값은 UserJoinResponse 이기 때문에 User를 UserJoinResponse로 변경해주는 작업이 필요합니다.
+
+이 또한 이 변경의 `책임` 은 누구한테 있는지 고민한다면 `User` 에게 있을 것입니다. 그러므로 User 클래스 안에 UserJoinResponse 객체를 만들어 주는 함수가 있어야 합니다.
+
+회원가입이 성공적으로 완료되면 클라이언트에게 email 값을 주는 UserJoinResponse 입니다.
+
+```java
+public class UserJoinResponse {
+		
+    String nickname;
+
+    public User toEntity() {
+        return User.builder()
+                .email(email)
+                .nickname(nickname)
+                .password(password)
+                .build();
+    }
+}
+```
 
 
 
