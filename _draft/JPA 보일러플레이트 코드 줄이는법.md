@@ -120,32 +120,54 @@ public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
 ```java
 public class UserJoinResponse {
 		
-    String nickname;
+    String email;
+}
+```
 
-    public User toEntity() {
-        return User.builder()
+User의 함수는 다음과 같습니다.
+
+```java
+public class User {
+	...필드 생략
+	
+	public UserJoinResponse toUserJoinResponse() {
+		 return User.UserJoinResponse()
                 .email(email)
-                .nickname(nickname)
-                .password(password)
                 .build();
-    }
+	}
+}
+```
+
+지금까지 제가 JPA를 사용하면서 주로 사용했던 내용을 작성했습니다.
+
+그러나 이렇게 클래스마다 Entity <-> DTO 변환 클래스를 작성하지 않아도, 자동으로 변환해주는 라이브러리가 있어서 소개해 드리려고 합니다.
+
+## ModelMapper
+
+ModelMapper 라이브러리를 사용하게 되면 간편하게 Entity <-> DTO 변환이 가능해 집니다.
+
+```java
+public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
+	  ModelMapper mm = new ModelMapper(); 
+  	User user = new User();
+	  mm.map(userJoinRequest, user);
+		User user =	userRepository.save(user);
 }
 ```
 
 
 
-## 방법
+## Entity vs DTO
 
-- modelmapper 쓰는방법
+이렇게 특정 필드만 받을 수 있게 DTO 클래스를 만들었습니다. 그러나 프로젝트가 커지게 되면 DTO 클래스는 계속 증가합니다.
 
-  ```
-  MyEntity mye = repository.finById(id);
-  ModelMapper mm = new ModelMapper();    
-  mm.map(myDTO, mye);
-  repository.save(mye):
-  ```
+그냥 Entity 클래스를 받아서 필요한 값만 추출해서 사용하면 될것인데, 왜 굳이 이렇게 DTO 클래스를 새로 만들어서 사용 할까요?
 
-- dozer? 
+DTO 클래스를 사용하는 이유는 다음과 같습니다.
+
+서비스 단은 데이터베이스와 독립적이어야 합니다. 데이터베이스의 변경사항이 있으면, Entity를 사용하는 서비스 단에도 변경이 일어날 수 있습니다. 
+
+또한 Entity 클래스를 DTO로 재사용 하는 일은 코드가 더러워질 수 있습니다. 클래스가 DTO로써 사용 될 때 사용하는 메소드와 Entity로써 사용 될 때 사용하는 메소드가 공존하게 됩니다. 이런 점에서 `관심사` 가 깔끔하게 분리되지 않고, 클래스의 결합력만 높이게 됩니다. 
 
 ## 참고문서
 
