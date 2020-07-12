@@ -1,10 +1,19 @@
-# JPA의 DTO와 Entity
+---
+layout: post
+title: JPA의 DTO와 Entity
+categories: [JPA]
+comments: true 
+---
+
+
+
+# ❗️JPA의 DTO와 Entity
 
 이번 시간에는 제가 JPA를 사용하면서 Entity와 DTO의 적절히 사용했던 경험에 대해 알려드리려고 합니다.
 
+보통 회원가입 기능을 만든다고하면, 회원에 관련된 데이터베이스 컬럼과, 회원가입 폼에서 사용하는 컬럼은 대부분 다를 것 입니다. 
 
-
-회원가입의 Entity가 있다고 가정해 보겠습니다. 회원의 관련된 Entity인 User 클래스는 다음과 같습니다.
+회원가입의 Entity가 있다고 가정해 보겠습니다. 회원의 관련된 Entity인 `User 클래스`는 다음과 같습니다.
 
 ```java
 public class User {
@@ -32,11 +41,9 @@ public class User {
 }
 ```
 
+그러나 회원가입을 진행할 때 클라이언트로부터 받는 데이터는 `email`과 `nickname` 그리고 `password`만 필요합니다. 이 3개의 데이터를 어떻게 받아 올 수 있을까요?
 
-
-그러나 회원가입을 진행할 때 클라이언트로부터 받는 데이터는 email과 nickname 그리고 password만 필요합니다. 이 3개의 데이터를 어떻게 받아 올 수 있을까요?
-
-저는 주로 각 기능마다 필요로 하는 필드들을 모은 DTO 클래스를 만들어 받습니다. 
+저는 주로 각 기능마다 필요로 하는 필드들을 모은 **DTO 클래스**를 만들어 받습니다. 
 
 예를 들어 회원가입 로직이 들어가있는 API의 형태는 다음과 같습니다.
 
@@ -62,13 +69,11 @@ public class UserJoinRequest {
 }
 ```
 
-
-
 그러나 Service 단에서, DAO로 데이터를 저장시키기 위해서 이 DTO를 Entity로 변환해주는 작업이 필요합니다.
 
 ```java
 public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
-		User user =	userRepository.save(user); //??
+  User user=userRepository.save(user); //??
 }
 ```
 
@@ -97,21 +102,21 @@ public class UserJoinRequest {
 }
 ```
 
-toEntity() 함수에서 User 객체를 만들때는 builder 패턴을 이용했습니다.
+toEntity() 함수에서 User 객체를 만들때는 [Builder 패턴](https://daeakin.github.io//articles/2020-02/%EB%B9%8C%EB%8D%94-%ED%8C%A8%ED%84%B4)을 이용했습니다.
 
 서비스 단에서는 다음과 같이 사용합니다.
 
 ```java
 public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
-  	User saveUser = userJoinRequest.toEntity();
-		User user =	userRepository.save(user);
+  User saveUser = userJoinRequest.toEntity();
+  User user = userRepository.save(user);
 }
 ```
 
 정상적으로 User가 데이터베이스에 저장되었다면, 클라이언트에게 보내줄 데이터를 만들어 보겠습니다.
 
 저는 예제로 클라이언트에게 유저의 email을 클라이언트에게 보내보겠습니다. 
-현재 서비스단의 `joinUser()` 함수의 리턴 값은 UserJoinResponse 이기 때문에 User를 UserJoinResponse로 변경해주는 작업이 필요합니다.
+현재 서비스단의 `joinUser()` 함수의 리턴 값은 UserJoinResponse 이기 때문에 **User를 UserJoinResponse로 변경해주는 작업**이 필요합니다.
 
 이 또한 이 변경의 `책임` 은 누구한테 있는지 고민한다면 `User` 에게 있을 것입니다. 그러므로 User 클래스 안에 UserJoinResponse 객체를 만들어 주는 함수가 있어야 합니다.
 
@@ -119,7 +124,6 @@ public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
 
 ```java
 public class UserJoinResponse {
-		
     String email;
 }
 ```
@@ -140,24 +144,24 @@ public class User {
 
 지금까지 제가 JPA를 사용하면서 주로 사용했던 내용을 작성했습니다.
 
-그러나 이렇게 클래스마다 Entity <-> DTO 변환 클래스를 작성하지 않아도, 자동으로 변환해주는 라이브러리가 있어서 소개해 드리려고 합니다.
+저는 위와 같은 방법을 주로 사용하지만, 이렇게 클래스마다 Entity <-> DTO 변환 클래스를 작성하지 않아도, 자동으로 변환해주는 라이브러리가 있어서 소개해 드리려고 합니다.
 
-## ModelMapper
+## 😯 ModelMapper
 
 ModelMapper 라이브러리를 사용하게 되면 간편하게 Entity <-> DTO 변환이 가능해 집니다.
 
 ```java
 public UserJoinResponse joinUser(UserJoinRequest userJoinRequest) {
-	  ModelMapper mm = new ModelMapper(); 
-  	User user = new User();
-	  mm.map(userJoinRequest, user);
-		User user =	userRepository.save(user);
+  ModelMapper mm = new ModelMapper(); 
+  User user = new User();
+  mm.map(userJoinRequest, user);
+  User user =	userRepository.save(user);
 }
 ```
 
+이런 방법도 있지만, 개인적으로 처음 설명해드렸던 방법을 추천합니다.
 
-
-## Entity vs DTO
+## 🧐 Entity vs DTO
 
 이렇게 특정 필드만 받을 수 있게 DTO 클래스를 만들었습니다. 그러나 프로젝트가 커지게 되면 DTO 클래스는 계속 증가합니다.
 
