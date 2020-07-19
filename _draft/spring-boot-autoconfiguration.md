@@ -69,9 +69,57 @@ com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
 
 
 
+### Class Conditions
+
+`@ConditionalOnClass` 와 `@ConditionalOnMissingClass` 어노테이션은 특정 클래스의 존재 여부에 따라 설정을 해줍니다. Due to the fact that annotation metadata is parsed using [ASM](http://asm.ow2.org/) you can actually use the `value` attribute to refer to the real class, even though that class might not actually appear on the running application classpath. You can also use the `name` attribute if you prefer to specify the class name using a `String` valu
 
 
 
+>  If you are using `@ConditionalOnClass` or `@ConditionalOnMissingClass` as a part of a meta-annotation to compose your own composed annotations you must use `name` as referring to the class in such a case is not handled.
+
+
+
+### Bean conditions
+
+`@ConditionalOnBean` 과 `@ConditionalOnMissingBean` 어노테이션은 특정 빈의 존재 여부에 따라 설정해 줍니다. value 속성을 이용하면, 빈의 타입을 정해줄수 있고, name 속성을 이용하여 빈의 이름을 정해줄수 있습니다. search 속성을 사용하며, 빈을 검색할 범위에 제한을 걸 수 있습니다.
+
+```java
+@Configuration
+public class MyAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public MyService myService() { ... }
+
+}
+```
+
+위에 예제는 MyService 타입의 빈이 ApplicationConext에서 갖고 있지 않으면, 생성을 해줍니다.
+
+
+
+> You need to be very careful about the order that bean definitions are added as these conditions are evaluated based on what has been processed so far. For this reason, we recommend only using `@ConditionalOnBean` and `@ConditionalOnMissingBean` annotations on auto-configuration classes (since these are guaranteed to load after any user-defined beans definitions have been added).
+
+
+
+> `@ConditionalOnBean` and `@ConditionalOnMissingBean` do not prevent `@Configuration` classes from being created. Using these conditions at the class level is equivalent to marking each contained `@Bean` method with the annotation.
+
+
+
+### property Conditions
+
+`@ConditionalOnProperty` 어노테이션은 특정 스프링 환경 프로퍼티 파일의 존재에 여부에따라 설정을 해주는 어노테이션 입니다. prefix와 name 속성을 
+
+
+
+
+
+```
+@PropertySource("classpath:mysql.properties")
+public class MySQLAutoconfiguration {
+    //...
+}
+```
 
 
 
@@ -94,7 +142,7 @@ public class MySQLAutoconfiguration {
 
 
 
-
+When SpringBoot app is starting, it will not scan all the classes in jars, So SpringBoot starter should specify which classes are auto-configured.
 
 
 
@@ -102,3 +150,8 @@ public class MySQLAutoconfiguration {
 
 https://docs.spring.io/spring-boot/docs/2.1.1.RELEASE/reference/htmlsingle/#using-boot-auto-configuration
 
+https://www.baeldung.com/spring-boot-custom-auto-configuration
+
+https://docs.spring.io/autorepo/docs/spring-boot/2.0.0.M3/reference/html/boot-features-developing-auto-configuration.html
+
+https://www.baeldung.com/spring-boot-custom-starter
