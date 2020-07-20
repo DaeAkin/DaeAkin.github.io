@@ -1,22 +1,71 @@
-# ‼️ 스프링 부트의 autoconfiguration
+# ‼️ 스프링 부트의 Autoconfiguration
 
+Spring Legacy를 사용하다가 Spring Boot를 사용하게 되면, Legacy에 비해 설정을 따로 해주지 않아도 자동으로 해주기 때문에 엄청 간편하다는 생각을 많이 해보셨을 겁니다. 
 
+이번 시간에는 스프링 부트를 쓰면 왜 설정들을 따로 해주지 않아도 어떻게 자동으로 그 원리를 알아보겠습니다.
 
-## Auto-configuration
+## 🚗 Auto-configuration
 
-Spring Boot의 auto-configuration은 추가한 jar 파일에 따라 자동적으로 설정을 해줍니다. 예를 들어 HSQLDB가 클래스패스에 존재하면, 데이터베이스의 커넥션을 맺는 bean을 수동으로 구성해주지 않았다면, 자동으로 인메모리 DB로 자동 구성 됩니다.
+Spring Boot의 auto-configuration은 추가한 jar 파일에 따라 자동적으로 설정을 해줍니다. 예를 들어 HSQLDB가 클래스패스에 존재하고, 데이터베이스의 커넥션을 맺는 Bean을 수동으로 구성해주지 않았다면, **자동으로 인메모리 DB로 자동 구성** 됩니다.
 
-@EnableAutoConfiguration 또는 @SpringBootApplication 주석을 @Configuration 클래스 중 하나에 추가하면 됩니다.
+Spring Legacy에서는 Connection 오류가 떠서 애플리케이션이 실행이 되지 않습니다.
 
-> @SpringBootApplication 또는 @EnableAutoConfiguration 주석을 하나만 추가해야합니다. 일반적으로 기본 @Configuration 클래스에만 하나를 추가하는 것이 좋습니다.
+Auto-configuration을 사용하고 싶다면 @EnableAutoConfiguration 또는 @SpringBootApplication 주석을 @Configuration 클래스 중 하나에 추가하면 됩니다.
+
+```java
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class TestApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(TestApplication.class, args);
+	}
+
+}
+```
+
+> @SpringBootApplication 또는 @EnableAutoConfiguration 주석을 하나만 추가해야합니다.
 
 
 
 ## Auto-configuration으로 점진적으로 변경하기
 
-언제든지 특정 부분을 auto-configuration으로 변경할 수 있습니다. 예를 들어 DataSource 빈을 사용하고 있다면, 디폴트로 사용되는 임베디드 데이터베이스는 더 이상 사용되지 않습니다.
+언제든지 특정 부분을 auto-configuration으로 변경할 수 있습니다. 예를 들어 DataSource 빈을 있다면, **디폴트로 사용되는 임베디드 데이터베이스는 더 이상 사용되지 않습니다.**
 
 만약 현재 어느 부분에 auto-configuration이 적용되어있는지 알고 싶다면 애플리케이션을 `--debug` 과 함께 실행시키면 됩니다.  이렇게 함으로써 logger의 debug를 활성화 시킬 수 있어, 콘솔로 확인할 수 있습니다.
+
+
+
+```
+$java -jar TestApplication.jar --debug
+============================
+CONDITIONS EVALUATION REPORT
+============================
+Positive matches:
+-----------------
+   AopAutoConfiguration matched:
+      - @ConditionalOnClass found required classes 'org.springframework.context.annotation.EnableAspectJAutoProxy', 'org.aspectj.lang.annotation.Aspect', 'org.aspectj.lang.reflect.Advice', 'org.aspectj.weaver.AnnotatedElement' (OnClassCondition)
+      - @ConditionalOnProperty (spring.aop.auto=true) matched (OnPropertyCondition)
+
+   AopAutoConfiguration.CglibAutoProxyConfiguration matched:
+      - @ConditionalOnProperty (spring.aop.proxy-target-class=true) matched (OnPropertyCondition)
+
+   CodecsAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.http.codec.CodecConfigurer' (OnClassCondition)
+
+....
+Exclusions:
+-----------
+    None
+Unconditional classes:
+----------------------
+    org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration
+    org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration
+    org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration
+
+```
 
 
 
@@ -108,11 +157,7 @@ public class MyAutoConfiguration {
 
 ### property Conditions
 
-`@ConditionalOnProperty` 어노테이션은 특정 스프링 환경 프로퍼티 파일의 존재에 여부에따라 설정을 해주는 어노테이션 입니다. prefix와 name 속성을 
-
-
-
-
+`@ConditionalOnProperty` 어노테이션은 특정 스프링 환경 프로퍼티 파일의 존재에 여부에따라 설정을 해주는 어노테이션 입니다. prefix와 name 속성을 이용하여 특정한 propery가 있는지 검사 할 수 있습니다. `havingValue` 와 `matchIfMissing` 속성을 이용하며 좀 더 세밀하게 검사할 수 있습니다.
 
 ```
 @PropertySource("classpath:mysql.properties")
@@ -121,7 +166,29 @@ public class MySQLAutoconfiguration {
 }
 ```
 
+### Resource Conditions
 
+`@ConditionalOnProperty` 어노테이션은 특정 리소스가 존재할 때 설정 됩니다. 리소스는 주로 스프링 컨벤션을 사용하여 `file:/home/user/test.dat` 처럼 작성합니다.
+
+
+
+### Web Application Conditions
+
+`@ConditionalOnWebApplication` 과 `@ConditionalOnNotWebApplication` 어노테이션은 애플리케이션이 웹 어플리케이션인지에 따라 설정 됩니다. 웹 어플리케이션은 스프링 WebApplicationContext를 사용하며, session 범위를 정의하거나, StandardServletEnvironment를 갖는 애플리케이션을 말합니다.
+
+
+
+### SpEL expression conditions 
+
+`@ConditionalOnExpression` 어노테이션은 [SpEL expression](https://docs.spring.io/spring/docs/5.0.0.RC3/spring-framework-reference/core.html#expressions) 결과 값에 따라 설정 됩니다.
+
+
+
+## 네이밍 컨벤션 
+
+acme 이라는 auto-configure 모듈을 만든다면 이 모듈의 이름은 acme-spring-boot-autoconfigure 으로 만들어야 하며, starter는 acme-spring-boot-starter로 만들어야 합니다. 만약 이 모듈 두개를 하나로 만든다면, acme-spring-boot-starter 가 되어야 합니다.
+
+게다가, starter가 설정에 대한 키를 지원한다면, 적절한 이름을 지어줘야 합니다. Spring Boot가 사용하고 있는(server,management, spring 등)을 사용하지 말아야 합니다. 
 
 
 
@@ -155,3 +222,4 @@ https://www.baeldung.com/spring-boot-custom-auto-configuration
 https://docs.spring.io/autorepo/docs/spring-boot/2.0.0.M3/reference/html/boot-features-developing-auto-configuration.html
 
 https://www.baeldung.com/spring-boot-custom-starter
+
