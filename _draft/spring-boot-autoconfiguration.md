@@ -36,8 +36,6 @@ public class TestApplication {
 
 만약 현재 어느 부분에 auto-configuration이 적용되어있는지 알고 싶다면 애플리케이션을 `--debug` 과 함께 실행시키면 됩니다.  이렇게 함으로써 logger의 debug를 활성화 시킬 수 있어, 콘솔로 확인할 수 있습니다.
 
-
-
 ```
 $java -jar TestApplication.jar --debug
 ============================
