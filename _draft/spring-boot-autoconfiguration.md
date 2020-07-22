@@ -4,13 +4,15 @@ Spring Legacy를 사용하다가 Spring Boot를 사용하게 되면, Legacy에 �
 
 이번 시간에는 스프링 부트를 쓰면 왜 설정들을 따로 해주지 않아도 어떻게 자동으로 그 원리를 알아보겠습니다.
 
-## 🚗 Auto-configuration
+## ❓ Auto-configuration이 뭘까?
 
-Spring Boot의 auto-configuration은 추가한 jar 파일에 따라 자동적으로 설정을 해줍니다. 예를 들어 HSQLDB가 클래스패스에 존재하고, 데이터베이스의 커넥션을 맺는 Bean을 수동으로 구성해주지 않았다면, **자동으로 인메모리 DB로 자동 구성** 됩니다.
+Spring Boot의 auto-configuration은 추가한 **jar 파일**에 따라 자동적으로 설정을 해줍니다. 예를 들어 HSQLDB가 <u>클래스패스에</u> 존재하고, **데이터베이스의 커넥션을 맺는 Bean을 수동으로 구성해주지 않았다면**, **자동으로 인메모리 DB로 자동 구성** 됩니다.
 
-Spring Legacy에서는 Connection 오류가 떠서 애플리케이션이 실행이 되지 않습니다.
+만약 Spring Legacy이었다면 Connection 오류가 떠서 애플리케이션이 실행이 되지 않습니다.
 
-Auto-configuration을 사용하고 싶다면 @EnableAutoConfiguration 또는 @SpringBootApplication 주석을 @Configuration 클래스 중 하나에 추가하면 됩니다.
+Auto-configuration을 사용하고 싶다면 **@EnableAutoConfiguration** 또는 **@SpringBootApplication** 주석을 @Configuration 클래스 중 하나에 추가하면 됩니다.
+
+보통 Spring Boot 어플리케이션을 만들면 다음과 같은 보일러플레이트 코드를 만날 수 있습니다.
 
 ```java
 import org.springframework.boot.SpringApplication;
@@ -26,18 +28,22 @@ public class TestApplication {
 }
 ```
 
+위에 나와 있는 `@SpringBootApplication` 이 자동구성을 해주는 어노테이션이였습니다.!
+
+
 > @SpringBootApplication 또는 @EnableAutoConfiguration 주석을 하나만 추가해야합니다.
 
 
 
-## Auto-configuration으로 점진적으로 변경하기
+## 🧐 Auto-configuration을 사용하기 싫다면?
 
-언제든지 특정 부분을 auto-configuration으로 변경할 수 있습니다. 예를 들어 DataSource 빈을 있다면, **디폴트로 사용되는 임베디드 데이터베이스는 더 이상 사용되지 않습니다.**
+언제든지 특정 부분을 Auto-configuration으로 변경할 수 있습니다. 예를 들어 DataSource 빈을 있다면, **디폴트로 사용되는 임베디드 데이터베이스는 더 이상 사용되지 않습니다.**
 
-만약 현재 어느 부분에 auto-configuration이 적용되어있는지 알고 싶다면 애플리케이션을 `--debug` 과 함께 실행시키면 됩니다.  이렇게 함으로써 logger의 debug를 활성화 시킬 수 있어, 콘솔로 확인할 수 있습니다.
+만약 현재 어느 부분에 Auto-configuration이 적용되어있는지 알고 싶다면 애플리케이션을 `--debug` 과 함께 실행시키면 됩니다.  이렇게 함으로써 logger의 debug를 활성화 시킬 수 있어, 콘솔로 확인할 수 있습니다.
 
 ```
-$java -jar TestApplication.jar --debug
+$ java -jar TestApplication.jar --debug
+
 ============================
 CONDITIONS EVALUATION REPORT
 ============================
@@ -67,9 +73,11 @@ Unconditional classes:
 
 
 
-## 특정 클래스 Auto-configuration  비활성화하기 
+## 특정 클래스 Auto-configuration 비활성화하기 
 
-auto-configuration을 적용하지 않은 클래스가 있다면, `@EnabelAutoConfiguration`의 exclude 속성을 사용하여 비활성화 할 수 있습니다.
+Auto-configuration을 적용하고 싶지 않는 클래스가 있다면, `@EnabelAutoConfiguration`의 **exclude** 속성을 사용하여 비활성화 할 수 있습니다.
+
+##### DataSourceAutoConfiguration의 자동구성을 제외하는 예제
 
 ```java
 import org.springframework.boot.autoconfigure.*;
@@ -82,17 +90,53 @@ public class MyConfiguration {
 }
 ```
 
-클래스패스에 클래스가 존재하지 않다면, excludeName 속성을 사용하여 이름을 전부 적어주면 됩니다.
+클래스패스에 클래스가 존재하지 않다면, **excludeName** 속성을 사용하여 이름을 전부 적어주면 됩니다.
 
 
+
+## 💡 Auto-configuration 원리
+
+Spring Boot가 실행될 때, 클래스패스에 있는 spring.factories 파일을 찾습니다. 이 파일은 **resources/META-INF/spring.factories**에 있습니다. [spring-boot-autoconfigure](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-autoconfigure/src/main/resources/META-INF/spring.factories) 프로젝트의 spring.factories의 일부분은 다음과 같습니다.
+
+```
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration,\
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
+```
+
+ 이 파일들은 스프링 부트가 실행할 설정 클래스들의 이름들을 담고 있습니다. 위에 일부분을 해석해보면, AOP , RabbitMQ , MongoDB, Spring Batch의 설정 클래스를 실행한다고 해석할 수 있습니다.
+
+그러나, 이 설정 클래스가 클래스패스에 존재해야 실행이 됩니다. 만약 MongoDB가 클래스패스에 있으면, [MongoAutoConfiguration이](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/mongo/MongoAutoConfiguration.java) 실행되며, mongo와 관련된 빈들이 초기화가 됩니다.
+
+auto-configuration은 내부적으로 표준 @Configuration 클래스로 구현됩니다. 거기에 `@Conditional` 어노테이션을 사용하면 auto-configuration의 조건을 걸 수 있습니다. 주로 auto-configuration 클래스는 @`ConditionalonClass` 과 `@ConditionalOnMissingBean` 어노테이션을 사용합니다. 이 어노테이션을 사용하면 auto-configuration이 관련 클래스를 찾은 경우, 그리고 @Configuration 어노테이션이 없는 경우에 적용되게 할 수 있습니다.
+
+
+
+## 블
+
+커스텀된 Auto-Configuration을 만들기 위해서는 @Configuration 어노테이션이 붙은 클래스가 필요하며, 이 클래스를 등록해줘야 합니다.
+
+Mysql 데이터소스를 커스텀 설정을 해보겠습니다.
+
+```java
+@Configuration
+public class MySQLAutoconfiguration {
+  //..
+}
+```
+
+그 다음으로 반드시 해야할 작업은 이 클래스를 auto-configuration의 후보자로 등록해야 합니다. @EnableAutoConfiguration의 후보자 목록의 파일은 resources/META-INF/spring.factories에 있습니다.
+
+
+
+When SpringBoot app is starting, it will not scan all the classes in jars, So SpringBoot starter should specify which classes are auto-configured.
 
 ## 커스텀 Auto-Configuration 만들기
 
 회사에서 라이브러리를 만들거나, 오픈소스 또는 상업적 라이브러리를 만들 때 auto-configuration을 적용하고 싶을 때가 있습니다. 
-
-## auto-configuration 원리
-
-auto-configuration은 내부적으로 표준 @Configuration 클래스로 구현됩니다. 거기에 `@Conditional` 어노테이션을 사용하면 auto-configuration의 조건을 걸 수 있습니다. 주로 auto-configuration 클래스는 @`ConditionalonClass` 과 `@ConditionalOnMissingBean` 어노테이션을 사용합니다. 이 어노테이션을 사용하면 auto-configuration이 관련 클래스를 찾은 경우, 그리고 @Configuration 어노테이션이 없는 경우에 적용되게 할 수 있습니다.
 
 
 
@@ -110,7 +154,9 @@ com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
 
 
 
-## Condition 어노테이션
+
+
+## Condition 어노테이션들
 
 거의 항상 auto-configuration 클래스에는 하나 이상의 @Conditional 어노테이션이 있습니다. @ConditionalOnMissingBean은 개발자가 기본 값에 만족하지 않는 경우 auto-configuration을 오버라이드 할 수 있도록 해줍니다.
 
@@ -187,27 +233,6 @@ public class MySQLAutoconfiguration {
 acme 이라는 auto-configure 모듈을 만든다면 이 모듈의 이름은 acme-spring-boot-autoconfigure 으로 만들어야 하며, starter는 acme-spring-boot-starter로 만들어야 합니다. 만약 이 모듈 두개를 하나로 만든다면, acme-spring-boot-starter 가 되어야 합니다.
 
 게다가, starter가 설정에 대한 키를 지원한다면, 적절한 이름을 지어줘야 합니다. Spring Boot가 사용하고 있는(server,management, spring 등)을 사용하지 말아야 합니다. 
-
-
-
-## 블
-
-커스텀된 Auto-Configuration을 만들기 위해서는 @Configuration 어노테이션이 붙은 클래스가 필요하며, 이 클래스를 등록해줘야 합니다.
-
-Mysql 데이터소스를 커스텀 설정을 해보겠습니다.
-
-```java
-@Configuration
-public class MySQLAutoconfiguration {
-  //..
-}
-```
-
-그 다음으로 반드시 해야할 작업은 이 클래스를 auto-configuration의 후보자로 등록해야 합니다. @EnableAutoConfiguration의 후보자 목록의 파일은 resources/META-INF/spring.factories에 있습니다.
-
-
-
-When SpringBoot app is starting, it will not scan all the classes in jars, So SpringBoot starter should specify which classes are auto-configured.
 
 
 
