@@ -111,30 +111,64 @@ org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
 
 그러나, 이 설정 클래스가 클래스패스에 존재해야 실행이 됩니다. 만약 MongoDB가 클래스패스에 있으면, [MongoAutoConfiguration이](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/mongo/MongoAutoConfiguration.java) 실행되며, mongo와 관련된 빈들이 초기화가 됩니다.
 
-auto-configuration은 내부적으로 표준 @Configuration 클래스로 구현됩니다. 거기에 `@Conditional` 어노테이션을 사용하면 auto-configuration의 조건을 걸 수 있습니다. 주로 auto-configuration 클래스는 @`ConditionalonClass` 과 `@ConditionalOnMissingBean` 어노테이션을 사용합니다. 이 어노테이션을 사용하면 auto-configuration이 관련 클래스를 찾은 경우, 그리고 @Configuration 어노테이션이 없는 경우에 적용되게 할 수 있습니다.
-
-
-
-## 블
-
-커스텀된 Auto-Configuration을 만들기 위해서는 @Configuration 어노테이션이 붙은 클래스가 필요하며, 이 클래스를 등록해줘야 합니다.
-
-Mysql 데이터소스를 커스텀 설정을 해보겠습니다.
+MongoAutoConfiguration을 보면 @ConditionalOnClass 어노테이션을 사용하여, 이 클래스가 언제 실행될지 **<u>조건</u>**을 걸어주었습니다.
 
 ```java
-@Configuration
-public class MySQLAutoconfiguration {
-  //..
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnClass(MongoClient.class)
+@EnableConfigurationProperties(MongoProperties.class)
+@ConditionalOnMissingBean(type = "org.springframework.data.mongodb.MongoDatabaseFactory")
+public class MongoAutoConfiguration {
+			...설정들
 }
 ```
 
-그 다음으로 반드시 해야할 작업은 이 클래스를 auto-configuration의 후보자로 등록해야 합니다. @EnableAutoConfiguration의 후보자 목록의 파일은 resources/META-INF/spring.factories에 있습니다.
+MongoAutoConfiguration 클래스는 클래스패스에 MongoClient가 존재할 때만 실행 됩니다.
 
 
 
-When SpringBoot app is starting, it will not scan all the classes in jars, So SpringBoot starter should specify which classes are auto-configured.
+## 💡 Properties의 원리
 
-## 커스텀 Auto-Configuration 만들기
+데이터베이스 접속 관련 정보를 입력할 땐 /resources/application 파일에 다음과 같이 작성하게 됩니다.
+
+```yaml
+spring:
+  data:
+    mongodb:
+      host: 
+			....
+```
+
+이렇게 사전에 설정된 값으로 빈들을 초기화 하고 싶을 때가 있습니다.
+
+이 값들은 [MongoProperties](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-autoconfigure/src/main/resources/META-INF/spring.factories) 클래스에 @ConfigurationProperties 어노테이션과 연관 있습니다.
+
+```java
+@ConfigurationProperties(prefix = "spring.data.mongodb")
+public class MongoProperties {
+	public static final int DEFAULT_PORT = 27017;
+	public static final String DEFAULT_URI = "mongodb://localhost/test";
+
+	private String host;
+	private Integer port = null;
+	private String uri;
+}
+```
+
+@ConfigurationProperties의 prefix와 MongoProperties의 필드이름을 합친 값을 property file에서 사용하게 됩니다.
+
+```yaml
+spring:
+	data:
+		mongodb:
+			host:
+			port:
+			uri
+```
+
+
+
+## 🎯 커스텀 Auto-Configuration 만들기
 
 회사에서 라이브러리를 만들거나, 오픈소스 또는 상업적 라이브러리를 만들 때 auto-configuration을 적용하고 싶을 때가 있습니다. 
 
@@ -156,9 +190,9 @@ com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
 
 
 
-## Condition 어노테이션들
+## Condition 어노테이션 정리
 
-거의 항상 auto-configuration 클래스에는 하나 이상의 @Conditional 어노테이션이 있습니다. @ConditionalOnMissingBean은 개발자가 기본 값에 만족하지 않는 경우 auto-configuration을 오버라이드 할 수 있도록 해줍니다.
+거의 항상 Auto-configuration 클래스에는 하나 이상의 @Conditional 어노테이션이 있습니다. @ConditionalOnMissingBean은 개발자가 기본 값에 만족하지 않는 경우 Auto-configuration을 오버라이드 할 수 있도록 해줍니다.
 
 
 
@@ -246,3 +280,27 @@ https://docs.spring.io/autorepo/docs/spring-boot/2.0.0.M3/reference/html/boot-fe
 
 https://www.baeldung.com/spring-boot-custom-starter
 
+
+
+
+
+auto-configuration은 내부적으로 표준 @Configuration 클래스로 구현됩니다. 거기에 `@Conditional` 어노테이션을 사용하면 auto-configuration의 조건을 걸 수 있습니다. 주로 auto-configuration 클래스는 @`ConditionalonClass` 과 `@ConditionalOnMissingBean` 어노테이션을 사용합니다. 이 어노테이션을 사용하면 auto-configuration이 관련 클래스를 찾은 경우, 그리고 @Configuration 어노테이션이 없는 경우에 적용되게 할 수 있습니다.
+
+## 
+
+커스텀된 Auto-Configuration을 만들기 위해서는 @Configuration 어노테이션이 붙은 클래스가 필요하며, 이 클래스를 등록해줘야 합니다.
+
+Mysql 데이터소스를 커스텀 설정을 해보겠습니다.
+
+```java
+@Configuration
+public class MySQLAutoconfiguration {
+  //..
+}
+```
+
+그 다음으로 반드시 해야할 작업은 이 클래스를 auto-configuration의 후보자로 등록해야 합니다. @EnableAutoConfiguration의 후보자 목록의 파일은 resources/META-INF/spring.factories에 있습니다.
+
+
+
+When SpringBoot app is starting, it will not scan all the classes in jars, So SpringBoot starter should specify which classes are auto-configured.
