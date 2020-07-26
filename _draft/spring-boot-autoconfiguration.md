@@ -163,14 +163,43 @@ spring:
 		mongodb:
 			host:
 			port:
-			uri
+			uri :
 ```
 
 
 
-## 🎯 커스텀 Auto-Configuration 만들기
+# 🎯 커스텀 Auto-Configuration 만들기
 
-회사에서 라이브러리를 만들거나, 오픈소스 또는 상업적 라이브러리를 만들 때 auto-configuration을 적용하고 싶을 때가 있습니다. 
+이 내용을 토래도 커스텀 Auto-Configuration을 한 번 만들어 보겠습니다.
+
+- custom 설정을 위한 properties 클래스와 함께 auto-configuration 제공
+- pom 또는 gradle로 우리가 만든 custom auto-configuration 의존성을 작성 해, 프로젝트 자동구성 적용해보기
+
+
+
+## AUtoConfigration 모듈 만들기
+
+greeter-spring-boot-autoconfigure 라는 모듈을 만들어 보겠습니다. 이 모듈은 2개의 클래스로 이루어져 있는데, GreeterProperties 클래스는 application.yaml(또는 .properties)를 통해 커스텀 설정을 하는 클래스이고, 다른 하나인 GreeterAutoConfiguration 클래스는 greeter 라이브러리를 위한 빈들을 생성하는 클래스입니다.
+
+> ## 🎫 네이밍 컨벤션 
+>
+> acme 이라는 auto-configure 모듈을 만든다면 이 모듈의 이름은 acme-spring-boot-autoconfigure 으로 만들어야 하며, starter는 acme-spring-boot-starter로 만들어야 합니다. 만약 이 모듈 두개를 하나로 만든다면, acme-spring-boot-starter 가 되어야 합니다.
+>
+> 게다가, starter가 설정에 대한 키를 지원한다면, 적절한 이름을 지어줘야 합니다. Spring Boot가 사용하고 있는(server,management, spring 등)을 사용하지 말아야 합니다. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -262,11 +291,7 @@ public class MySQLAutoconfiguration {
 
 
 
-## 네이밍 컨벤션 
 
-acme 이라는 auto-configure 모듈을 만든다면 이 모듈의 이름은 acme-spring-boot-autoconfigure 으로 만들어야 하며, starter는 acme-spring-boot-starter로 만들어야 합니다. 만약 이 모듈 두개를 하나로 만든다면, acme-spring-boot-starter 가 되어야 합니다.
-
-게다가, starter가 설정에 대한 키를 지원한다면, 적절한 이름을 지어줘야 합니다. Spring Boot가 사용하고 있는(server,management, spring 등)을 사용하지 말아야 합니다. 
 
 
 
