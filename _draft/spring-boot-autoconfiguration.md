@@ -334,6 +334,8 @@ jar{enabled=true}
 
 
 
+>  You should mark the dependencies to the library as optional so that you can include the `autoconfigure` module in your projects more easily. If you do it that way, the library is not provided and, by default, Spring Boot backs off.
+
 ## auto-configuration 후보자 설정하기
 
 Spring Boot는 `META-INF/spring.factories` 파일의 유무를 검사합니다. 이 파일은 EnableAutoConfiguration 
