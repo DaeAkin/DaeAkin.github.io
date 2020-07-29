@@ -170,16 +170,17 @@ spring:
 
 # 🎯 커스텀 Auto-Configuration 만들기
 
-이 내용을 토래도 커스텀 Auto-Configuration을 한 번 만들어 보겠습니다.
+이 내용을 토대로 커스텀 Auto-Configuration을 한 번 만들어 보겠습니다.
 
 - custom 설정을 위한 properties 클래스와 함께 auto-configuration 제공
 - pom 또는 gradle로 우리가 만든 custom auto-configuration 의존성을 작성 해, 프로젝트 자동구성 적용해보기
 
+그 전에 앞서서 용어 정리를 해보겠습니다.
 
-
-## AUtoConfigration 모듈 만들기
-
-greeter-spring-boot-autoconfigure 라는 모듈을 만들어 보겠습니다. 이 모듈은 2개의 클래스로 이루어져 있는데, GreeterProperties 클래스는 application.yaml(또는 .properties)를 통해 커스텀 설정을 하는 클래스이고, 다른 하나인 GreeterAutoConfiguration 클래스는 greeter 라이브러리를 위한 빈들을 생성하는 클래스입니다.
+- [greeter-library](https://github.com/DaeAkin/greeter-library) : greeter의 코어 로직이 있는 라이브러리 입니다.
+- [greeter-spring-boot-autoconfigure](https://github.com/DaeAkin/greeter-spring-boot-autoconfigure) : greeter 라이브러리를 사용하기 위한 설정을 해줘야하는데, **<u>설정을 안할 경우</u>**, 이 라이브러리가 자동설정을 해줍니다.
+- [greeter-spring-boot-starter](https://github.com/DaeAkin/greeter-spring-boot-starter) : greeter-library + greeter-spring-boot-autoconfigure 가 합쳐진 라이브러리 입니다.
+- [greeter-client](https://github.com/DaeAkin/greeter-client) : greeter을 테스트하기 위한 클라이언트 입니다.
 
 > ## 🎫 네이밍 컨벤션 
 >
@@ -189,17 +190,147 @@ greeter-spring-boot-autoconfigure 라는 모듈을 만들어 보겠습니다. �
 
 
 
+## Greeter 라이브러리 만들기 
+
+먼저 Greeter 라이브러리를 간단하게 만들어 보겠습니다.
+
+```java
+public class Greeter {
+
+    private GreetingConfig greetingConfig;
+
+    public Greeter(GreetingConfig greetingConfig) {
+        this.greetingConfig = greetingConfig;
+    }
+
+    public String greet(LocalDateTime localDateTime) {
+
+        String name = greetingConfig.getProperty(USER_NAME);
+        int hourOfDay = localDateTime.getHour();
+
+        if (hourOfDay >= 5 && hourOfDay < 12) {
+            return String.format("Hello %s, %s", name, greetingConfig.get(MORNING_MESSAGE));
+        } else if (hourOfDay >= 12 && hourOfDay < 17) {
+            return String.format("Hello %s, %s", name, greetingConfig.get(AFTERNOON_MESSAGE));
+        } else if (hourOfDay >= 17 && hourOfDay < 20) {
+            return String.format("Hello %s, %s", name, greetingConfig.get(EVENING_MESSAGE));
+        } else {
+            return String.format("Hello %s, %s", name, greetingConfig.get(NIGHT_MESSAGE));
+        }
+    }
+
+    public String greet() {
+        return greet(LocalDateTime.now());
+    }
+
+}
+```
+
+Greeter 라이브러리의 주요 클래스입니다. 이 클래스를 간단히 설명하자면, Greeter.greet()를 호출 될 때 properties의 정의된 userName을 가져와서 현재 시간에 맞게 콘솔에 출력하는 간단한 라이브러리 입니다.
+
+이 포스팅의 주된 내용은 라이브러리 구현이 아니기 때문에 간단히 넘어가겠습니다.
+
+좀 더 자세한 내용은 [여기](https://github.com/DaeAkin/greeter-library)를 참조해주세요.
+
+## AutoConfigration 모듈 만들기
+
+그 다음으로greeter-spring-boot-autoconfigure 라는 모듈을 만들어 보겠습니다. 
+
+이 모듈은 2개의 클래스로 이루어져 있는데, GreeterProperties 클래스는 application.yaml(또는 .properties)를 통해 커스텀 설정을 하는 클래스이고, 다른 하나인 GreeterAutoConfiguration 클래스는 greeter 라이브러리를 위한 설정 빈들을 생성하는 클래스입니다.
+
+##### GreeterAutoConfiguration.java
+
+```java
+@Configuration
+@ConditionalOnClass(Greeter.class)
+@EnableConfigurationProperties(GreeterProperties.class)
+public class GreeterAutoConfiguration {
+
+    @Autowired
+    private GreeterProperties greeterProperties;
+
+    @ConditionalOnMissingBean
+    public GreetingConfig greeterConfig() {
+
+        String userName = greeterProperties.getUserName() == null
+                ? System.getProperty("user.name")
+                : greeterProperties.getUserName();
+
+        // ..
+
+        GreetingConfig greetingConfig = new GreetingConfig();
+        greetingConfig.put(USER_NAME, userName);
+        // ...
+        return greetingConfig;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public Greeter greeter(GreetingConfig greetingConfig) {
+        return new Greeter(greetingConfig);
+    }
+}
+```
+
+- 
+
+##### GreeterProperties.java
+
+```java
+@ConfigurationProperties(prefix = "donghyeon.greeter")
+public class GreeterProperties {
+
+    private String userName;
+    private String morningMessage;
+    private String afternoonMessage;
+    private String eveningMessage;
+    private String nightMessage;
+
+    //..getter setter
+}
+```
 
 
 
+##### /resource/META-INF/spring.factories
+
+```
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  dev.donghyeon.autoconfiguration.GreeterAutoConfiguration
+```
 
 
 
+##### build.gradle
+
+```java
+plugins {
+	id 'org.springframework.boot' version '2.3.2.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+}
+
+group = 'dev.donghyeon'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '8'
 
 
+repositories {
+	mavenCentral()
+	maven { url 'https://jitpack.io' }
+}
 
+dependencies {
+	implementation 'com.github.DaeAkin:greeter-library:v1.0.0'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+}
 
-
+bootJar{enabled=false}
+jar{enabled=true}
+```
 
 
 
@@ -304,6 +435,8 @@ https://www.baeldung.com/spring-boot-custom-auto-configuration
 https://docs.spring.io/autorepo/docs/spring-boot/2.0.0.M3/reference/html/boot-features-developing-auto-configuration.html
 
 https://www.baeldung.com/spring-boot-custom-starter
+
+https://github.com/spring-projects/spring-boot/tree/master/spring-boot-project/spring-boot-autoconfigure
 
 
 
