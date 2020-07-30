@@ -232,7 +232,7 @@ Greeter 라이브러리의 주요 클래스입니다. 이 클래스를 간단히
 
 좀 더 자세한 내용은 [여기](https://github.com/DaeAkin/greeter-library)를 참조해주세요.
 
-## AutoConfigration 모듈 만들기
+## Greeter-spring-boot-autoconfigure 만들기
 
 그 다음으로greeter-spring-boot-autoconfigure 라는 모듈을 만들어 보겠습니다. 
 
@@ -272,7 +272,18 @@ public class GreeterAutoConfiguration {
 }
 ```
 
-- 
+애플리케이션이 실행될 때, Greeter 클래스가 클래스패스에 존재하면 GreeterAutoConfiguration 클래스를 실행합니다.
+
+[@ConditionalOnMissingBean](https://docs.spring.io/spring-boot/docs/current/api/org/springframework/boot/autoconfigure/condition/ConditionalOnMissingBean.html) 어노테이션을 사용하여, GreeterConfig의 bean이 없을 경우 GreeterConfig bean을 자동 생성합니다. 개발자가 자동생성된 GreeterConfig bean을 사용하고 싶다면, @Configuration 어노테이션을 클래스에 붙여서 동일하게 bean을 만들어주면 됩니다.
+
+##### /resource/META-INF/spring.factories
+
+```
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  dev.donghyeon.autoconfiguration.GreeterAutoConfiguration
+```
+
+다음으로 spring.factories라는 파일이 존재하는데, 이 파일은 애플리케이션이 실행될 때, 시작할 AutoConfiguration 목록을 추가해주는 역할을 합니다.
 
 ##### GreeterProperties.java
 
@@ -290,20 +301,79 @@ public class GreeterProperties {
 }
 ```
 
+@ConfigurationProperties는 설정된 prefix + 필드 이름으로 property를 만들 수 있습니다.
+다음과 같이 사용 됩니다.
 
+##### application.yaml
 
-##### /resource/META-INF/spring.factories
-
+```yaml
+donghyeon :
+  greeter :
+    userName :
+    morningMessage :
+    afternoonMessage :
+    ...
 ```
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  dev.donghyeon.autoconfiguration.GreeterAutoConfiguration
+
+
+
+## autoconfigure 테스트 코드 작성하기
+
+테스트 코드는 좋은 프로그램을 만드는 좋은 습관이기 때문에, 테스트 코드도 같이 작성해 보겠습니다.
+
+```java
+class AutoconfigurationApplicationTests {
+
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(GreeterAutoConfiguration.class));
+
+    @Test
+    public void greeterConfigExists() {
+        this.contextRunner.run((context -> assertThat(context).hasSingleBean(GreetingConfig.class)));
+    }
+
+    @Test
+    public void settingsAdded() {
+        this.contextRunner.withUserConfiguration(MyGreeterConfig.class)
+                .run((context -> assertThat(context.getBean(GreetingConfig.class).getProperty(USER_NAME))
+                .isEqualTo("testUserName")));
+    }
+
+    @Test
+    public void noSettingsAdded() {
+        this.contextRunner.run((context ->
+                assertThat(context.getBean(GreetingConfig.class).getProperty(USER_NAME))
+                        .isEqualTo(System.getProperty("user.name"))));
+    }
+
+    //no runtime-generated subclass is necessary.
+    @Configuration(proxyBeanMethods = false)
+    static class MyGreeterConfig {
+
+        @Bean
+        public GreetingConfig myGreeterConfig() {
+            GreetingConfig greetingConfig = new GreetingConfig();
+            greetingConfig.put(USER_NAME, "testUserName");
+            return greetingConfig;
+        }
+
+    }
+}
 ```
 
+[테스트코드](https://github.com/DaeAkin/greeter-spring-boot-autoconfigure/blob/master/src/test/java/dev/donghyeon/autoconfiguration/AutoconfigurationApplicationTests.java)는 여기서 보실 수 있습니다.
 
+## starter 사용 해보기
+
+이렇게 만든 라이브러리를 사용 해보겠습니다.
+
+**greeter-library**와 greeter-libarary의 설정을 도와주는 **greeter-spring-boot-autoconfigure** 총 두개의 모듈을 만들었습니다.
+
+이 모듈 2개를 합친 모듈인 **[greeter-spring-boot-starter](https://github.com/DaeAkin/greeter-spring-boot-starter)** 를 이용해서 사용 해보겠습니다.
 
 ##### build.gradle
 
-```java
+```
 plugins {
 	id 'org.springframework.boot' version '2.3.2.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
@@ -312,8 +382,7 @@ plugins {
 
 group = 'dev.donghyeon'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '8'
-
+sourceCompatibility = '1.8'
 
 repositories {
 	mavenCentral()
@@ -321,32 +390,72 @@ repositories {
 }
 
 dependencies {
-	implementation 'com.github.DaeAkin:greeter-library:v1.0.0'
+	implementation('com.github.DaeAkin:greeter-spring-boot-starter:v1.0.1')
+	
 	implementation 'org.springframework.boot:spring-boot-starter'
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
 }
 
-bootJar{enabled=false}
-jar{enabled=true}
+test {
+	useJUnitPlatform()
+}
+
+```
+
+
+
+##### GreeterClienApplication.java
+
+```java
+@SpringBootApplication
+public class GreeterClientApplication implements CommandLineRunner {
+	@Autowired
+	private Greeter greeter;
+
+	public static void main(String[] args) {
+		SpringApplication.run(GreeterClientApplication.class, args);
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+        String message = greeter.greet();
+        System.out.println(message);
+	}
+}
+```
+
+이 클래스를 실행시키면 다음과 같은 결과를 얻습니다.
+
+```
+Hello donghyeonmin, null
 ```
 
 
 
->  You should mark the dependencies to the library as optional so that you can include the `autoconfigure` module in your projects more easily. If you do it that way, the library is not provided and, by default, Spring Boot backs off.
+## application.yaml을 이용한 프로퍼티 주입
 
-## auto-configuration 후보자 설정하기
+##### application.yaml
 
-Spring Boot는 `META-INF/spring.factories` 파일의 유무를 검사합니다. 이 파일은 EnableAutoConfiguration 
+
+```yaml
+donghyeon :
+  greeter :
+    userName : Hello Donghyeon
+```
+
+application.yaml(또는 .properties)를 다음과 같이 수정한 후 다시 실행시키면 다음과 같은 결과를 얻습니다.
+
+##### 결과
 
 ```
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.mycorp.libx.autoconfigure.LibXAutoConfiguration,\
-com.mycorp.libx.autoconfigure.LibXWebAutoConfiguration
+Hello Hello Donghyeon, null
 ```
 
-`@AutoConfigureAfter` 또는 `@AutoConfigureBefore` 어노테이션을 이용하면 사용자가 원하는 순서대로 설정이 적용됩니다. 예를 들어, 만약 web 관련 설정을 한다면, `WebMvcAutoConfiguration` 이 된 후 에 설정이 적용되도록 하는 것이 좋습니다.
+
+
+
 
 
 
@@ -453,14 +562,31 @@ auto-configuration은 내부적으로 표준 @Configuration 클래스로 구현�
 Mysql 데이터소스를 커스텀 설정을 해보겠습니다.
 
 ```java
-@Configuration
-public class MySQLAutoconfiguration {
-  //..
+plugins {
+	id 'org.springframework.boot' version '2.3.2.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
 }
+
+group = 'dev.donghyeon'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '8'
+
+
+repositories {
+	mavenCentral()
+	maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
+	implementation 'com.github.DaeAkin:greeter-library:v1.0.0'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+}
+
+bootJar{enabled=false}
+jar{enabled=true}
 ```
-
-그 다음으로 반드시 해야할 작업은 이 클래스를 auto-configuration의 후보자로 등록해야 합니다. @EnableAutoConfiguration의 후보자 목록의 파일은 resources/META-INF/spring.factories에 있습니다.
-
-
-
-When SpringBoot app is starting, it will not scan all the classes in jars, So SpringBoot starter should specify which classes are auto-configured.
