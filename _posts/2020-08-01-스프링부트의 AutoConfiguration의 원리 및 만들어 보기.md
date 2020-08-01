@@ -1,3 +1,10 @@
+---
+layout: post
+title: 스프링 부트의 Autoconfiguration 원리 및 만들어 보기
+categories: [Spring]
+comments: true 
+---
+
 # ‼️ 스프링 부트의 Autoconfiguration
 
 Spring Legacy를 사용하다가 Spring Boot를 사용하게 되면, Legacy에 비해 설정을 따로 해주지 않아도 자동으로 해주기 때문에 엄청 간편하다는 생각을 많이 해보셨을 겁니다. 
@@ -73,7 +80,7 @@ Unconditional classes:
 
 
 
-## 특정 클래스 Auto-configuration 비활성화하기 
+### ⌛️ 특정 클래스 Auto-configuration 비활성화하기 
 
 Auto-configuration을 적용하고 싶지 않는 클래스가 있다면, `@EnabelAutoConfiguration`의 **exclude** 속성을 사용하여 비활성화 할 수 있습니다.
 
@@ -136,7 +143,8 @@ spring:
   data:
     mongodb:
       host: 
-			....
+      port:
+      uri:
 ```
 
 이렇게 사전에 설정된 값으로 빈들을 초기화 하고 싶을 때가 있습니다.
@@ -155,16 +163,7 @@ public class MongoProperties {
 }
 ```
 
-@ConfigurationProperties의 prefix와 MongoProperties의 필드이름을 합친 값을 property file에서 사용하게 됩니다.
-
-```yaml
-spring:
-	data:
-		mongodb:
-			host:
-			port:
-			uri :
-```
+@ConfigurationProperties의 prefix와 MongoProperties의 필드이름을 합친 값을 property file에서 사용하게 됩니다. 
 
 
 
@@ -175,7 +174,7 @@ spring:
 - custom 설정을 위한 properties 클래스와 함께 auto-configuration 제공
 - pom 또는 gradle로 우리가 만든 custom auto-configuration 의존성을 작성 해, 프로젝트 자동구성 적용해보기
 
-그 전에 앞서서 용어 정리를 해보겠습니다.
+그 전에 앞서서 우리가 만들 라이브러리를 정리 해보겠습니다.
 
 - [greeter-library](https://github.com/DaeAkin/greeter-library) : greeter의 코어 로직이 있는 라이브러리 입니다.
 - [greeter-spring-boot-autoconfigure](https://github.com/DaeAkin/greeter-spring-boot-autoconfigure) : greeter 라이브러리를 사용하기 위한 설정을 해줘야하는데, **<u>설정을 안할 경우</u>**, 이 라이브러리가 자동설정을 해줍니다.
@@ -190,7 +189,7 @@ spring:
 
 
 
-## Greeter 라이브러리 만들기 
+## ➡️ Greeter 라이브러리 만들기 
 
 먼저 Greeter 라이브러리를 간단하게 만들어 보겠습니다.
 
@@ -232,7 +231,7 @@ Greeter 라이브러리의 주요 클래스입니다. 이 클래스를 간단히
 
 좀 더 자세한 내용은 [여기](https://github.com/DaeAkin/greeter-library)를 참조해주세요.
 
-## Greeter-spring-boot-autoconfigure 만들기
+## ➡️ Greeter-spring-boot-autoconfigure 만들기
 
 그 다음으로greeter-spring-boot-autoconfigure 라는 모듈을 만들어 보겠습니다. 
 
@@ -317,7 +316,7 @@ donghyeon :
 
 
 
-## autoconfigure 테스트 코드 작성하기
+## ➡️ autoconfigure 테스트 코드 작성하기
 
 테스트 코드는 좋은 프로그램을 만드는 좋은 습관이기 때문에, 테스트 코드도 같이 작성해 보겠습니다.
 
@@ -363,7 +362,7 @@ class AutoconfigurationApplicationTests {
 
 [테스트코드](https://github.com/DaeAkin/greeter-spring-boot-autoconfigure/blob/master/src/test/java/dev/donghyeon/autoconfiguration/AutoconfigurationApplicationTests.java)는 여기서 보실 수 있습니다.
 
-## starter 사용 해보기
+## ➡️ starter 사용 해보기
 
 이렇게 만든 라이브러리를 사용 해보겠습니다.
 
@@ -434,7 +433,7 @@ Hello donghyeonmin, null
 
 
 
-## application.yaml을 이용한 프로퍼티 주입
+## ➡️application.yaml을 이용한 프로퍼티 주입
 
 ##### application.yaml
 
@@ -455,138 +454,21 @@ Hello Hello Donghyeon, null
 
 
 
+## 📫 마치며
 
+이렇게 SpringBoot의 특징 중 하나인 Auto-configuration을 살펴 보았습니다. 예제를 진행하면서, 실제로 만든 라이브러리를 배포까지 해보기 위해서 jitpack을 이용해서 github에 라이브러리를 배포까지 해보았습니다. 
 
+[spring-boot-starter-data-mognodb](https://github.com/spring-projects/spring-boot/blob/master/spring-boot-project/spring-boot-starters/spring-boot-starter-data-mongodb/build.gradle)의 라이브러리를 보면, build.gradle 파일 하나만 갖고 있는데, 아마 spring-boot의 서브모듈이라서 가능한 것 같기도 생각됩니다. 이 부분은 좀 더 공부해봐야 될 것 같습니다.
 
-
-
-
-## Condition 어노테이션 정리
-
-거의 항상 Auto-configuration 클래스에는 하나 이상의 @Conditional 어노테이션이 있습니다. @ConditionalOnMissingBean은 개발자가 기본 값에 만족하지 않는 경우 Auto-configuration을 오버라이드 할 수 있도록 해줍니다.
-
-
-
-### Class Conditions
-
-`@ConditionalOnClass` 와 `@ConditionalOnMissingClass` 어노테이션은 특정 클래스의 존재 여부에 따라 설정을 해줍니다. Due to the fact that annotation metadata is parsed using [ASM](http://asm.ow2.org/) you can actually use the `value` attribute to refer to the real class, even though that class might not actually appear on the running application classpath. You can also use the `name` attribute if you prefer to specify the class name using a `String` valu
-
-
-
->  If you are using `@ConditionalOnClass` or `@ConditionalOnMissingClass` as a part of a meta-annotation to compose your own composed annotations you must use `name` as referring to the class in such a case is not handled.
-
-
-
-### Bean conditions
-
-`@ConditionalOnBean` 과 `@ConditionalOnMissingBean` 어노테이션은 특정 빈의 존재 여부에 따라 설정해 줍니다. value 속성을 이용하면, 빈의 타입을 정해줄수 있고, name 속성을 이용하여 빈의 이름을 정해줄수 있습니다. search 속성을 사용하며, 빈을 검색할 범위에 제한을 걸 수 있습니다.
-
-```java
-@Configuration
-public class MyAutoConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean
-    public MyService myService() { ... }
-
-}
-```
-
-위에 예제는 MyService 타입의 빈이 ApplicationConext에서 갖고 있지 않으면, 생성을 해줍니다.
-
-
-
-> You need to be very careful about the order that bean definitions are added as these conditions are evaluated based on what has been processed so far. For this reason, we recommend only using `@ConditionalOnBean` and `@ConditionalOnMissingBean` annotations on auto-configuration classes (since these are guaranteed to load after any user-defined beans definitions have been added).
-
-
-
-> `@ConditionalOnBean` and `@ConditionalOnMissingBean` do not prevent `@Configuration` classes from being created. Using these conditions at the class level is equivalent to marking each contained `@Bean` method with the annotation.
-
-
-
-### property Conditions
-
-`@ConditionalOnProperty` 어노테이션은 특정 스프링 환경 프로퍼티 파일의 존재에 여부에따라 설정을 해주는 어노테이션 입니다. prefix와 name 속성을 이용하여 특정한 propery가 있는지 검사 할 수 있습니다. `havingValue` 와 `matchIfMissing` 속성을 이용하며 좀 더 세밀하게 검사할 수 있습니다.
-
-```
-@PropertySource("classpath:mysql.properties")
-public class MySQLAutoconfiguration {
-    //...
-}
-```
-
-### Resource Conditions
-
-`@ConditionalOnProperty` 어노테이션은 특정 리소스가 존재할 때 설정 됩니다. 리소스는 주로 스프링 컨벤션을 사용하여 `file:/home/user/test.dat` 처럼 작성합니다.
-
-
-
-### Web Application Conditions
-
-`@ConditionalOnWebApplication` 과 `@ConditionalOnNotWebApplication` 어노테이션은 애플리케이션이 웹 어플리케이션인지에 따라 설정 됩니다. 웹 어플리케이션은 스프링 WebApplicationContext를 사용하며, session 범위를 정의하거나, StandardServletEnvironment를 갖는 애플리케이션을 말합니다.
-
-
-
-### SpEL expression conditions 
-
-`@ConditionalOnExpression` 어노테이션은 [SpEL expression](https://docs.spring.io/spring/docs/5.0.0.RC3/spring-framework-reference/core.html#expressions) 결과 값에 따라 설정 됩니다.
-
-
-
-
-
-
+실제로 라이브러리를 만들고, 배포까지 직접 해보니 오픈소스 개발자(?)가 된 것만 같았습니다...ㅋㅋ  
 
 ## 참고자료
 
 https://docs.spring.io/spring-boot/docs/2.1.1.RELEASE/reference/htmlsingle/#using-boot-auto-configuration
 
-https://www.baeldung.com/spring-boot-custom-auto-configuration
-
 https://docs.spring.io/autorepo/docs/spring-boot/2.0.0.M3/reference/html/boot-features-developing-auto-configuration.html
 
-https://www.baeldung.com/spring-boot-custom-starter
+https://github.com/spring-projects/spring-boot/tree/master/spring-boot-project/spring-boot-starters
 
 https://github.com/spring-projects/spring-boot/tree/master/spring-boot-project/spring-boot-autoconfigure
 
-
-
-
-
-auto-configuration은 내부적으로 표준 @Configuration 클래스로 구현됩니다. 거기에 `@Conditional` 어노테이션을 사용하면 auto-configuration의 조건을 걸 수 있습니다. 주로 auto-configuration 클래스는 @`ConditionalonClass` 과 `@ConditionalOnMissingBean` 어노테이션을 사용합니다. 이 어노테이션을 사용하면 auto-configuration이 관련 클래스를 찾은 경우, 그리고 @Configuration 어노테이션이 없는 경우에 적용되게 할 수 있습니다.
-
-## 
-
-커스텀된 Auto-Configuration을 만들기 위해서는 @Configuration 어노테이션이 붙은 클래스가 필요하며, 이 클래스를 등록해줘야 합니다.
-
-Mysql 데이터소스를 커스텀 설정을 해보겠습니다.
-
-```java
-plugins {
-	id 'org.springframework.boot' version '2.3.2.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
-	id 'java'
-}
-
-group = 'dev.donghyeon'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '8'
-
-
-repositories {
-	mavenCentral()
-	maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-  annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor"
-	implementation 'com.github.DaeAkin:greeter-library:v1.0.0'
-	implementation 'org.springframework.boot:spring-boot-starter'
-	testImplementation('org.springframework.boot:spring-boot-starter-test') {
-		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-	}
-}
-
-bootJar{enabled=false}
-jar{enabled=true}
-```
