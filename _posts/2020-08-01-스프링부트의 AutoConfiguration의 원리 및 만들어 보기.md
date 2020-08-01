@@ -167,7 +167,7 @@ public class MongoProperties {
 
 
 
-# 🎯 커스텀 Auto-Configuration 만들기
+## 🎯 커스텀 Auto-Configuration 만들기
 
 이 내용을 토대로 커스텀 Auto-Configuration을 한 번 만들어 보겠습니다.
 
