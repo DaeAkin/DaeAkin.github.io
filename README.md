@@ -11,9 +11,10 @@ URL : https://daeakin.github.io/
 
 ###  Work Queue
 
-- <u>Design Pattern</u>
+<u> - Design Pattern</u>
+<u>- AutoConfiguration의 원리 </u>
+- Cutsom Annotation 만들기
 - JPA Posting 마무리하기
-- AutoConfiguration의 원리
 - RXJava 정리하기
 - Weflux , Mono , backpressure 정리
 - Spring MSA 및 Cloud 정리하기
