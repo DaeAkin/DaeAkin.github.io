@@ -11,9 +11,11 @@ URL : https://daeakin.github.io/
 
 ###  Work Queue
 
-<u>- Design Pattern</u>
-- AutoConfiguration의 원리
-- Cutsom Annotation 만들기
+- ~~Design Pattern~~
+
+- ~~AutoConfiguration의 원리~~
+- ~~Cutsom Annotation 만들기~~
+- REST API를 만들기 위한 좋은 규칙들
 - JPA Posting 마무리하기
 - RXJava 정리하기
 - Weflux , Mono , backpressure 정리
