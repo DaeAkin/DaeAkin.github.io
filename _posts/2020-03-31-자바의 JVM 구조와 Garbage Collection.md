@@ -7,7 +7,7 @@ comments: true
 
 ## JVM 메모리 모델 
 
-![](https://github.com/DaeAkin/DaeAkin.github.io/blob/master/img/gc/JVMMemory.png?raw=true)
+![]({{"/img/gc/JVMMemory.png" | relative_url}})
 
 위에 사진을 보면 JVM 메모리는 부분적으로 나누어져 있습니다. 큰 부분에서 보면 JVM Heap 메모리는 물리적으로 **Young 영역**과 **Old 영역** 두부분으로 나누어져 있습니다.
 
