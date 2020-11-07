@@ -1,3 +1,5 @@
-<footer>
-  &copy; {{ site.time | date: '%Y' }} {{ site.owner.name }} <i class="fa fa-heart heart-icon"></i>
-</footer>
+{% include svg-icons.html %}
+
+{% if site.footer-text %}
+<p>{{ site.footer-text }}</p>
+{% endif %}

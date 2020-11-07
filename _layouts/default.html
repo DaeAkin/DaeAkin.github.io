@@ -1,25 +1,21 @@
 <!DOCTYPE html>
-<head>
-      <script data-ad-client="ca-pub-1081251319490173" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-</head>
-<html lang="en">
+<html>
+  {% include head.html %}
+  <body>
+    {% include nav.html %}
 
-{% include head.html %}
+    <div id="main" role="main" class="container">
+      {{ content }}
+    </div>
 
-<body>
-  <div class="row">
-    <div class="col s12 m3">
-      <div class="table cover">
-        {% include sidebar.html %}
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          {% include footer.html %}
+        </footer>
       </div>
     </div>
-    <div class="col s12 m9">
-      <div class="post-listing">
-        {{ content }}
-        {% include footer.html %}
-      </div>
-    </div>
-  </div>
-  {% include js.html %}
-</body>
+
+    {% include analytics.html %}
+  </body>
 </html>
