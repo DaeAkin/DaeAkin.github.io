@@ -1,1 +1,0 @@
-https://stackoverflow.com/questions/447898/what-is-object-serialization
