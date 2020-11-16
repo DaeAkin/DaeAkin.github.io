@@ -367,7 +367,58 @@ public class ConditionalTest {
 
 ### 자바 환경변수에 따라 실행하기
 
-특정 JRE 버전에 따라 테스트를 활성화 비활성화 할 수 있습니다. `@EnabledOnJre` 와 `@DisabledOnJre` 어노테이션을 이용해서 활성화할 JRE 버전을 명시하고, `@EnabledForJreRange` 와 `DisabledForJreRange`  어노테이션을 이용하면 여러개으 ㅣJRE 버전을 
+특정 JRE 버전에 따라 테스트를 활성화 비활성화 할 수 있습니다. `@EnabledOnJre` 와 `@DisabledOnJre` 어노테이션을 이용해서 활성화할 JRE 버전을 명시하고, `@EnabledForJreRange` 와 `@DisabledForJreRange`  어노테이션을 이용하면 여러개의JRE 버전을 테스트 할 수 있다. 
+
+### 시스템 속성 조건
+
+`@EnabledIfSystemProperty` 와 `@DisabledIfSystemProperty` 어노테이션을 사용하면 named에 작성된 JVM 시스템 속성에 따라 테스트를 활성화 또는 비활성화 할 수 있다. 
+
+```java
+public class SystemPropertyConditionalTest {
+    @Test
+    @EnabledIfSystemProperty(named = "os.arch", matches = ".*64.*")
+    void onlyOn64BitArchitectures() {
+        // ...
+    }
+
+    @Test @DisabledIfSystemProperty(named = "ci-server", matches = "true")
+    void notOnCiServer() {
+        // ...
+    }
+}
+```
+
+> Junit Jupiter 5.6부터는 `EnabledIfSystemProperty` 와 `DisabledIfSystemProperty` 는 반복가능한 어노테이션으로 변경되었다. 그 결과로, 테스트를 할 때 여러 개를 중첩해서 사용할 수 있다. 
+
+### 환경 변수 조건
+
+`@EnabledIfEnvironmentVariable` 와 `@DisabledIfEnvironmentVariable` 어노테이션을 사용하여 운영체제 시스템의 환경 변수에 따라 테스트를 활성화 또는 비활성화 할 수 있다.
+
+```java
+public class EnvironmentVariableConditionalTest {
+    @Test
+    @EnabledIfEnvironmentVariable(named = "ENV", matches = "staging-server")
+    void onlyOnStagingServer() {
+        // ...
+    }
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = "ENV", matches = ".*development.*")
+    void notOnDeveloperWorkstation() { 
+        // ...
+    }
+}
+```
+
+> JUnit Jupiter 5.6부터 두개의 어노테이션은 반복가능한 어노테이션으로 변경되었다. 그 결과로 테스트 할 때 여러개를 중첩해서 사용할 수 있다.
+
+### 사용자 커스텀 조건
+
+`@EnabledIf` 와 `@DisabledIf` 어노테이션을 사용하여 지정해준 메소드가 반환하는 boolean의 값에 따라 테스트를 활성화 또는 비활성화 할 수 있다. 어노테이션 안에 메소드 이름을 작성주면 되고, 만약 테스트 클래스 밖에 있는 메소드라면, 클래스 까지 써줘야 한다. 필요하다면 메소드는 하나의 파라미터를 갖을 수 있다.
+
+
+
+?? 예제 검색
 
 ## 테스트 LifeCycle
 
