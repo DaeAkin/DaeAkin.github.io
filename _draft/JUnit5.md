@@ -416,9 +416,103 @@ public class EnvironmentVariableConditionalTest {
 
 `@EnabledIf` 와 `@DisabledIf` 어노테이션을 사용하여 지정해준 메소드가 반환하는 boolean의 값에 따라 테스트를 활성화 또는 비활성화 할 수 있다. 어노테이션 안에 메소드 이름을 작성주면 되고, 만약 테스트 클래스 밖에 있는 메소드라면, 클래스 까지 써줘야 한다. 필요하다면 메소드는 하나의 파라미터를 갖을 수 있다.
 
+```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.condition.EnabledIf;
+
+public class CustomConditionalTest {
+    @Test
+    @EnabledIf("customCondition")
+    void enabled() {
 
 
-?? 예제 검색
+    }
+
+    @Test
+    @DisabledIf("customCondition")
+    void disabled() {
+
+    }
+
+    boolean customCondition() {
+        return true;
+    }
+}
+```
+
+> `@EnabledIf` 나 `@DisabledIf` 를 클래스 레벨에 사용할 때 컨디션 메소드는 반드시 `static` 으로 선언되어야 한다. 외부 클래스에 위치한 컨디션 메소드도 `static` 으로 선언되어야 한다.
+
+external 클래스에 위치한 메소드는 안되나?
+
+
+
+## 태그와 필터링
+
+클래스와 메소드는 `@Tag` 어노테이션을 통해 태그할 수 있다. 이 태그들은 나중에 테스트를 필터링 할때 사용 된다.
+
+### Tags를 사용하기 위한 규칙
+
+- 태그는 공백이나 `null` 이 있으면 안됨
+- ISO 제어문자가 있으면 안됨
+- 다음과 같은 문자열이 있으면 안됨
+  - , 
+  - ( 
+  - ) 
+  - |
+  - !
+  - &
+
+## 테스트 실행 순서 바꾸기
+
+일반적으로 단위테스트는 테스트 순서에 영향을 받지 않지만, 통합 테스트를 작성할 때나, 테스트의 순서가 중요한 함수형 테스트를 할 때 테스트 실행 순서를 바꾸고 싶을 때가 있다. 
+
+테스트 메소드가 실행되는 순서를 바꾸고 싶으면 테스트 클래스나 메소드에 `@TestMethodOrder` 를 이용하여 `MethodOrderer` 를 원하는대로 구현하면 된다. `MethodOrderer` 를 커스텀해서 구현하거나, 이미 내장된 `MethodOrderer` 구현 중 하나를 사용하면 된다.
+
+- DisplayName : displayName 기반으로 정렬한다.
+
+- MethodName : 메소드 이름으로 정렬한다.
+
+- OrderAnnotation : `@Order` 어노테이션에 명시된 순서대로 정렬한다.
+
+- Random : 랜덤으로 정렬한다.
+
+- Alphanumeric : sorts test methods alphanumerically based on their names and formal parameter
+
+  28 lists.
+
+> MethodName은 6.0에 Deprecated 될 예정임.
+
+```java
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class OrderedTest {
+    @Test
+    @Order(1)
+    void nullValues() {
+    }
+
+    @Test
+    @Order(2)
+    void emptyValues() {
+    }
+
+    @Test
+    @Order(3)
+    void validValues() {
+    }
+}
+```
+
+
+
+### 메소드 실행 순서 디폴트 설정하기
+
+`junit.jupiter.testmethod.order.default` 설정 파라미터를 이용하여 디폴트로 사용할 `MethodOrderer` 를 설정해줄 수 있다. 
 
 ## 테스트 LifeCycle
 
