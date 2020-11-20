@@ -512,9 +512,28 @@ public class OrderedTest {
 
 ### 메소드 실행 순서 디폴트 설정하기
 
-`junit.jupiter.testmethod.order.default` 설정 파라미터를 이용하여 디폴트로 사용할 `MethodOrderer` 를 설정해줄 수 있다. 
+`junit.jupiter.testmethod.order.default` 설정 파라미터를 이용하여 디폴트로 사용할 `MethodOrderer` 를 설정해줄 수 있다. 테스트 클래스에 `@TestMethodOrder` 가 없으면 모든 테스트들은 디폴트 순서를 사용한다.
+
+예를 들어 `OrderAnnotation ` 클래스를 디폴트로 사용하고 싶다면 클래스 이름 전체를 설정 파라미터에 설정하면 된다.
+
+**src/test/reousrces/junit-platform.properties**
+
+```yaml
+junit.jupiter.testmethod.order.default = \
+	org.junit.jupiter.api.MethodOrder$OrderAnnotation
+```
+
+
 
 ## 테스트 LifeCycle
 
-사이드 이펙트를 줄이고, 테스트 메서드를 격리된 환경에서 독립적으로 실행시키기 위해 JUnit은 테스트 메소드를 실행시키기 전에 각각의 테스트 클래스의 새로운 인스턴스를 만든다.  
+사이드 이펙트를 줄이고, 테스트 메서드를 격리된 환경에서 독립적으로 실행시키기 위해 JUnit은 테스트 메소드를 실행시키기 전에 각각의 테스트 클래스의 새로운 인스턴스를 만든다.  이렇게 메소드마다 테스트 라이프사이클을 갖는다.
+
+> 테스트 메소드에 `@Disabled` ,`@DisabledOnOs` 를 붙여 테스트 메소드를 비활성화 해도 똑같은 테스트 라이플 사이클을 가진다
+
+만약 같은 인스턴스에서 모든 테스트 메소드를 모두 실행하고 싶다면 테스트 클래스에 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 사용하면 된다. 이 어노테이션을 사용하면 **<u>테스트 클래스 단위로</u>** 새로운 테스트 인스턴스가 생기게 된다. 그러므로 그 안에 있는 인스턴스 변수를 테스트 메소드들이 공유를 하므로 `@BeforeEach` 나 `@AfterEach` 를 사용하여 내부 상태를 리셋을 시켜줘야 한다.
+
+**PER-CLASS** 는 테스트 인스턴스의 기본 생성 방식인**PER-METHOD** 를 사용할 때와 같은 이점을 얻는다. 특히 PER-CLASS는 `@BeforeAll` 과 `@AfterAll` 를 붙인 메소드에 static을 사용하지 않아도 되고 인터페이스의 `deafult` 메소드에서도 사용하지 않아도 된다. 또한   **PER-CLASS** `@Nested` 테스트 클래스에서 `@BeforeAll` 과 `@AfterAll` 메소드를 사용할 수 있게 해준다.
+
+
 
