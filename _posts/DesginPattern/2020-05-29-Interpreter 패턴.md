@@ -3,6 +3,8 @@ layout: post
 title: Interpreter 패턴
 categories: [Design Pattern]
 comments: true 
+tags:
+- Design Pattern
 ---
 
 # Interpreter 디자인 패턴

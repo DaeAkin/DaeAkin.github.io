@@ -3,6 +3,8 @@ layout: post
 title: 책임 연쇄 패턴
 categories: [Design Pattern]
 comments: true 
+tags:
+- Design Pattern
 ---
 
 # Chain Of Responsibility(책임 연쇄 패턴)

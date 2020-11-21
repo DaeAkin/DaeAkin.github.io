@@ -3,7 +3,8 @@ layout: post
 title: JPA 클래스와 기본키 맵핑
 categories: [JPA]
 comments: true
-
+tags:
+- JPA
 ---
 
 # JPA 클래스와 기본키 맵핑
