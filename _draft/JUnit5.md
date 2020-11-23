@@ -541,6 +541,8 @@ junit.jupiter.testmethod.order.default = \
 
 예를 들어 라이플사이클 모드를 `LifeCycle_PER_CLASS` 로 변경하고 싶으면 JVM을 실행할 때 다음과 같이 실행한다.
 
+**JVM 시스템 변수 설정**
+
 ```
 -Djunit.jupiter.testinstance.lifecycle.default=per_class
 ```
@@ -549,8 +551,100 @@ junit.jupiter.testmethod.order.default = \
 
 JUnit 설정 파일을 통해 설정하는 방법은, `junit-platform.properties` 이름의 파일을 클래스패스 만들고 다음과 같이 작성한다.
 
+**JUnit 설정 파일 설정**
+
 ```
 junit.jupiter.testinstance.lifecycle.default = per_class
 ```
 
-> 디폴트 테스트 인스턴스 라이플사이클 변경이 일관적으로 적용되지 않으면 예상치 못한 결과를 할 수 있다. 
+> 디폴트 테스트 인스턴스 라이플사이클 변경이 일관적으로 적용되지 않으면 예상치 못한 결과를 초래 한다. 예를 들어, 빌드 설정엔 "per-class"를 디폴트로 설정했지만, IDE 설정에서는 "per-method"로 설정되어 실행될 수 있다. 이렇게 되면, 빌드 서버에서 오류가 난다. 이런 현상을 해결하기 위해서는 JVM 시스템 변수 대신, JUnit 설정 파일을 사용하는 걸 추천 한다.
+
+## Nested Tests
+
+`@Nested` 테스트는 테스트 그룹 사이의 관계를 표현할 수 있게 해준다.
+
+```java
+@DisplayName("A stack")
+class TestingStack {
+
+    Stack<Object> stack;
+
+    @Test
+    @DisplayName("is instantiated with new Stack()")
+    void isInstantiatedWithNew() {
+        new Stack<>();
+    }
+
+    @Nested
+    @DisplayName("when new")
+    class WhenNew {
+        @BeforeEach
+        void createNewStack() {
+            stack = new Stack<>();
+        }
+
+        @Test
+        @DisplayName("is empty")
+        void isEmpty() {
+            assertTrue(stack.isEmpty());
+        }
+
+        @Test
+        @DisplayName("throws EmptyStackException when popped")
+        void throwsExceptionWhenPopped() {
+            assertThrows(EmptyStackException.class, stack::pop);
+        }
+
+        @Test
+        @DisplayName("throws EmptyStackException when peeked")
+        void throwsExceptionWhenPeeked() {
+            assertThrows(EmptyStackException.class, stack::peek);
+        }
+
+        @Nested
+        @DisplayName("after pushing an element")
+        class AfterPushing {
+            String anElement = "an element";
+
+            @BeforeEach
+            void pushAnElement() {
+                stack.push(anElement);
+            }
+
+            @Test
+            @DisplayName("it is no longer empty")
+            void isNotEmpty() {
+                assertFalse(stack.isEmpty());
+            }
+
+            @Test
+            @DisplayName("returns the element when popped and is empty")
+            void returnElementWhenPopped() {
+                assertEquals(anElement, stack.pop());
+                assertTrue(stack.isEmpty());
+            }
+
+            @Test
+            @DisplayName("returns the element when peeked but remains not empty")
+            void returnElementWhenPeeked() {
+                assertEquals(anElement, stack.peek());
+                assertFalse(stack.isEmpty());
+            }
+        }
+    }
+}
+```
+
+오직 non-static인 nested 클래스(예를 들어 inner 클래스)만 `@Nested` 를 붙일 수 있다. 
+
+Only non-static nested classes (i.e. inner classes) can serve as @Nested test classes. Nesting can be arbitrarily deep, and those inner classes are considered to be full members of the test class family with one exception: @BeforeAll and @AfterAll methods do not work by default. The reason is that Java does not allow static members in inner classes. However, this restriction can be circumvented by annotating a @Nested test class with @TestInstance(Lifecycle.PER_CLASS) (see Test Instance Lifecycle).
+
+## 생생자와 메소드 의존성 주입
+
+이전 JUnit 버전들에서는 테스트 생성자나 메소드에 파라미터를 갖지 못하게 했다. JUnit juptier의 주요 변화로 테스트 생성자와 메소드가 이제는 파라미터를 갖을 수 있도록 변경되었다. 이런 변화는 코드의 유연성과 생성자와 메소드에 의존성 주입을 가능하게 해준다. 
+
+**ParameterResolver** 는 런타임시 동적으로 파라미터를 결정하는 테스트 익스텐션에 관한 API가 정의되어 있다. 테스트 클래스 생성자나, 테스트메소드나, 라이플사이클 메소드가 파라미터를 받고 싶다면, 파라미터는 `ParameterResolver` 를 등록함으로써 런타임시 결정을 해야 한다.
+
+현재 자동적으로 등록되는 3개의 내장된 리졸버들이 있다.
+
+- [TestInfoParameterResolver](https://github.com/junit-team/junit5/blob/r5.7.0/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/TestInfoParameterResolver.java) : 생성자나 메소드 파라미터가 TestInfo의 타입이면 TestInfoParameterResolver가  현재 컨테이너나, 테스트에 일치하는 값을 TestInfo 인스턴스로 제공해준다. 제공받은 TestInfo는 현재 컨테이너나 
