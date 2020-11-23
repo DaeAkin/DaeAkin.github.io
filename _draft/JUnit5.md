@@ -533,7 +533,24 @@ junit.jupiter.testmethod.order.default = \
 
 만약 같은 인스턴스에서 모든 테스트 메소드를 모두 실행하고 싶다면 테스트 클래스에 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 사용하면 된다. 이 어노테이션을 사용하면 **<u>테스트 클래스 단위로</u>** 새로운 테스트 인스턴스가 생기게 된다. 그러므로 그 안에 있는 인스턴스 변수를 테스트 메소드들이 공유를 하므로 `@BeforeEach` 나 `@AfterEach` 를 사용하여 내부 상태를 리셋을 시켜줘야 한다.
 
-**PER-CLASS** 는 테스트 인스턴스의 기본 생성 방식인**PER-METHOD** 를 사용할 때와 같은 이점을 얻는다. 특히 PER-CLASS는 `@BeforeAll` 과 `@AfterAll` 를 붙인 메소드에 static을 사용하지 않아도 되고 인터페이스의 `deafult` 메소드에서도 사용하지 않아도 된다. 또한   **PER-CLASS** `@Nested` 테스트 클래스에서 `@BeforeAll` 과 `@AfterAll` 메소드를 사용할 수 있게 해준다.
+**PER-CLASS** 는 테스트 인스턴스의 기본 생성 방식인**PER-METHOD** 를 사용할 때와 같은 이점을 얻는다. 특히 PER-CLASS는 `@BeforeAll` 과 `@AfterAll` 를 붙인 메소드에 static을 사용하지 않아도 되고 인터페이스의 `deafult` 메소드에서도 사용하지 않아도 된다. 또한   **PER-CLASS** 는`@Nested` 테스트 클래스에서 `@BeforeAll` 과 `@AfterAll` 메소드를 사용할 수 있게 해준다.
 
+### 디폴트 테스트 인스턴스 라이플사이클 변경하기
 
+테스트 클래스에 `@TestInstance` 어노테이션이 없으면 기본 라이플사이클을 사용한다. 기본 모드는 PER_METHOD 이다. 그러나 전체 테스트에 디폴트 라이프사이클을 변경할 수 있다. 변경하기 위해선 `junit.jupiter.testinstnace.lifecycle.default` 설정 파라미터에 `TestInstnace.LifeCycle` enum클래스를 써주면 된다. JUnit 설정파일이나, LauncherDiscoveryRequest를 Launcher로 전달한 설정 파라미터를 이용해 JVM 시스템 변수로 제공해줄 수 있다. 
 
+예를 들어 라이플사이클 모드를 `LifeCycle_PER_CLASS` 로 변경하고 싶으면 JVM을 실행할 때 다음과 같이 실행한다.
+
+```
+-Djunit.jupiter.testinstance.lifecycle.default=per_class
+```
+
+그러나 이것 보단, JUnit 설정파일을 통해 라이플사이클 모드를 변경하는 것이 프로젝트의 버전 관리를 할 수 있기 때문에 좀 더 권장하는 방법이다.
+
+JUnit 설정 파일을 통해 설정하는 방법은, `junit-platform.properties` 이름의 파일을 클래스패스 만들고 다음과 같이 작성한다.
+
+```
+junit.jupiter.testinstance.lifecycle.default = per_class
+```
+
+> 디폴트 테스트 인스턴스 라이플사이클 변경이 일관적으로 적용되지 않으면 예상치 못한 결과를 할 수 있다. 
