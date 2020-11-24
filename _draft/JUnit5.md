@@ -647,4 +647,41 @@ Only non-static nested classes (i.e. inner classes) can serve as @Nested test cl
 
 현재 자동적으로 등록되는 3개의 내장된 리졸버들이 있다.
 
-- [TestInfoParameterResolver](https://github.com/junit-team/junit5/blob/r5.7.0/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/TestInfoParameterResolver.java) : 생성자나 메소드 파라미터가 TestInfo의 타입이면 TestInfoParameterResolver가  현재 컨테이너나, 테스트에 일치하는 값을 TestInfo 인스턴스로 제공해준다. 제공받은 TestInfo는 현재 컨테이너나 
+- [TestInfoParameterResolver](https://github.com/junit-team/junit5/blob/r5.7.0/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/TestInfoParameterResolver.java) : 생성자나 메소드 파라미터가 TestInfo의 타입이면 TestInfoParameterResolver가  현재 컨테이너나, 테스트에 일치하는 값을 TestInfo 인스턴스로 제공해준다. 제공받은 TestInfo는 현재 컨테이너 또는 테스트에 관한 display name, 테스트클래스, 테스트메소드, 관련된 태그들의 테스트 정보를 가져올 때 사용한다. 
+
+  다음의 예제는 테스트 생성자와, `@BeforeEach` 메소드, `@Test` 메소드에 어떻게 **TestInfo** 가 주입되는지 보여준다.
+
+  ```java
+  @DisplayName("TestInfo Demo Test")
+  class TestInfoTest {
+      TestInfoTest(TestInfo testInfo) {
+          assertEquals("TestInfo Demo Test", testInfo.getDisplayName());
+      }
+  
+      @BeforeEach
+      void init(TestInfo testInfo) {
+          String displayName = testInfo.getDisplayName();
+          assertTrue(displayName.equals("TEST 1") || displayName.equals("test2()"));
+      }
+  
+      @Test
+      @DisplayName("TEST 1")
+      @Tag("my-tag")
+      void test1(TestInfo testInfo) {
+          assertEquals("TEST 1", testInfo.getDisplayName());
+          assertTrue(testInfo.getTags().contains("my-tag"));
+      }
+  
+      @Test
+      void test2() {
+      }
+  
+  }
+  ```
+
+- RepetitionInfoParameterResolver : `@RepeatedTest` ,`@BeforeEach` ,`@AfterEach` 의 어노테이션이 붙은 메소드 파라미터는 RepetitionInfo의 타입이며, RepetitionInfoParameterResolver가 RepetitionInfo 인스턴스를 제공해준다. **RepetitionInfo**는 현재 반복하고 있는 정보나, `@RepeatedTest` 와 관련된 반복의 총 갯수의 정보를 가져올 때 사용한다. 그러나 현재 컨텍스트 외부에 있는 `@RepeatedTest` 를 찾아내진 못한다.
+
+- TestReporterParameterResolver : TestReporter 타입의 파라미터를 사용해야할 때 사용한다. TestReporter는 현재 실행중인 테스트에 관한 추가적인 데이터를 발행해야할 때 사용한다.  데이터는 TestExecutionListener안에 있는 reportingEntryPublished() 메소드를 이용해 컨슘되며, IDE나 리포트에서 볼 수 있다.
+
+  
+
