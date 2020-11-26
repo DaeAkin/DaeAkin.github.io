@@ -681,7 +681,76 @@ Only non-static nested classes (i.e. inner classes) can serve as @Nested test cl
 
 - RepetitionInfoParameterResolver : `@RepeatedTest` ,`@BeforeEach` ,`@AfterEach` 의 어노테이션이 붙은 메소드 파라미터는 RepetitionInfo의 타입이며, RepetitionInfoParameterResolver가 RepetitionInfo 인스턴스를 제공해준다. **RepetitionInfo**는 현재 반복하고 있는 정보나, `@RepeatedTest` 와 관련된 반복의 총 갯수의 정보를 가져올 때 사용한다. 그러나 현재 컨텍스트 외부에 있는 `@RepeatedTest` 를 찾아내진 못한다.
 
-- TestReporterParameterResolver : TestReporter 타입의 파라미터를 사용해야할 때 사용한다. TestReporter는 현재 실행중인 테스트에 관한 추가적인 데이터를 발행해야할 때 사용한다.  데이터는 TestExecutionListener안에 있는 reportingEntryPublished() 메소드를 이용해 컨슘되며, IDE나 리포트에서 볼 수 있다.
+- TestReporterParameterResolver : TestReporter 타입의 파라미터를 사용해야할 때 사용한다. TestReporter는 현재 실행중인 테스트에 관한 추가적인 데이터를 발행해야할 때 사용한다.  데이터는 TestExecutionListener안에 있는 reportingEntryPublished() 메소드를 이용해 컨슘되며, IDE나 리포트에서 볼 수 있다. -- 안보인다. 나중에 다시한번확인
 
-  
+다른 리졸버를 사용하고 싶으면, `@ExtendWith` 을 통해서 상속을 하면 된다.
+
+```java
+ExtendWith(RandomParametersExtension.class)
+class MyRandomParameterTest {
+
+    @Test
+    void injectsInteger(@Random int i, @Random int j) {
+
+        assertNotEquals(i, j);
+    }
+
+    @Test
+    void injectsDouble(@Random double d) {
+        assertEquals(0.0, d, 1.0);
+    }
+
+}
+```
+
+>   RandomParametersExtension은 아직 정식출시가 안되었다.
+
+실제 사용 사례로는 MockitoExtension과 SpringExtension을 많이 쓴다.
+
+
+
+## 테스트 인터페이스와 디폴트 메소드
+
+@Test, @RepeatedTest, @ParameterizedTest , @TestFactory, @TestTemplate, @BeforeEach, @AfterEach는 인터페이스 디폴트 메소드에 선언을 해도 된다.만약 테스트 인터페이스나 테스트 클래스에 @TestInstnace(Lifecycle.PER_CLASS)로 되어 있다면  @BeforeAll과 @AfterAll은 static으로 인터페이스 디폴트 메소드와 테스트 인터페이스에 선언해도 된다. 
+
+```java
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+interface TestLifecycleLogger {
+
+    static final Logger logger = Logger.getLogger(TestLifecycleLogger.class.getName());
+
+    @BeforeAll
+    default void beforeAllTests() {
+        logger.info("Before all tests");
+    }
+
+    @AfterAll
+    default void afterAllTests() {
+        logger.info("After all tests");
+    }
+
+    @BeforeEach
+    default void beforeEachTest(TestInfo testInfo) {
+        logger.info(() -> String.format("About to execute [%s]",
+                testInfo.getDisplayName()));
+    }
+
+    @AfterEach
+    default void afterEachTest(TestInfo testInfo) {
+        logger.info(() -> String.format("Finished executing [%s]",
+                testInfo.getDisplayName()));
+    }
+}
+```
+
+
+
+```java
+interface TestInterfaceDynamicTestsDemo {
+    @TestFactory
+    default Stream<DynamicTest> dynamicTestsForPalindromes() {
+        return Stream.of("racecar", "radar", "mom", "dad")
+                .map(text -> dynamicTest(text, () -> assertTrue(text,equals(text)))); }
+}
+```
 
