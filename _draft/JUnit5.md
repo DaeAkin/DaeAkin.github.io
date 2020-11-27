@@ -754,3 +754,22 @@ interface TestInterfaceDynamicTestsDemo {
 }
 ```
 
+@ExtendWith과 @Tag는 테스트 인터페이스에 선언할 수 있어서 이 테스트 인터페이스를 선언한 구현체는 자동으로 tag와 extension을 상속 받는다.
+
+나중에 다시정리해야겠따. 40p.
+
+## @Repeated Test 
+
+@RepeatedTest 어노테이션에 명시된 숫자로 테스트를 얼마나 반복적으로 실행할지 지정해줄 수 있다. 반복 테스트의 호출은 보통의 @Test 메소드들이랑 똑같이 동작한다.
+
+다음의 예제는 repeatedTest()가 10번 호출된다.
+
+```java
+@RepeatedTest(10) void repeatedTest() { 
+}
+```
+
+또한 반복의 수를 지정해 줄 때, 각각의 반복되는 테스트에 대해서 보여줄 display name도 설정할 수 있다. 게다가, display name은 스트링과 정적 placeholder로 조합해서 패턴을 만들 수 있다.  다음은 지원되는 placeholder 이다.
+
+- DisplayName : @RepeatedTest 메소드의 보여줄 이름
+- {currentRepetition} : 
