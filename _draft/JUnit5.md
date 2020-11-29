@@ -765,11 +765,24 @@ interface TestInterfaceDynamicTestsDemo {
 다음의 예제는 repeatedTest()가 10번 호출된다.
 
 ```java
-@RepeatedTest(10) void repeatedTest() { 
+@RepeatedTest(10) 
+void repeatedTest() { 
 }
 ```
 
 또한 반복의 수를 지정해 줄 때, 각각의 반복되는 테스트에 대해서 보여줄 display name도 설정할 수 있다. 게다가, display name은 스트링과 정적 placeholder로 조합해서 패턴을 만들 수 있다.  다음은 지원되는 placeholder 이다.
 
 - DisplayName : @RepeatedTest 메소드의 보여줄 이름
-- {currentRepetition} : 
+- {currentRepetition} : 현재 반복 횟수
+- {totalRepetitions} : 반복할 총 횟수
+
+반복을 돌 때 보여지는 기본 display name은 다음과 같은 패턴으로 만들어진다.
+
+**"repetition {currentRepetition} of {totalRepetitions}"**
+
+그래서 위에 있는 repeatedTest()는 "repetition 1 of 10, repetition 2 of 10" 이렇게 보여진다. 메소드 이름을 포함하고 싶으면 사전 정의된, RepeatedTest.LONG_DISPLAY_NAME을 사용하면 된다. 
+
+현재 반복 정보와 반복의 수를 구하기 위해서 개발자가 @RepeatedTest ,@BeforeEach ,@AfterEach 메소드에 **RepetitionInfo의** 인스턴스를 주입시켜야 한다.
+
+### 반복 테스트 예제
+
