@@ -896,3 +896,74 @@ INFO: About to execute repetition 5 of 5 for repeatedTestInGerman
 │ └─ Wiederholung 5 von 5 ✔
 ```
 
+## 파라미터화 테스트
+
+파라미터화 테스트는 각각 다른 인자로 여러 번 테스트를 돌린다. @Test 대신 @ParameterizedTest 어노테이션을 사용하면 된다. 추가적으로 호출 시 사용될 인자를 적어도 하나는 적어줘야 한다. 
+
+```java
+@ParameterizedTest
+@ValueSource(strings = {"racecar", "radar", "able was I ere I saw elba"})
+void palindromes(String candidate) {
+	assertTrue(StringUtils.isPalindrome(candidate));
+}
+```
+
+이 테스트코드를 실행하면 콘솔에는 다음과 같이 찍힌다.
+
+```
+palindromes(String) ✔
+├─ [1] candidate=racecar ✔
+├─ [2] candidate=radar ✔
+└─ [3] candidate=able was I ere I saw elba ✔
+```
+
+> 파라미터화 테스트는 현재 실험단계다.
+
+### 필수 셋업
+
+파라미터화 테스트를 사용하려면 [junit-jupiter-params](https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-params) 를 추가해야한다.
+
+### 인자 사용하기
+
+파라미터화 테스트 메소드는 일반적으로 미리 정해놓은 파라미터 소스들과 1:1 매칭이 된다. 그러나 
+
+Parameterized test methods typically consume arguments directly from the configured source (see Sources of Arguments) following a one-to-one correlation between argument source index and method parameter index (see examples in @CsvSource). However, a parameterized test method may also choose to aggregate arguments from the source into a single object passed to the method (see Argument Aggregation). Additional arguments may also be provided by a ParameterResolver (e.g., to obtain an instance of TestInfo, TestReporter, etc.). Specifically, a parameterized test method must declare formal parameters according to the following rules.
+
+- 인덱스화된 인자들은 반드시 처음에 선언되어야 한다.
+- aggregator는 그 다음에 선언되어야 한다.
+- ParameterResolver에 의해 제공되는 인자는 반드시 마지막에 선언되어야 한다.
+
+In this context, an indexed argument is an argument for a given index in the Arguments provided by an ArgumentsProvider that is passed as an argument to the parameterized method at the same index in the method’s formal parameter list. An aggregator is any parameter of type ArgumentsAccessor or any parameter annotated with @AggregateWith.
+
+### 인자 제공하기
+
+JUnit Jupiter는 몇 개의 source 어노테이션을 제공한다. 
+
+**@ValueSource**
+
+@ValueSource는 가장 심플한 소스다. 간단하게 하나의 배열로 값을 정의하며, 하나의 인자만 받는 파라미터화 테스트에만 적용할 수 있다.
+
+다음은 @ValueSource가 지원하는 타입의 목록이다.
+
+- Short
+- byte
+- int
+- long
+- float
+- double
+- char
+- boolean
+- java.lang.String
+
+예를 들어 다음의 @ParameterizedTest 메소드는 3번 호출 된다.
+
+```java
+@ParameterizedTest 
+@ValueSource(ints = { 1, 2, 3 }) 
+void testWithValueSource(int argument) {
+	assertTrue(argument > 0 && argument < 4); 
+}
+```
+
+**Null and Empty Sources**
+
