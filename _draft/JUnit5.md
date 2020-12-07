@@ -967,3 +967,9 @@ void testWithValueSource(int argument) {
 
 **Null and Empty Sources**
 
+잘못된 인풋이 들어올 수 있는 코너케이스(corner 케이스가 뭐지?) 확인하고 적절한 행동을 검증하기 위해서 파라미터화 테스트에 null 또는 빈 값을 제공해주는 것이 유용하다. 다음의 어노테이션은 null 과 빈 값을 제공해준다.
+
+- @NullSource : @ParameterizedTest 메소드에 null을 제공한다.
+- @EmptySource : 다음과 같은 타입 String ,List ,Set, Map, 프리미티브 배열 예) int[] ,char[] ..., 객체 배열 예) String[] ,Intger[] ... 같은 인자에 빈값을 제공한다.
+  - 지원되는 타입중에 서브타입들은 지원하지 않는다.
+- @NullAndEmptySource : 
