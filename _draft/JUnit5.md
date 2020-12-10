@@ -972,4 +972,36 @@ void testWithValueSource(int argument) {
 - @NullSource : @ParameterizedTest 메소드에 null을 제공한다.
 - @EmptySource : 다음과 같은 타입 String ,List ,Set, Map, 프리미티브 배열 예) int[] ,char[] ..., 객체 배열 예) String[] ,Intger[] ... 같은 인자에 빈값을 제공한다.
   - 지원되는 타입중에 서브타입들은 지원하지 않는다.
-- @NullAndEmptySource : 
+- @NullAndEmptySource : @NullSource 와 @EmptySource 기능들을 합친 어노테이션이다.
+
+만약 파라미터화 테스트로 다양한 빈 스트링을 제공해주고 싶다면 다음과 같이 사용하면 된다.
+
+```java
+@ValueSource(Strings = {" ", "    ", "\t", "\n"})
+```
+
+또한 null , 빈 값 , 빈 입력을 테스트 하고 싶으면, @NullSource, @EmptySoucre, @ValueSouce를 혼합해서 사용하면 된다.
+
+```java
+@ParameterizedTest 
+@NullSource 
+@EmptySource 
+@ValueSource(strings = { " ", " ", "\t", "\n" }) 
+void nullEmptyAndBlankStrings(String text) {
+  assertTrue(text == null || text.trim().isEmpty()); 
+}
+```
+
+이걸 더 요약하면 다음과 같이 작성하면 된다.
+
+```java
+@ParameterizedTest 
+@NullAndEmptySource
+@ValueSource(strings = { " ", " ", "\t", "\n" }) 
+void nullEmptyAndBlankStrings(String text) {
+  assertTrue(text == null || text.trim().isEmpty()); 
+}
+```
+
+> 위에 있는 nullEmptyAndBlankString(String) 파라미터화 테스트는 6번의 호출이 이루어진다. null과 빈 스트링, 그리고 @ValueSoucre에 적힌 4개의 String들이다.
+
