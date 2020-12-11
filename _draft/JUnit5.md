@@ -1005,3 +1005,62 @@ void nullEmptyAndBlankStrings(String text) {
 
 > 위에 있는 nullEmptyAndBlankString(String) 파라미터화 테스트는 6번의 호출이 이루어진다. null과 빈 스트링, 그리고 @ValueSoucre에 적힌 4개의 String들이다.
 
+**@EnumSource**
+
+@EnumSource는 Enum을 편리하게 사용하게 해 준다.
+
+```java
+@ParameterizedTest
+@EnumSource(ChronoUnit.class)
+void testWithEnumSource(TemporalUnit unit) {
+  assertNotNull(unit);
+}
+```
+
+value 속성은 선택이다. 생략하면 메소드에 선언된 첫번 째 타입 파라미터가 사용된다. enum 타입을 참조하지 않으면 테스트는 실패 한다. 위에 예제는 메소드 파라미터가 `TemporalUnit` 으로 선언되어 있기 때문에 value 속성이 필요하다. i.e. the interface implemented by ChronoUnit, which isn’t an enum type. Changing the method parameter type to ChronoUnit allows you to omit the explicit enum type from the annotation as follow
+
+```java
+@ParameterizedTest 
+@EnumSource 
+void testWithEnumSourceWithAutoDetection(ChronoUnit unit) {
+	assertNotNull(unit); 
+}
+```
+
+
+
+이 어노테이션은 어떤 상수를 사용할지 지정해주는 추가적인 name 속성을 사용할 수 있다. 생략하면 모든 상수가 사용된다.
+
+```java
+@ParameterizedTest
+@EnumSource(names = { "DAYS", "HOURS" })
+void testWithEnumSourceInclude(ChronoUnit unit) {
+  assertTrue(EnumSet.of(ChronoUnit.DAYS, ChronoUnit.HOURS).contains(unit)); 
+}
+```
+
+@EnumSource 어노테이션은 mode 라는 추가적인 속성을 제공하는데, 이 속성은 어떤 상수를 테스트 메소드에 넘길지, 섬세하게 조절할 수 있는 기능이 있다. 예를 들어, enum 상수 풀 이나 특정 정규식에서 다음과 같이 특정 name만을 제외할 수 있다.
+
+```java
+@ParameterizedTest 
+@EnumSource(mode = EXCLUDE, names = { "ERAS", "FOREVER" })
+void testWithEnumSourceExclude(ChronoUnit unit) { 
+  assertFalse(EnumSet.of(ChronoUnit.ERAS, ChronoUnit.FOREVER).contains(unit)); 
+}
+```
+
+
+
+```java
+@ParameterizedTest 
+@EnumSource(mode = MATCH_ALL, names = "^.*DAYS$")
+void testWithEnumSourceRegex(ChronoUnit unit) {
+  assertTrue(unit.name().endsWith("DAYS")); 
+}
+```
+
+
+
+**@MethodSource**
+
+@MethodSource는 하나 이상의 테스트 클래스 또는 외부 클래스 팩토리 메소드를 참조할 수 있다.
