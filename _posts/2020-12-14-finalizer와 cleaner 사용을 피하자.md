@@ -7,25 +7,19 @@ tags:
 - 이펙티브자바
 ---
 
-
-
-
-
-
-
-**객체 소멸자**
+## **객체 소멸자**
 
 자바는 두 가지 객체 소멸자를 제공한다. 그 중 **finalizer는 예측할 수 없고, 상황에 따라 위험할 수 있어 일반적으로 불필요하다.** 오동작, 낮은 성능, 이식성 문제의 원인이 되기도 한다. finalizer는 나름의 쓰임새가 몇 가지 있긴 하지만, 기본적으로 쓰지 말아야 한다. 그래서 자바 9에서 부터 finalizer는 deprecated 되었으며, **그 대안으로 cleaner를 제공하지만, cleaner는 finalizer보단 덜 위험하지만, 여전히 예측할 수 없고, 느리고, 일반적으로 불 필요하다.**
 
-**자원 회수**
+## **자원 회수**
 
 C++에서의 파괴자(destructor)는 특정 개체와 관련된 자원을 회수하는 보편적인 방법이다. 자바에서는 접근할 수 없게 된 객체를 회수하는 역할을 가비지 컬렉터가 담당하고, 개발자는 아무런 작업을 하지 않는다.
 
 C++의 파괴자는 비메모리 자원을 회수하는 용도로 사용하며, 자바에서는 try-wtih-resources와 try-finally를 사용하여 회수한다.
 
-**문제점**
+## **문제점**
 
-finalizer와 cleaner는 즉시 수행된단느 보장이 없다.  객체에 접근할 수 없게 된 후 finalizer나 cleaner가 실행되기까지 얼마나 걸릴지 알 수 없다. **즉 finalizer와 cleaner로는 제때 실행되어야 하는 작업은 절대 할 수 없다.** 예를 들어 파일 닫기를 finalizer와 cleaner에 맡기면 중대한 오류를 일으킬 수 있다. 시스템이 동시에 열 수 있는 파일 개수에 한계가 있어, 시스템이 finalizer나 cleaner 실행을 게을리해서 파일을 계속 열어둔다면, 새로운 파일을 열지 못해 프로그램이 실패할 수 있다.
+finalizer와 cleaner는 즉시 수행된다는 보장이 없다.  객체에 접근할 수 없게 된 후 finalizer나 cleaner가 실행되기까지 얼마나 걸릴지 알 수 없다. **즉 finalizer와 cleaner로는 제때 실행되어야 하는 작업은 절대 할 수 없다.** 예를 들어 파일 닫기를 finalizer와 cleaner에 맡기면 중대한 오류를 일으킬 수 있다. 시스템이 동시에 열 수 있는 파일 개수에 한계가 있어, 시스템이 finalizer나 cleaner 실행을 게을리해서 파일을 계속 열어둔다면, 새로운 파일을 열지 못해 프로그램이 실패할 수 있다.
 
 finalizer나 cleaner를 얼마나 신속히 수행할지는 전적으로 [가비지 컬렉터](https://donghyeon.dev/java/2020/03/31/%EC%9E%90%EB%B0%94%EC%9D%98-JVM-%EA%B5%AC%EC%A1%B0%EC%99%80-Garbage-Collection/) 알고리즘에 달려있으며, 이는 가비지 컬렉터 구현마자 천차 만별이다.
 
@@ -37,27 +31,29 @@ System.gc나 System.runFinalization 메서드에 현혹되지 말자. finalizer�
 
 **finalizer와 cleaner는 심각한 성능 문제도 동반한다**. AutoCloseable 인터페이스를 구현한 객체를 생성하고 가비지 컬렉터가 수거하기까지 12ns가 걸린 반면(try-with-resource 사용), finalizer와 cleaner를 사용하면 50배 가까이 느려진다. 
 
-**그렇다면 어디에 쓰는걸까?**
+## **그렇다면 어디에 쓰는걸까?**
 
-적절한 쓰임새는 두 가지 정도 있다. 하나는 자원의 소유자가 close 메서드를 호출하지 않는 것에 대비한 안전망 역할이다. cleaner나 finalizer가 즉시 호출되리라는 보장은 없지만, 클라이언트가 하지 않은 자원 회수를 늦게라도 해주는 것이 아예 안하는 것보다 낫다. 이런 안전망 역할의 finalizer를 작성할 때는 그럴만한 값어치가 있는지 심사숙고하자. 자바 라이브러리 중 FileInputStream, FileOutputStream, ThreadPoolExecutor가 대표적이다.
+적절한 쓰임새는 두 가지 정도 있다. 하나는 자원의 소유자가 **close 메서드를 호출하지 않는 것에 대비한 안전망 역할이다.** cleaner나 finalizer가 즉시 호출되리라는 보장은 없지만, 클라이언트가 하지 않은 자원 회수를 늦게라도 해주는 것이 아예 안하는 것보다 낫다. 이런 안전망 역할의 finalizer를 작성할 때는 그럴만한 값어치가 있는지 심사숙고하자. 자바 라이브러리 중 FileInputStream, FileOutputStream, ThreadPoolExecutor가 대표적이다.
 
-두 번째 예로 네이티브 피어와 연결된 객체에서다.
-
-
+**두 번째 예로 네이티브 피어와 연결된 객체에서다.** 네이티브 피어란 일반 자바 객체가 네이티브 메서드를 통해 기능을 위임한 네이티브 객체를 말한다. 네이티브 피어는 자바 객체가 아니기 때문에 가비지 컬렉터는 그 존재를 알지 못한다. 그 결과 자바 피어를 회수할 때 네이티브 객체까지 회수하지 못한다. cleaner나 finalizer가 나서서 처리하기에 적당한 작업이다. 단, 성능 저하를 감당할 수 있고 네이티브 피어가 심각한 자원을 가지고 있지 않을 때에만 해당 된다. 성능 저하를 감당할 수 없거나 네이티브 피어가 사용하는 자원을 즉시 회수해야 한다면 앞서 설명한 close 메서드를 사용해야 한다.
 
 > 네이티브 피어란?
->
-> **자바 네이티브 인터페이스**(Java Native Interface, JNI)는 [자바 가상 머신](https://ko.wikipedia.org/wiki/자바_가상_머신)(JVM)위에서 실행되고 있는 자바코드가 네이티브 응용 프로그램(하드웨어와 운영 체제 플랫폼에 종속된 프로그램들) 그리고 C, C++ 그리고 어샘블리 같은 다른 언어들로 작성된 라이브러리들을 호출하거나 반대로 호출되는 것을 가능하게 하는 프로그래밍 프레임워크이다.
 >
 > 예를 들어 JFrame은 자바 피어이다. 그러나 실제로 그래픽을 그릴 때, 네이티브 피어가 필요하다. 
 >
 > 그래서 JFrame에서 전부 삭제 할 때 dispose()를 호출하는 것이다.  네이티브 피어는 가비지 컬렉터가 손 댈 수 없는 영역이기 때문에, 명시적으로 네이티브 컴포넌트를 삭제해야한다.
 
+> 자바 네이티브 인터페이스란?
+>
+> **자바 네이티브 인터페이스**(Java Native Interface, JNI)는 [자바 가상 머신](https://ko.wikipedia.org/wiki/자바_가상_머신)(JVM)위에서 실행되고 있는 자바코드가 네이티브 응용 프로그램(하드웨어와 운영 체제 플랫폼에 종속된 프로그램들) 그리고 C, C++ 그리고 어샘블리 같은 다른 언어들로 작성된 라이브러리들을 호출하거나 반대로 호출되는 것을 가능하게 하는 프로그래밍 프레임워크이다.
 
+## Room 예제
+
+다음은 cleaner를 Room 클래스로 설명해보겠다. 방(room) 자원을 수거하기 전에 반드시 청소(clean)를 해야한다고 가정해보자.
+
+Room 클래스는 **AutoCloseable을** 구현한다. 
 
 ```java
-package demo;
-
 import java.lang.ref.Cleaner;
 
 public class Room implements AutoCloseable{
@@ -97,3 +93,35 @@ public class Room implements AutoCloseable{
 
 ```
 
+여기서 Room의 cleaner는 단지 **안전망**으로만 쓰였다. 클라이언트가 모든 Room 생성을 try-with-resources 블록으로 감쌌다면 자동 청소는 전혀 필요하지 않다.
+
+### Adult.java (방 청소가 반드시 수행 된다.)
+
+```java
+public class Adult {
+  public static void main(String[] args) {
+    try(Room myRoom = new Room(7)) {
+      System.out.println("안녕");
+    }
+  }
+}
+```
+
+
+
+### Teengager(방 청소가 될 수도 있고 안 될 수도 있다.)
+
+```java
+public class Teenager {
+  public static void main(String[] args) {
+    	new Room(99);
+      System.out.println("안녕");
+  }
+}
+```
+
+
+
+## 정리
+
+cleaner(자바 8까지는 finalizer)는 안전망 역할이나 중요하지 않은 네이티브 자원 회수용으로만 사용하자. 물론 이런 경우라도 불확실성과 성능 저하에 주의해야 한다.
