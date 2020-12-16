@@ -1064,3 +1064,22 @@ void testWithEnumSourceRegex(ChronoUnit unit) {
 **@MethodSource**
 
 @MethodSource는 하나 이상의 테스트 클래스 또는 외부 클래스 팩토리 메소드를 참조할 수 있다.
+
+ 테스트 클래스 안에 있는 팩토리 메서드는 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 테스트 클래스에 붙이지 않았으면, 반드시 static을 붙여줘야 하며 외부 클래스에 있는 팩토리 메서드는 반드시 static을 붙여줘야 한다. 게다가 이런 팩토리 메서드는 어떠한 인자도 갖지 않는다.
+
+각각의 팩토리 메서드는 반드시 인자의 stream을 만들며, stream안의 각각의 인자들은 @ParameterizedTest 가 붙은 메소드의 독립적인 호출에 대하여 물리적인 인자를 제공한다. 일반적으로 말하면 인자의 Stream으로 번역해주는 것이지만, 실제 구체적인 반환 타입은 다양한 형태를 가질 수 있다. 여기서의 stream은 JUnit이 Stream으로 변환할 수 있는 어떤 것이든 해당한다, 예를 들어, Stream, DoubleStream, LongStream, IntStream, Collection, Iterator, Iterable 객체배열, 원시배열 등이다. stream안에 "인자"는 인자의 인스턴스로 제공될 수 있다. an array of objects (e.g., Object[]), or a single value if the parameterized test method accepts a single argument.
+
+만약 하나의 파라미터만 필요하다면 다음과 같이 파라미터 타입의 인스턴스의 Stream을 리턴한다.
+
+```java
+@ParameterizedTest 
+@MethodSource("stringProvider") 
+void testWithExplicitLocalMethodSource(String argument) {
+  assertNotNull(argument); 
+}
+
+static Stream<String> stringProvider() {
+  return Stream.of("apple", "banana"); 
+}
+```
+
