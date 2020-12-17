@@ -1083,3 +1083,67 @@ static Stream<String> stringProvider() {
 }
 ```
 
+@MethodSource를 통해서 팩토리 메소드 이름을 명시적으로 제공해주지 않으면, @ParamterizedTest 메소드가 붙은 현재 테스트 메소드 이름을 기준으로 팩토리 메소드를 찾는다.
+
+```java
+@ParameterizedTest 
+@MethodSource void testWithDefaultLocalMethodSource(String argument) { 	
+  assertNotNull(argument); 
+}
+
+static Stream<String> testWithDefaultLocalMethodSource() { 
+  return Stream.of("apple", "banana"); 
+}
+```
+
+다음과 같이 DoubleStream, IntStream, LongStream의 프리미트 타입의 Stream도 지원한다
+
+```java
+@ParameterizedTest 
+@MethodSource("range") void testWithRangeMethodSource(int argument) {
+  assertNotEquals(9, argument); 
+}
+
+static IntStream range() {
+  return IntStream.range(0, 20).skip(10); 
+}
+```
+
+파라미터화 테스트 메소드가 여러개의 파라미터를 갖고 있으면 collection , stream , 인자인스턴스의 배열, 객체 배열을 리턴해야 한다. 
+
+arguments(Obejct)는 Arguments 인터페이스에 정의된 정적 팩토리 메소드 이다. arguments(Object)의 대안으로 Arguments.of(Object)를 사용할 수도 있다.
+
+```java
+@ParameterizedTest 
+@MethodSource("stringIntAndListProvider")
+void testWithMultiArgMethodSource(String str, int num, List<String> list) {
+	assertEquals(5, str.length());
+	assertTrue(num >=1 && num <=2);
+	assertEquals(2, list.size()); 
+}
+
+static Stream<Arguments> stringIntAndListProvider() { 
+  return Stream.of(
+    arguments("apple", 1, Arrays.asList("a", "b")),
+    arguments("lemon", 2, Arrays.asList("x", "y")) 
+  ); 
+}
+```
+
+외부에 있는 정적 팩토리 메소드를 사용하려면 메소드 이름을 구별할 수 있게 다음과 같이 전체를 적어줘야한다.
+
+```java
+import java.util.stream.Stream; 
+import org.junit.jupiter.params.ParameterizedTest; 
+import org.junit.jupiter.params.provider.MethodSource;
+class ExternalMethodSourceDemo {
+
+@ParameterizedTest 
+@MethodSource("example.StringsProviders#tinyStrings") 
+  void testWithExternalMethodSource(String tinyString) { // test with tiny string }
+
+}
+
+class StringsProviders { static Stream<String> tinyStrings() { return Stream.of(".", "oo", "OOO"); } }
+```
+
