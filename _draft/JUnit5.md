@@ -1227,4 +1227,90 @@ In contrast to the syntax used in @CsvSource, @CsvFileSource uses a double quote
 
 **@ArgumentsSource**
 
-@ArgumentsSource는
+@ArgumentsSource는 커스텀 또는 재사용가능한 ArgumentsProvider를 지정해 줄 때 사용한다. ArgumentsProvider의 구현은 반드시 클래스 탑 레벨에 선언하거나, 정적 중첩 클래스에 선언해야 한다. 
+
+```java
+@ParameterizedTest 
+@ArgumentsSource(MyArgumentsProvider.class) 
+void testWithArgumentsSource(String argument) {
+  assertNotNull(argument); 
+}
+```
+
+
+
+```java
+public class MyArgumentsProvider implements ArgumentsProvider {
+
+	@Override 
+  public Stream<? extends Arguments> provideArguments(ExtensionContext context) { 		
+    return Stream.of("apple", "banana").map(Arguments::of); 
+	}
+}
+```
+
+
+
+#### **인자 변환**
+
+**Widening 변환**
+
+@ParaterizedTest에 제공된 인자들은 Widening Primitive 변환을 지원한다. 예를 들어 @ValueSoue(ints = {1, 2, 3})이 적힌 파라미터화 테스트에서 int 타입 뿐만 아니라, long, float, double 타입들을 받을 수 있다. 
+
+**묵시적 변환**
+
+@CsvSource 같은 경우를 지원하기 위해 JUnit Jupiter는 내장된 많은 묵시적 변환기를 지원한다. 변환 프로세스는 각각의 메소드 파라미터에 선언된 타입에 달려있다. 
+
+예를 들어 만약 @ParameterizedTest가 TimeUnit 파라미터가 선언되어 있고, 외부에서 String 값으로 파라미터를 공급해준다고 했을 때, 이 공급되는 String은 자동적으로 일치하는 TimeUnit enum 상수로 변환된다. 
+
+```java
+@ParameterizedTest 
+@ValueSource(strings = "SECONDS") 
+void testWithImplicitArgumentConversion(ChronoUnit argument) { 						   			             assertNotNull(argument.name()); 
+}   
+```
+
+String 인스턴스는 묵시적으로 ChronoUnit인 타켓 타입으로 묵시적으로 변환된다.
+
+> 10진법, 16진법, 8진법 String 문자들은,byte,short,int,long 등 대응하는 타입으로 변환 된다.
+
+
+
+| Target Type      | Example                           |
+| ---------------- | --------------------------------- |
+| boolean/ Boolean | "true" → true                     |
+| byte/Byte       | "15", "0xF", or "017" → (byte) 15 |
+| char/Character  | "o" → 'o'                         |
+| short/Sh ort               | "15", "0xF", or "017" → (short) 15                           |
+| int/Inte ger               | "15", "0xF", or "017" → 15                                   |
+| long/Lon g                 | "15", "0xF", or "017" → 15L                                  |
+| float/Fl oat               | "1.0" → 1.0f                                                 |
+| double/D ouble             | "1.0" → 1.0d                                                 |
+| Enumsubclass               | "SECONDS" → TimeUnit.SECONDS                                 |
+| java.io. File              | "/path/to/file" → new File("/path/to/file")                  |
+| java.lan g.Class           | "java.lang.Integer" → java.lang.Integer.class (use $ for nested classes, e.g. "java.lang.Thread$State") |
+| java.lan g.Class           | "byte" → byte.class (primitive types are supported)          |
+| java.lan g.Class           | "char[]" → char[].class (array types are supported)          |
+| java.mat h.BigDec imal     | "123.456e789" → new BigDecimal("123.456e789")                |
+| java.mat h.BigInt eger     | "1234567890123456789" → new BigInteger("1234567890123456789") |
+| java.net .URI              | "https://junit.org/" → URI.create("https://junit.org/")      |
+| java.net .URL              | "https://junit.org/" → new URL("https://junit.org/")         |
+| java.nio .charset .Charset | "UTF-8" → Charset.forName("UTF-8")                           |
+| java.nio .file.Pa th       | "/path/to/file" → Paths.get("/path/to/file")                 |
+| java.tim e.Durati on       | "PT3S" → Duration.ofSeconds(3)                               |
+| java.tim e.Instan t        | "1970-01-01T00:00:00Z" → Instant.ofEpochMilli(0)             |
+| java.tim e.LocalD ateTime  | "2017-03-14T12:34:56.789" → LocalDateTime.of(2017, 3, 14, 12, 34, 56, 789_000_000) |
+| java.tim e.LocalD ate      | "2017-03-14" → LocalDate.of(2017, 3, 14)                     |
+| java.tim e.LocalT ime      | "12:34:56.789" → LocalTime.of(12, 34, 56, 789_000_000)       |
+| java.tim e.MonthD ay       | "--03-14" → MonthDay.of(3, 14)                               |
+| java.tim e.Offset DateTime | "2017-03-14T12:34:56.789Z" → OffsetDateTime.of(2017, 3, 14, 12, 34, 56, 789_000_000, ZoneOffset.UTC) |
+| java.tim e.Offset Time     | "12:34:56.789Z" → OffsetTime.of(12, 34, 56, 789_000_000, ZoneOffset.UTC) |
+| java.tim e.Period          | P2M6D" → Period.of(0, 2, 6)"                                 |
+| java.tim e.YearMo nth      | "2017-03" → YearMonth.of(2017, 3)                            |
+| java.tim e.Year            | "2017" → Year.of(2017)                                       |
+| java.tim e.ZonedD ateTime  | "2017-03-14T12:34:56.789Z" → ZonedDateTime.of(2017, 3, 14, 12, 34, 56, 789_000_000, ZoneOffset.UTC) |
+| java.tim e.ZoneId          | Europe/Berlin" → ZoneId.of("Europe/Berlin")"                 |
+| java.tim e.ZoneOf fset     | "+02:30" → ZoneOffset.ofHoursMinutes(2, 30)                  |
+| java.uti l.Curren cy       | "JPY" → Currency.getInstance("JPY")                          |
+| java.uti l.Locale          | en" → new Locale("en")"                                      |
+| java.uti l.UUID            | "d043e930-7b3b-48e3-bdbe-5a3ccfb833db" → UUID.fromString("d043e930-7b3b-48e3-bdbe- 5a3ccfb833db") |
