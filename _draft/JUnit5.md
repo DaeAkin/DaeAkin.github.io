@@ -1314,3 +1314,112 @@ String 인스턴스는 묵시적으로 ChronoUnit인 타켓 타입으로 묵시�
 | java.uti l.Curren cy       | "JPY" → Currency.getInstance("JPY")                          |
 | java.uti l.Locale          | en" → new Locale("en")"                                      |
 | java.uti l.UUID            | "d043e930-7b3b-48e3-bdbe-5a3ccfb833db" → UUID.fromString("d043e930-7b3b-48e3-bdbe- 5a3ccfb833db") |
+
+**Fallback String to-Object 변환** 
+
+또한 위에 있는 테이블에 있는 것 처럼 String 타입을 변환하려는 대상 타입으로 묵시적으로 변환할 수 있다. JUnit Jupiter는 만약 대상 타입이 아래에 적힌 것 처럼 정확히 하나의 팩토리 메소드 또는 팩토리 생성자에 알맞은 경우를 위해 String 타입을 자동적으로 변환해주는 fallback 메카니즘을 제공한다.
+
+- factory method : 접근자가 private가 아니여야함, static method declared in the target type that accepts a single String argument and returns an instance of the target type. The name of the method can be 55 arbitrary and need not follow any particular convention.
+- factory constructor : a non-private constructor in the target type that accepts a single String argument. Note that the target type must be declared as either a top-level class or as a static nested class
+
+> If multiple factory methods are discovered, they will be ignored. If a factory method and a factory constructor are discovered, the factory method will be used instead of the constructor.
+
+아래 예제에서, @ParameterizedTest 메소드에서, Book 인자는 Book.fromTitle(String) 팩토리 메소드가 호출될 때 생성되며, title의 값으로 "42 Cats" 전달 된다.
+
+```java
+@ParameterizedTest 
+@ValueSource(strings = "42 Cats") 
+void testWithImplicitFallbackArgumentConversion(Book book) { 
+	assertEquals("42 Cats", book.getTitle()); 
+}
+```
+
+**Book.java**
+
+```java
+public class Book {
+
+  private final String title;
+
+  private Book(String title) { 
+    this.title = title; 
+  } 
+  
+  public static Book fromTitle(String title) {
+		return new Book(title); 
+  }
+
+  public String getTitle() {
+    return this.title; 
+  }
+}
+```
+
+
+
+**명시적 변환**
+
+묵시적 인자 변환에 의존하는 대신, 아래의 예제와 같이 특정 파라미터에 @ConvertWith 어노테이션을 사용하여 ArgumentConverter를 명시적으로 지정해주면 된다. ArgumentConverter의 구현은 반드시 클래스 최상위 레벨에 선언하거나, 정적 중첩 클래스로 선언되야한다.
+
+```java
+@ParameterizedTest 
+@EnumSource(ChronoUnit.class) 
+void testWithExplicitArgumentConversion( 
+  @ConvertWith(ToStringArgumentConverter.class) String argument) {
+	assertNotNull(ChronoUnit.valueOf(argument));
+}
+```
+
+**ToStringArgumentConverter.java**
+
+```java
+public class ToStringArgumentConverter extends SimpleArgumentConverter {
+
+	@Override 
+  protected Object convert(Object source, Class<?> targetType) {
+    assertEquals(String.class, targetType, "Can only convert to String");
+    if (source instanceof Enum<?>) {
+      return ((Enum<?>) source).name(); 
+    }
+    return String.valueOf(source); 
+  }
+}
+```
+
+컨버터가 오직 타입을 다른 타입으로 변경하는거라면, 보일러플레이트 타입 체크를 줄이기 위해서 TypedArgumentConverter를 상속하면 된다.
+
+**ToLengthArgumentConverter.java**
+
+```java
+public class ToLengthArgumentConverter extends TypedArgumentConverter<String, Integer> 
+{
+
+  protected ToLengthArgumentConverter() {
+    super(String.class, Integer.class); 
+  }
+
+	@Override 
+  protected Integer convert(String source) {
+    return source.length(); 
+  }
+
+}
+```
+
+명시적 인자 컨버터는 테스트를 구현하거나, authors ?를  확장할 때 사용한다, 그러므로 junit-jupiter-params는 참조 구현(reference implementation)을 제공하는 JavaTimeArgumentConverter 오직 하나의 명시적 인자 컨버터만 제공한다. JavaTimeConversionPattern 어노테이션을 사용할 때 사용된다. 
+
+
+
+```java
+@ParameterizedTest 
+@ValueSource(strings = { "01.01.2017", "31.12.2017" }) 
+void testWithExplicitJavaTimeConverter( 
+  @JavaTimeConversionPattern("dd.MM.yyyy") LocalDate argument) {
+
+	assertEquals(2017, argument.getYear());
+}
+```
+
+
+
+**인자 수집**
