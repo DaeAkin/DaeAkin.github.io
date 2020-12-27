@@ -1422,4 +1422,70 @@ void testWithExplicitJavaTimeConverter(
 
 
 
-**인자 수집**
+#### **인자 수집**
+
+기본적으로 @ParameterizedTest 메소드에 제공되는 각각의 인자들은 하나의 메소드 파라미터와 일치한다. 결과적으로 많은 인자가 제공될 것이 예상 되는 인자 소스는 많은 메소드 시그니쳐를 낳게 된다.
+
+이런 경우때문에 `ArgumentsAccessor` 는 여러개의 파라미터를 대신하여 사용한다. 이 API를 사용하기 위해 테스트 메소드에 제공된 하나의 인자를 통해서 접근할 수 있다. 게다가 위에서 묵시적 변환에서 얘기한 것 처럼 타입 변환이 지원 된다.
+
+```java
+@ParameterizedTest 
+@CsvSource({
+  "Jane, Doe, F, 1990-05-20",
+  "John, Doe, M, 1990-10-22" 
+}) 
+void testWithArgumentsAccessor(ArgumentsAccessor arguments) {
+	Person person = new Person(arguments.getString(0),
+                             arguments.getString(1),
+                             arguments.get(2, Gender.class),
+                             arguments.get(3, LocalDate.class));
+
+	if (person.getFirstName().equals("Jane")) {
+    assertEquals(Gender.F, person.getGender()); 
+  } else {
+		assertEquals(Gender.M, person.getGender()); 
+  }
+  assertEquals("Doe", person.getLastName()); 
+  assertEquals(1990, 	person.getDateOfBirth().getYear());
+}
+```
+
+ArgumentsAccessor 인스턴스는 자동으로 ArgumentsAccessor 타입의 파라미터에 주입된다.
+
+
+
+**커스텀 수집**
+
+ArgumentsAccessor를 @ParameterizedTest 인자로 직접적으로 접근하는걸 제외하고, 커스텀하고, 재사용 가능한 수집기를 사용할 수 있다.
+
+커스텀 수집기를 사용하기 위해서 ArgumentsAggregator 인터페이스를 구현해서, @AggregateWith 어노테이션을 통해서 등록해야 한다. 
+
+Note that an implementation of ArgumentsAggregator must be declared as either a top-level class or as a static nested class.
+
+```java
+@ParameterizedTest 
+@CsvSource({
+  "Jane, Doe, F, 1990-05-20",
+  "John, Doe, M, 1990-10-22" 
+}) void testWithArgumentsAggregator(@AggregateWith(PersonAggregator.class) Person person) 
+{
+// perform assertions against person 
+}
+```
+
+
+
+```java
+public class PersonAggregator implements ArgumentsAggregator { 
+  @Override 
+  public Person aggregateArguments(ArgumentsAccessor arguments, ParameterContext context) {
+		return new Person(arguments.getString(0),
+                      arguments.getString(1),
+                      arguments.get(2, Gender.class),
+                      arguments.get(3, LocalDate.class));
+  }
+}
+```
+
+
+
