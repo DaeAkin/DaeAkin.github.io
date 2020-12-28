@@ -1489,3 +1489,97 @@ public class PersonAggregator implements ArgumentsAggregator {
 
 
 
+만약 @AggregateWith() 어노테이션이 파라미터화 테스트 메소드 여러 개에서 사용하고 있다면, 다음과 같이 커스텀 어노테이션을 만들어서 사용해 볼 수도 있다.
+
+```java
+@ParameterizedTest 
+@CsvSource({
+	"Jane, Doe, F, 1990-05-20",
+	"John, Doe, M, 1990-10-22" 
+}) 
+void testWithCustomAggregatorAnnotation(@CsvToPerson Person person) {
+// perform assertions against person 
+}
+```
+
+
+
+```java
+@Retention(RetentionPolicy.RUNTIME) 
+@Target(ElementType.PARAMETER) 
+@AggregateWith(PersonAggregator.class)
+public @interface CsvToPerson { }
+```
+
+
+
+#### DispalyName 커스텀 하기
+
+기본적으로 파라미터화 테스트 호출의 display name은 호출된 index와 특정 호출에 관련한 모든 인자를 나타내는 String으로 이루어져 있다. 각각 앞에 파라미터 변수 이름이 붙는다. 
+
+그러나 다음과 같이 name 속성을 이용해서 display name을 커스텀할 수 있다.
+
+```java
+@DisplayName("Display name of container") 
+@ParameterizedTest(name = "{index} ==> the rank of ''{0}'' is {1}") 
+@CsvSource({ "apple, 1", "banana, 2", "'lemon, lime', 3" }) 
+void testWithCustomDisplayNames(String fruit, int rank) { 
+}
+```
+
+이 테스트를 실행해보면 콘솔에 다음과 같이 찍힌다.
+
+```
+Display name of container ✔ 
+├─ 1 ==> the rank of 'apple' is 1 ✔ 
+├─ 2 ==> the rank of 'banana' is 2 ✔ 
+└─ 3 ==> the rank of 'lemon, lime' is 3 ✔
+```
+
+name 속성은 `MessageFormat` 패턴을 사용한다. 그래서 작은따옴표(')를 표현하기 위해 작은따옴표를 두번 썼다.
+
+다음은 display name을 커스텀 하기 위한 지원되는 placeholder 들이다.
+
+| Placeholder          | Description                                                  |
+| -------------------- | ------------------------------------------------------------ |
+| DisplayName          | 메소드의 이름을 나타낸다.                                    |
+| {index}              | 현재 호출된 인덱스를 나타낸다.                               |
+| {arguments}          | the complete, comma-separated arguments list                 |
+| {argumentsWithNames} | the complete, comma-separated arguments list with parameter names |
+| {0}, {1}, …          | 0번째 인자 1번째 인자..                                      |
+
+
+
+> When including arguments in display names, their string representations are truncated if they exceed the configured maximum length. The limit is configurable via the junit.jupiter.params.displayname.argument.maxlength configuration parameter and defaults to 512 characters.
+
+
+
+#### 생명주기와 상호작용성?(Interoperability) 
+
+@BeforeEach 메소드는 호출 전에 실행 되듯이, 파라미터화 테스트는 호출마다 @Test 메소드와 동일한 생명주기를 갖는다. 다이나믹 테스트와 비슷하게, 호출마다 테스트이 트리가 하나씩 IDE에 보여진다. 일반적인 @Test 메소드와 @ParamterizedTest 메소드를 같은 테스트 클래스안에 혼합해서 사용할 수 있다.
+
+@ParameterizedTest 메소드를 ParamterResolver를 확장해서 사용하지만, argument source에 의해 제공되는 메소드 파라미터들은 인자 리스트에 먼저 와야한다, 테스트 클래스가 
+
+
+
+ou may use ParameterResolver extensions with @ParameterizedTest methods. However, method parameters that are resolved by argument sources need to come first in the argument list. Since a test class may contain regular tests as well as parameterized tests with different parameter lists, values from argument sources are not resolved for lifecycle methods (e.g. @BeforeEach) and test class constructors.
+
+```java
+@BeforeEach void beforeEach(TestInfo testInfo) {
+
+// ...
+
+} @ParameterizedTest @ValueSource(strings = "apple") void testWithRegularParameterResolver(String argument, TestReporter testReporter) {
+
+testReporter.publishEntry("argument", argument); } @AfterEach void afterEach(TestInfo testInfo) {
+
+// ... }
+```
+
+
+
+### 테스트 템플릿
+
+@TestTemplate 메소드는 일반적인 테스트 케이스보단 테스트 케이스에 대한 템플릿 이다. 등록된 프로바이더가 리턴하는 컨텍스트 호출 수에 따라 여러번 호출 되도록 디자인 되었다. 그래서 반드시 등록된 TestTemplateInvocationContextProvider와 함 께 사용해야 한다. 테스트 템플릿 메소드의 각각의 호출은 일반적인 @Test 메소드처럼 실행된다. 
+
+> Repared Test와 Parameterized Test는 내장된 테스트 템플릿 중 하나이다.
