@@ -1583,3 +1583,25 @@ testReporter.publishEntry("argument", argument); } @AfterEach void afterEach(Tes
 @TestTemplate 메소드는 일반적인 테스트 케이스보단 테스트 케이스에 대한 템플릿 이다. 등록된 프로바이더가 리턴하는 컨텍스트 호출 수에 따라 여러번 호출 되도록 디자인 되었다. 그래서 반드시 등록된 TestTemplateInvocationContextProvider와 함 께 사용해야 한다. 테스트 템플릿 메소드의 각각의 호출은 일반적인 @Test 메소드처럼 실행된다. 
 
 > Repared Test와 Parameterized Test는 내장된 테스트 템플릿 중 하나이다.
+
+
+
+### Dynamic Test (동적 테스트)
+
+JUnit Jupiter의 @Test 어노테이션은 Junit 4의 @Test 어노테이션과 굉장히 유사하다. 둘다 테스트 케이스에 대한 내용이 메소드 안에 있다. 이런 테스트 케이스는 그 상태로 정적이며, 컴파일 시간에 정해지며, 런타임 시에도 아무 변화가 없다.  
+
+Junit Jupiter는 이 기본 테스트들에 대해 완전히 새로운 테스트 프로그래밍 모델을 소개 했다. 이 새로운 종류의 테스트는 @TestFactory 어노테이션이 붙은 팩토리 메소드에 의해 런타임시 만들어지는 동적 테스트이다.
+
+@Test 어노테이션을 사용하는 메소드와 반대로, @TestFactory 메소드는 그 자체로 테스트는 아니며, 팩토리 메소드가 테스트 케이스다. 그래서, 동적 테스트는 팩토리의 제품이다. 기술적으로 말하자면, @TestFactory 메소드는 반드시 하나의 DynamicNode나, Stream,Collection,Interable,Interator 나 DynamicNode 인스턴스의 배열을 리턴해야 한다. DynamicContainer 인스턴스는 dispalyName과랜덤으로 dynamic node의 중첩 계층을 만들 수 있는 동적 자식 노드의 리스트로 이루어져 있다. DynamicTest 인스턴스는 lazy 실행되어 테스트 케이스의 동적 생성과 비 결정적(non-deterministic) 생성이 가능하다.
+
+@TestFactory 가 리턴하는 Stream은 stream.close()을 호출해서 닫아줘야 Files.lines() 같은 리소스를 안전하게 사용할 수 있다.
+
+@Test 메소드를 같이 쓰려면,  @TestFactory를 반드시 private나  static으로 선언하면 안되며, 선택적으로 ParameterResolver에서 파라미터를 제공해주는 걸 사용할 수 있다.
+
+그래서 DynamicTest는 런타임시 만들어지는 테스트케이스를 말한다. displayname과  A DynamicTest is a test case generated at runtime. It is composed of a display name and an Executable. Executable is a @FunctionalInterface which means that the implementations of dynamic tests can be provided as lambda expressions or method references.
+
+> 동적 테스트 생명주기
+>
+> 동적 테스트의 생명주기는 @Test 어노테이션과는 좀 다르다. 특히 콜백 라이플 사이클이 존재하지 않는데, @BeforeEach 와 @AfterEach 메소드는 @TestFactory 메소드에서는 실행하는데, 각각의 동적테스트에 대해서는 실행하지 않는다. 다른 말로, 동적테스트 관한 람다 표현식안의 테스트 인스턴스의 필드에 접근하기위해서 해당 필드는 초기화 되지 않는 다는 말이다. 
+
+JUnit Jupiter 5.7.0이 되면서 동적 테스트는 반드시 항상 factory 메소드가 만들어야 한다. 그러나 
