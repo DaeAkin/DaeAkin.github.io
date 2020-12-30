@@ -1604,4 +1604,181 @@ Junit Jupiter는 이 기본 테스트들에 대해 완전히 새로운 테스트
 >
 > 동적 테스트의 생명주기는 @Test 어노테이션과는 좀 다르다. 특히 콜백 라이플 사이클이 존재하지 않는데, @BeforeEach 와 @AfterEach 메소드는 @TestFactory 메소드에서는 실행하는데, 각각의 동적테스트에 대해서는 실행하지 않는다. 다른 말로, 동적테스트 관한 람다 표현식안의 테스트 인스턴스의 필드에 접근하기위해서 해당 필드는 초기화 되지 않는 다는 말이다. 
 
-JUnit Jupiter 5.7.0이 되면서 동적 테스트는 반드시 항상 factory 메소드가 만들어야 한다. 그러나 
+JUnit Jupiter 5.7.0이 되면서 동적 테스트는 반드시 항상 factory 메소드가 만들어야 한다. however, this might be complemented by a registration facility in a later release.
+
+#### 동적 테스트 예제
+
+다음의 DynamicTestsDemo 클래스는 동적 테스트의 예제를 보여준다.
+
+첫번 째 메소드는 유효하지 않은 타입을 반환한다. 유효하지 하지 않는 타입을 리턴하는건 컴파일 시에 알수 없고 런타임시에 알 수 있기 때문에, 발견되면 JUnitException을 던진다.
+
+다음 5개의 메소드는 DynamicTest 인스턴스의 Collection, Iterable, Iterator, Stream을 만드는 간단한 예제이다. 대부분의 예제는 동적 동작을 제대로 보여주진 않고, 그저 규칙에 맞게 지원되는 리턴 타입을 반환하기만 한다. 그러나 dynamicTestFromStream() 과 dynamicTestsFromIntStream()은 주어진 string의 set과 인풋 숫자의 범위로 동적 테스트를 얼마나 쉽게 만드는지 보여준다.
+
+그 다음 메소드는 정말로 다이나믹하다. generateRandomNumberOfTests()는 랜덤 숫자를 만드는 Iterator, display name generator, test executor를 만들어, 이 세개를 DynamicTest.stream()에게 제공한다.  generateRandomNumberOfTests()의 비 결정적(non-deterministic) 동작 때문에 반복되는 테스트와 충돌은 날수 있기 때문에 사용에 주의 해야 한다. 동적 테스트는 표현력이 뛰어나다.
+
+그 다음 메소드는 유연셩 측면에서 generateRandomNumberOfTests()와 비슷하다. 
+
+```java
+package dev.donghyeon.junitstudy.dynamic;
+
+import static dev.donghyeon.junitstudy.StringUtils.isPalindrome;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+
+import dev.donghyeon.junitstudy.Calculator;
+import org.junit.jupiter.api.DynamicNode;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.function.ThrowingConsumer;
+
+class DynamicTestsDemo {
+
+    private final Calculator calculator = new Calculator();
+
+    // This will result in a JUnitException!
+    @TestFactory
+    List<String> dynamicTestsWithInvalidReturnType() {
+        return Arrays.asList("Hello");
+    }
+
+    @TestFactory
+    Collection<DynamicTest> dynamicTestsFromCollection() {
+        return Arrays.asList(
+                dynamicTest("1st dynamic test", () -> assertTrue(isPalindrome("madam"))),
+                dynamicTest("2nd dynamic test", () -> assertEquals(4, calculator.multiply(2, 2)))
+        );
+    }
+
+    @TestFactory
+    Iterable<DynamicTest> dynamicTestsFromIterable() {
+        return Arrays.asList(
+                dynamicTest("3rd dynamic test", () -> assertTrue(isPalindrome("madam"))),
+                dynamicTest("4th dynamic test", () -> assertEquals(4, calculator.multiply(2, 2)))
+        );
+    }
+
+    @TestFactory
+    Iterator<DynamicTest> dynamicTestsFromIterator() {
+        return Arrays.asList(
+                dynamicTest("5th dynamic test", () -> assertTrue(isPalindrome("madam"))),
+                dynamicTest("6th dynamic test", () -> assertEquals(4, calculator.multiply(2, 2)))
+        ).iterator();
+    }
+
+    @TestFactory
+    DynamicTest[] dynamicTestsFromArray() {
+        return new DynamicTest[]{
+                dynamicTest("7th dynamic test", () -> assertTrue(isPalindrome("madam"))),
+                dynamicTest("8th dynamic test", () -> assertEquals(4, calculator.multiply(2, 2)))
+        };
+    }
+
+    @TestFactory
+    Stream<DynamicTest> dynamicTestsFromStream() {
+
+        return Stream.of("racecar", "radar", "mom", "dad")
+                .map(text -> dynamicTest(text, () -> assertTrue(isPalindrome(text))));
+    }
+
+    @TestFactory
+    Stream<DynamicTest> dynamicTestsFromIntStream() {
+
+        // Generates tests for the first 10 even integers.
+        return IntStream.iterate(0, n -> n + 2).limit(10).mapToObj(n -> dynamicTest("test" + n, () -> assertTrue(n % 2 == 0)));
+
+    }
+
+    @TestFactory
+    Stream<DynamicTest> generateRandomNumberOfTestsFromIterator() {
+
+        // Generates random positive integers between 0 and 100 until
+        // a number evenly divisible by 7 is encountered.
+        Iterator<Integer> inputGenerator = new Iterator<Integer>() {
+            Random random = new Random();
+            int current;
+
+            @Override
+            public boolean hasNext() {
+                current = random.nextInt(100);
+                return current % 7 != 0;
+            }
+
+            @Override
+            public Integer next() {
+                return current;
+            }
+
+        };
+        // Generates display names like: input:5, input:37, input:85, etc.
+        Function<Integer, String> displayNameGenerator = (input) -> "input:" + input;
+        // Executes tests based on the current input value.
+        ThrowingConsumer<Integer> testExecutor = (input) -> assertTrue(input % 7 != 0);
+
+        // Returns a stream of dynamic tests.
+
+        return DynamicTest.stream(inputGenerator, displayNameGenerator, testExecutor);
+
+    }
+
+    @TestFactory
+    Stream<DynamicTest> dynamicTestsFromStreamFactoryMethod() {
+
+        // Stream of palindromes to check
+        Stream<String> inputStream = Stream.of("racecar", "radar", "mom", "dad");
+
+        // Generates display names like: racecar is a palindrome
+        Function<String, String> displayNameGenerator = text -> text + " is a palindrome";
+
+        // Executes tests based on the current input value.
+        ThrowingConsumer<String> testExecutor = text -> assertTrue(isPalindrome(text));
+
+        // Returns a stream of dynamic tests.
+        return DynamicTest.stream(inputStream, displayNameGenerator, testExecutor);
+
+    }
+
+    @TestFactory
+    Stream<DynamicNode> dynamicTestsWithContainers() {
+
+        return Stream.of("A", "B", "C")
+                .map(input -> dynamicContainer("Container " + input, Stream.of(
+                        dynamicTest("not null", () -> assertNotNull(input)),
+                        dynamicContainer("properties", Stream.of(
+                                dynamicTest("length > 0", () -> assertTrue(input.length() > 0)),
+                                dynamicTest("not empty", () -> assertFalse(input.isEmpty()))
+                        ))
+                )));
+    }
+
+    @TestFactory
+    DynamicNode dynamicNodeSingleTest() {
+        return dynamicTest("'pop' is a palindrome", () -> assertTrue(isPalindrome("pop")));
+    }
+
+    @TestFactory
+    DynamicNode dynamicNodeSingleContainer() {
+        return dynamicContainer("palindromes",
+                Stream.of("racecar", "radar", "mom", "dad")
+                        .map(text -> dynamicTest(text, () -> assertTrue(isPalindrome(text)))
+                ));
+    }
+
+}
+
+```
+
