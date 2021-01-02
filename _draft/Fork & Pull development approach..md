@@ -12,8 +12,6 @@ fork and pull 모델은 누구나 오픈소스 저장소를 fork를 한 다음 �
 
 만약 shared 저장소 모델(저장소에 직접적인 접근이 가능한 경우)인 경우 collaborator 들은 저장소에 대한 push 권한을 얻어야 하며, 수정사항 마다 새로운 브랜치를 만들어 작업한다. 
 
-In the *shared repository model*, collaborators are granted push access to a single shared repository and topic branches are created when changes need to be made. Pull requests are useful in this model as they initiate code review and general discussion about a set of changes before the changes are merged into the main development branch. This model is more prevalent with small teams and organizations collaborating on private projects.
-
 ## Fork 하기
 
 가장 먼저 해야할 일은 내가 협력하고 싶은 저장소를 Fork 하는 것이다. Fork는 하는 방법은 간단하다. Fork 하려는 저장소에 가서, Fork 버튼만 누르면 자동으로 된다.
@@ -52,7 +50,7 @@ git branch -va
 이제 내 저장소의 master 브랜치에서, 업스트림에 있는 master 브랜치로 병합을 해보자.
 
 ```
-# master 브랜치로 Checkout 하고 upstream으로 merge 하기
+# master 브랜치로 Checkout 하고 upstream에서 merge 하기
 git checkout master
 git merge upstream/master
 ```
@@ -171,6 +169,3 @@ git branch -d newfeature
 
 
 
-
-
-https://juliendubreuil.fr/blog/development/collaborative-development-model-git-pull-requests/
