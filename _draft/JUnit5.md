@@ -1616,7 +1616,9 @@ JUnit Jupiter 5.7.0이 되면서 동적 테스트는 반드시 항상 factory �
 
 그 다음 메소드는 정말로 다이나믹하다. generateRandomNumberOfTests()는 랜덤 숫자를 만드는 Iterator, display name generator, test executor를 만들어, 이 세개를 DynamicTest.stream()에게 제공한다.  generateRandomNumberOfTests()의 비 결정적(non-deterministic) 동작 때문에 반복되는 테스트와 충돌은 날수 있기 때문에 사용에 주의 해야 한다. 동적 테스트는 표현력이 뛰어나다.
 
-그 다음 메소드는 유연셩 측면에서 generateRandomNumberOfTests()와 비슷하다. 
+그 다음 메소드는 유연셩 측면에서 generateRandomNumberOfTests()와 비슷하다. 그러나 dynamicTestsFromStreamFactoryMethod()는  DynamicTest.stream 팩토리 메소드를 통해서 다이나믹 테스트의 stream을 만들어낸다.
+
+증명하기 위해서, dynamicNodeSingleTest()메소드는 stream 대신 하나의 DynamicTest를 만든다. the dynamicNodeSingleContainer() method generates a nested hierarchy of dynamic tests utilizing DynamicContainer.
 
 ```java
 package dev.donghyeon.junitstudy.dynamic;
@@ -1782,3 +1784,64 @@ class DynamicTestsDemo {
 
 ```
 
+
+
+#### 다이나믹 URI 테스트 
+
+2.17.2. URI Test Sources for Dynamic Tests
+
+The JUnit Platform provides TestSource, a representation of the source of a test or container used to navigate to its location by IDEs and build tools.
+
+The TestSource for a dynamic test or dynamic container can be constructed from a java.net.URI which can be supplied via the DynamicTest.dynamicTest(String, URI, Executable) or DynamicContainer.dynamicContainer(String, URI, Stream) factory method, respectively. The URI will be converted to one of the following TestSource implementations.
+
+ClasspathResourceSource
+
+If the URI contains the classpath:/test/foo.xml?line=20,column=2.
+
+classpath
+
+scheme — for
+
+example,
+
+DirectorySource
+
+If the URI represents a directory present in the file system.
+
+66 FileSource
+
+If the URI represents a file present in the file system.
+
+MethodSource
+
+If the URI contains the method scheme and the fully qualified method name (FQMN) — for example, method:org.junit.Foo#bar(java.lang.String, java.lang.String[]). Please refer to the Javadoc for DiscoverySelectors.selectMethod(String) for the supported formats for a FQMN.
+
+UriSource
+
+If none of the above TestSource implementations are applicable.
+
+### Timeouts
+
+@Timeout 어노테이션은 테스트, 테스트 팩토리, 테스트 템플릿 , 라이프사이클 메소드에 선언하며, 주어진 시간 동안 실행시간이 초과하면 실패하게 된다. 기본 단위는 seconds(초)이지만, 따로 설정도 가능하다.
+
+다음이 예제는 @Timeout이 라이프사이클 메서드와, 테스트 메서드에 사용된 모습이다.
+
+```java
+class TimeoutDemo {
+
+    @BeforeEach
+    @Timeout(5)
+    void setUp() {
+        // fails if execution time exceeds 5 seconds
+    }
+
+    @Test
+    @Timeout(value = 100, unit = TimeUnit.MILLISECONDS)
+    void failsIfExecutionTimeExceeds100Milliseconds() {
+        // fails if execution time exceeds 100 milliseconds
+    }
+
+}
+```
+
+assertTimeoutPreempti
