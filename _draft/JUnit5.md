@@ -1926,3 +1926,43 @@ Table 1. Example timeout configuration parameter values
 #### Polling Test에 @Timeout 사용하기
 
 비동기 코드를 다뤄야 할 때  검증을 하기 전에, 어떤 일이 생기기를 기다리는 poll 테스트를 작성하는 것이 일반적이다. 어떤 경우에는 CountDownLatch나 다른 동기화 메카니즘으로 로직을 재작성 해야 한다. 그러나 때때로 불가능할 수도 있다. 예를 들어, 테스트에 있는 대상이 외부에 있는 메세지 브로커로 채널에 메세지를 전송하면, 메세지가 성공적으로 채널로 전달될 때 까지 검증을 수행하지 못한다. 이와 같은 비동기 테스트에는 비동기 메시지가 성공적으로 전달되지 않는 경우와 같이 무기한 실행하여 테스트 모음이 중단되지 않도록 특정 형태의 시간 제한이 필요하다.
+
+폴링하는 비동기 테스트에 대한 제한 시간을 구성하여 테스트가 무기한 실행되지 않도록 할 수 있다. 다음의 예제는 @Timeout 어노테이션을 이용한 예제다. 
+
+```java
+@Test
+@Timeout(5)  // 최대 5초동안 실행
+void pollUntil() throws InterruptedException {
+  while (asynchronousResultNotAvailable()) {
+    Thread.sleep(250); // 폴링 시간 설정
+  }
+  // 비동기 결과를 얻어서 검증을 실행
+}
+```
+
+> 폴링 간격을 컨트롤하거나, 비동기 테스트를 유연하게 하고 싶으면 [Awaitility](https://github.com/awaitility/awaitility) 를 사용해보는 걸 추천한다.
+
+#### 전체적으로 @Timout 비활성화하기
+
+테스트를 디버그모드로 돌릴 때, 고정된 타임아웃 제한은 테스트결과에 영향이 있을 수 있다. 예를 들어 모든 검증이 성공했음에도 테스트가 실패할 수 있다.
+
+Junit jupiter는 junit.jupiter.execution.timeout.mode 설정 파라미터를 지원해서 원할 때 enabled, disabled, disabled_on_debug 세가지 모드로 변경할 수 있다. 기본 값은 enabled 이다. VM 런타임이 인풋 파라미터가 -agentlib:jdwp로 시작하는 파라미터가 있으면 디버그 모드로 실행된다. 
+
+### 병렬적 실행
+
+> 병렬적 실행은 experimental 기능이다.
+
+기본적으로 테스트들은 싱글스레드안에서 순차적으로 실행된다. 테스트를 병렬적으로 실행하면, 테스트 실행 속도가 빨라진다. 이 기능은 5.3부터 지원한다. 병렬적 실행을 활성화 하려면 junit.jupiter.execution.parallel.enabled 설정 파라미터를 true로 설정하면 된다. 
+
+위에서 파라미터를 true로 설정한 것은 첫번 째 단계이며, true로 설정해도 테스트는 기본적으로 순차적으로 실행 될 것이다. 이는 테스트 트리의 노드가 동시에 실행되는지 여부에 따라 실행 모드가 제어 된다. 다음의 두 가지 모드가 사용 가능 하다.
+
+**SAME_THREAD**
+
+부모가 사용하던 스레드를 사용한다. 예를 들어, 테스트 메소드를 사용할 때, 테스트 메소드는 @BeforeAll이나 @AfterAll 메소드가 사용하던 스레드를 같이 사용 한다..
+
+**CONCURRENT**
+
+리소스 잠금이 동일한 스레드에서 강제 실행하지 않는 한 동시에 실행한다.
+
+기본적으로 테스트 트리에 있는 노드는 SAME_THREAD를 사용한다. junit.jupiter.execution.parallel.mode.default 설정 파라미터를 사용하면 기본값을 바꿀 수 있다. 아니면, @Execution 어노테이션을 사용해서 해당
+
