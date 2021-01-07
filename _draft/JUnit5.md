@@ -1964,5 +1964,40 @@ Junit jupiter는 junit.jupiter.execution.timeout.mode 설정 파라미터를 지
 
 리소스 잠금이 동일한 스레드에서 강제 실행하지 않는 한 동시에 실행한다.
 
-기본적으로 테스트 트리에 있는 노드는 SAME_THREAD를 사용한다. junit.jupiter.execution.parallel.mode.default 설정 파라미터를 사용하면 기본값을 바꿀 수 있다. 아니면, @Execution 어노테이션을 사용해서 해당
+기본적으로 테스트 트리에 있는 노드는 SAME_THREAD를 사용한다. junit.jupiter.execution.parallel.mode.default 설정 파라미터를 사용하면 기본값을 바꿀 수 있다. 아니면, @Execution 어노테이션을 사용해서 독립적으로 해당 테스트 또는 클래스만 실행모드를 변경할 수 있다.
 
+모든 테스트를 병렬적으로 실행하는 파라미터 설정이다.
+
+```
+junit.jupiter.execution.parallel.enabled = true junit.jupiter.execution.parallel.mode.default = concurrent
+```
+
+기본 실행 모드는 Lifecycle.PER_CLASS 모드 또는 MethodOrderer를 사용하는 테스트 클래스르 제외하고 테스트 트리의 모든 노드에 적용 된다. Lifecycle.PER_CLASS의 경우 테스트 작성자는 테스트 클래스가 스레드로부터 안전한지 확인해야 한다. MethodOrderer 경우, 동시 실행이 구성된 실행순서와 충돌할 수 있다. 따라서 두 경우 모두 이러한 테스트 클래스의 테스트 메서드는 @Execution(CONCURRENT)주석이 테스트 클래스 또는 메서드에 있는 경우에만 병렬적으로 실행된다.
+
+CONCURRENT 실행 모드로 구성된 테스트 트리의 모든 노드는 선언적 동기화 메커니즘을 관찰하면서 제공된 구성에 따라 완전히 병렬로 실행된다. Please note that Capturing Standard Output/Error needs to be enabled separately.
+
+추가적으로 junit.jupiter.execution.parallel.mode.classes.default 설정 파라미터를 클래스 최상단에 설정할 수 있다. 이 설정을 위에 설정해준거랑 같이 써주면 병렬적으로 실행되지만, 메소드들은 같은 스레드에서 실행된다.
+
+```
+junit.jupiter.execution.parallel.enabled = true junit.jupiter.execution.parallel.mode.default = same_thread junit.jupiter.execution.parallel.mode.classes.default = concurrent
+```
+
+이와 반대적인 설정은, 하나의 클래스의 모든 메소드는 병렬적으로 실행되지만, 최상위 클래스는 순차적으로 실행된다.
+
+```
+junit.jupiter.execution.parallel.enabled = true junit.jupiter.execution.parallel.mode.default = concurrent junit.jupiter.execution.parallel.mode.classes.default = same_thread
+```
+
+![스크린샷 2021-01-07 오전 8.44.54](/Users/donghyeonmin/Library/Application Support/typora-user-images/스크린샷 2021-01-07 오전 8.44.54.png)
+
+If the junit.jupiter.execution.parallel.mode.classes.default configuration parameter is explicitly set, the value for junit.jupiter.execution.parallel.mode.default will be used instead.
+
+
+
+#### 설정
+
+`ParallelExecutionConfigurationStrategy` 을 이용하여 원하는 병렬과, 최대 풀 사이즈의 프로퍼티들을 설정할 수 있다. dynamic과 fixed 두개의 구현을 제공한다. 아니면 커스텀해서 사용해도 된다.
+
+사용하고 싶은 구현을 선택하려면 junit.jupiter.execution.parallel.config.strategy 설정 파라미터를 사용해야 한다.
+
+**dynamic**
