@@ -78,3 +78,74 @@ System.out.println(treeSet.size());  // 1
 
 
 
+## CompareTo 구현
+
+compareTo 메서드는 각 필드가 동치인지를 비교하는게 아니라 그 순서를 비교한다. 객체 참조 필드를 비교하려면 compareTo 메서드를 재귀적으로 호출한다. Comparable을 구현하지 않은 필드나 표쥰이 아닌 순서로 비교해야 한다면 비교자(Comparator)를 대신 사용한다. 비교자는 직접 만들거나 자바가 제공하는 것 중에 골라 쓰면 된다. 
+
+우리가 [eqauls](https://donghyeon.dev/%EC%9D%B4%ED%8E%99%ED%8B%B0%EB%B8%8C%EC%9E%90%EB%B0%94/2021/01/04/eqauls%EB%A5%BC-%EC%9E%AC%EC%A0%95%EC%9D%98-%ED%95%98%EB%8A%94-%EB%B0%A9%EB%B2%95/)에서 다뤘던 예제 인 **CaseInsensitiveString** 을 예로 들어 보겠다.
+
+```java
+public class CaseInsensitiveString implements Comparable<CaseInsensitiveString>{
+    private final String s;
+
+    @Override
+    public int compareTo(CaseInsensitiveString cis) {
+        return String.CASE_INSENSITIVE_ORDER.compare(s,cis.s);
+    }
+}
+```
+
+CaseInsensitiveString은 자바가 제공하는 비교자를 사용하고 있다.
+
+
+
+#### 기본 타입 필드가 여러개 일 때
+
+기본 타입 필드가 여럿일 때는 어떻게 해야 할까? 다음과 같이 3개의 필드를 갖고 있는 PhoneNumber 클래스는 다음과 같이 구현 한다.
+
+**PhoneNumber**
+
+```java
+package test;
+
+public class PhoneNumber implements Comparable<PhoneNumber>{
+    private short areaCode;
+    private short prefix;
+    private short lineNum;
+
+    @Override
+    public int compareTo(PhoneNumber pn) {
+        int result = Short.compare(areaCode,pn.areaCode); // 가장 중요한 필드
+        if(result == 0) {
+            result = Short.compare(prefix,pn.prefix); //두 번째로 중요한 필드
+            if(result == 0) 
+                result = Short.compare(lineNum,pn.lineNum); // 세 번째로 중요한 필드
+        }
+        return result;
+    }
+}
+```
+
+그러나 자바 8부터 메서드 연쇄 방식으로 비교자를 생성할 수 있게 되어서 더욱 간결하게 코드를 짤 수 있다.
+
+```java
+private static final Comparator<PhoneNumber> COMPARATOR =
+  Comparator.comparingInt((PhoneNumber pn) -> pn.areaCode)
+  .thenComparingInt(pn -> pn.prefix)
+  .thenComparingInt(pn -> pn.lineNum);
+
+@Override
+public int compareTo(PhoneNumber pn) {
+  return COMPARATOR.compare(this,pn);
+}
+```
+
+그러나 이 방식은 간결하지만, 10%정도의 성능이 저하가 존재한다.
+
+## 주의 할점
+
+예전에는 compareTo 메서드에서 정수 기본 타입 필드를 비교 할 때는 관계 연산자인 < 와 >를, 실수 기본 타입 필드를 비교할 때는 정적 메서드인 Double.comprae와 Float.compare를 사용하라고 권했다. 그런대 자바 7 부터는 상황이 변했다. 박싱된 기본 타입 클래스들에 새로 추가된 정적 메서드인 compare를 이용하면 된다. **compareTo 메서드에서 관계 연산자 <와 >을 사용하는 이전 방식은 거추장스럽고 오류를 유발하니, 이제는 추천하지 않는다.**
+
+## 정리
+
+순서를 고려해야 하는 값 클래스를 작성한다면 꼭 Comparable 인터페이스를 구현하여, 그 인스턴스들을 쉽게 정렬하고, 검색하고, 비교 기능을 제공하는 컬렉션과 어우러지도록 해야 한다. compareTo 메서드에서 필드의 값을 비교할 때 < 와 > 연산자는 쓰지 말아야 한다. 그 대신 박싱된 기본 타입 클래스가 제공하는 정적 compare 메서드나 Comparetor 인터페이스가 제공하는 비교자 생성 메서드를 사용하자.
