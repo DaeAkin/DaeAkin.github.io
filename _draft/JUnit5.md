@@ -2001,3 +2001,81 @@ If the junit.jupiter.execution.parallel.mode.classes.default configuration param
 사용하고 싶은 구현을 선택하려면 junit.jupiter.execution.parallel.config.strategy 설정 파라미터를 사용해야 한다.
 
 **dynamic**
+
+junit.jupiter.execution.paralle.config.dynamic.factor 설정 파라미터에 설정된 값과 사용가능한 프로세스/ 코어 수를 곱하여 원하는 병렬 처리를 계산한다. (기본 값은 1)
+
+**fixed**
+
+필수적인 junit.jupiter.execution.parallel.config.fixed.parallelism 설정 파라미터를 원하는 병렬 처리로 사용 한다.
+
+**custom**
+
+필수적인 junit.jupiter.execution.parallel.config.custom.class 설정 파라미터를 통해 사용자 지정 ParallelExecutionConfigurationStrategy 구현을 지정하여 원하는 설정을 결정한다.
+
+만약 어떠한 전략도 설정되지 않았으면, factor 1을 가진 dynamic 설정을 이용한다. 그렇게 되면, 병렬 구성은 프로세서/코어의 사용 가능한 수로 사용된다.
+
+> 병렬처리는 최대 동시 스레드 수를 의미 하지 않는다.
+>
+> Junit은 동시에 실행되는 테스트의 수가 설정된 병렬 처리를 초과하지 않을 것이라고 보장하지 않는다. 예를 들어 다음 세션에서 살펴 볼 동기화 메카니즘 중 하나인 ForkJoinPool을 사용할 때 그 뒤에는 충분한 병렬 처리로 실행이 계속 되도록 추가 스레드를 생성 한다. 따라서 테스트 클래스에서 이러한 보장이 필요한 경우 동시성을 제어하는 자체 수단을 사용해야 한다.
+
+
+
+#### 동기화(Synchronization)
+
+@Execution 어노테이션을 이용해서 실행 모드를 컨트롤 하기 위해, Junit은 또 다른 어노테이션 기반 선언적 동기화 메카니즘을 제공한다. @ResourceLock 어노테이션은 테스트 클래스나 메서드에 선언할 수 있으며, 안정적인 테스트 실행 보장하기 위해 동기화된 접근이 필요한 특정 공유 자원에 사용한다.
+
+공유 자원은 String타입으로 유일한 이름을 갖도록하여 식별한다. 이름은 사용자가 정의하거나, Resources 안에 미리 선언된 SYSTEM_PROPERTIES, SYSTEM_OUT, SYSTEMERR, LOCALE, TIME_ZONE을 사용할 수 있다.
+
+만약 아래의 테스트가 @ResourceLock 어노테이션 없이 병렬하게 실행된다면 테스트가 이상해진다. 가끔은 테스트가 패스되고,  가끔은 race condition 때문에 실패하기도 한다. 
+
+@ResourceLock 어노테이션이 붙은 공유 자원에 접근하려고 할 때 Junit은 병렬적으로 실행되는 테스트에 충돌이 없게 보장한다.
+
+> 격리된 테스트 실행
+>
+> 대부분의 테스트가 병렬적으로 실행되는데, 어떠한 동기화도 없이 실행되는 클래스라면,@Isolated 어노테이션을 이용하여 격리된 상태로 테스트를 실행할 수 있다. 이런 테스트 클래스는 다른 테스트와 동시에 실행되지 않고, 순차적으로 실행 된다.
+
+공유 자원을 고유하게 식별하는 String 타입외에도 접근 모드를 지정해줄 수 있다. 공유 자원에 대한 READ 접근이 필요한 두 테스트는 서로 병렬로 실행 될 수 있지만, 공유 자원에 대한 READ_WRITE 접근이 필요한 다른 테스트가 실행되는 동안에는 실행되지 않는다. 즉 READ_WRTIE의 테스트가 전부 끝날 때 까지 대기한다.
+
+```java
+@Execution(CONCURRENT)
+class SharedResourcesDemo {
+
+    private Properties backup;
+
+    @BeforeEach
+    void backup() {
+        backup = new Properties();
+        backup.putAll(System.getProperties());
+    }
+
+    @AfterEach
+    void restore() {
+        System.setProperties(backup);
+    }
+
+    @Test
+    @ResourceLock(value = SYSTEM_PROPERTIES, mode = READ)
+    void customPropertyIsNotSetByDefault() {
+        assertNull(System.getProperty("my.prop"));
+    }
+
+    @Test
+    @ResourceLock(value = SYSTEM_PROPERTIES, mode = READ_WRITE)
+    void canSetCustomPropertyToApple() {
+        System.setProperty("my.prop", "apple");
+        assertEquals("apple", System.getProperty("my.prop"));
+    }
+
+    @Test
+    @ResourceLock(value = SYSTEM_PROPERTIES, mode = READ_WRITE)
+    void canSetCustomPropertyToBanana() {
+        System.setProperty("my.prop", "banana");
+        assertEquals("banana", System.getProperty("my.prop"));
+    }
+
+}
+```
+
+
+
+### Built-in Extensions
