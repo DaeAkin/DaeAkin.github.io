@@ -2079,3 +2079,55 @@ class SharedResourcesDemo {
 
 
 ### Built-in Extensions
+
+Junit 팀은 재사용 가능한 extension이 패키징되고 유지되도록 권장하지만, Junit Jupiter API 아티팩트는 일반적으로 유옹하여 사용자가 다른 의존성을 추가할 필요 없이 몇 가지의 extension이 포함되어 있다.
+
+#### TempDirectory Extension
+
+> @TempDir는 experimental 기능이다.
+
+TempDirectory extension은 테스트클래스 안에 있는 독립적인 테스트 또는 모든 테스트에 대해 임시 디렉토리를 생성하거나, 정리를 할 때 사용한다. 이 기능을 사용하려면 접근 제어자가 private이 아닌 `java.nio.file.Path` 나 `java.io.File` 필드에 @TempDir 어노테이션을 붙이거나, 파라미터에 붙여준다.  
+
+```java
+@Test 
+void writeItemsToFile(@TempDir Path tempDir) throws IOException {
+  Path file = tempDir.resolve("test.txt");
+  new ListWriter(file).write("a", "b", "c");
+  assertEquals(singletonList("a,b,c"), Files.readAllLines(file)); 
+}
+```
+
+> @TempDir는 생성자 파라미터에는 지원하지 않는다. 만약 라이프 사이클 메서드와 현재 테스트 메서드를 넘어서 임시 디렉토리를 유지하기 싶으면 접근제어자가 private이 아닌 인스턴스 필드에 @TempDir 어노테이션을 이용해 필드 인젝션을 이용해야 한다.
+
+
+
+다음의 예제는 static field에 있는 공유 임시 디렉토리에 저장한다. This allows the same sharedTempDir to be used in all lifecycle methods and test methods of the test class.
+
+```java
+class SharedTempDirectoryDemo {
+
+    @TempDir
+    static Path sharedTempDir;
+
+    @Test
+    void writeItemsToFile() throws IOException {
+
+        Path file = sharedTempDir.resolve("test.txt");
+        new ListWriter(file).write("a", "b", "c");
+        assertEquals(singletonList("a,b,c"), Files.readAllLines(file));
+    }
+
+    @Test
+    void anotherTestThatUsesTheSameTempDir() {
+        // use sharedTempDir 
+    }
+}
+```
+
+
+
+## Junit4에서 마이그레이션 하기
+
+JUnit Juptier 프로그래밍 모델과 extensiom 모델은 Junit4 특징인 Rules과 Runners에 네이티브하게 지원되지는 않지만, 반드시 버전업을 해야되는건 아니다.
+
+대신 JUnit은 
