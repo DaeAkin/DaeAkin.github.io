@@ -2130,4 +2130,32 @@ class SharedTempDirectoryDemo {
 
 JUnit Juptier 프로그래밍 모델과 extensiom 모델은 Junit4 특징인 Rules과 Runners에 네이티브하게 지원되지는 않지만, 반드시 버전업을 해야되는건 아니다.
 
-대신 JUnit은 
+대신 JUnit은 Junit 플랫폼 인프라를 이용해  JUnit3와 와  JUnit4 기반의 테스트를 실행시켜주는  Junit Vintage 테스트 엔진을 통해 마이그레이션을 지원해준다. 모든 클래스와 어노테이션들은 새로운 패키지인 org.junit.jupiter 베이스 안에 존재하기 때문에 JUnit4와  JUnit Jupiter는 클래스패스에서 충돌날 일이 없다. 게다가 JUnit 팀은 Junit4에 대하여 지속적인 유지보수와 버그수정 릴리즈 진행하고 있다.
+
+### JUnit 플랫폼에서  JUnit4 테스트 실행하기
+
+먼저`junit-vintage-engine` 이 테스트 런타임 패스에 있는지 확인하자. 
+
+#### Categories Support
+
+@Category 어노테이션이 붙은 테스트 클래스나 메서드를 실행하기 위해, JUnit Vintage 테스트 엔진에 해당 테스트 식별자의 태그로 카테고리의 패키지를 포함한 클래스 이름을 적어야 한다. 예를 들어 `@Category(Example.class)` 어노테이션이 붙은 테스트 메서드가 있으면  JUnit 4에서는 Categories 러너에  `com.acme.Example`  태그와 같다. 
+
+### 마이그레이션 팁
+
+다음의 주제들은 JUnit4 에서 JUnit Jupiter로 마이그레이션할 때 조심해야할 것들이다.
+
+- 어노테이션은 `org.junit.jupiter.api` 패키지에 있다.
+- Assertion은 `org.junit.jupiter.api.Assertions` 에 있다.
+  - `org.junit.Asssert` 에 있는 assertion 메서드나 다른 assertion 라이브러리인 AssertJ, Hamcrest, Truth 등을 사용해도 된다.
+- Assumption은 `org.junit.jupiter.api.Assumptions` 에 있다.
+  - JUnit 5.4 버전이나 그 후 버전은JUnit 4의 `org.junit.Assume` 클래스의 assumption을 지원한다.  Specifically, JUnit Jupiter supports JUnit 4’s AssumptionViolatedException to signal that a test should be aborted instead of marked as a failure.
+- @Before 와 @After는 더 이상 없다. 대신 @BeforeEach와 @AfterEach를 사용해야 한다.
+- @BeforeClass와 @AFterClass는 더 이상 없다. 대신 @BeforeAll와 @AfterAll를 사용해야 한다.
+- @Ignore는 더이상 없다. 대신 @Disabled나 내장된 조건실행(execution condition)을 사용하면 된다.
+- @Category는 더 이상 없다. 대신 @Tag를 사용하면 된다.
+- @RunWith는 더 이상 없다. 대신 @ExtendWith을 사용하면 된다.
+- @Rule과 @ClassRule은 더 이상 없다. 대신 @ExtendWith과 @RegisterExtenstion을 사용하면 된다.
+
+### 제한된 JUnit 4 Rule 지원
+
+위에 명시한 것 처럼 JUnit Jupiter에서 JUnit4의 rule은 더 이상 네이티브하게 지원하지 않는다. 
