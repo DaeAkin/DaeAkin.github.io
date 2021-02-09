@@ -2158,4 +2158,118 @@ JUnit Juptier 프로그래밍 모델과 extensiom 모델은 Junit4 특징인 Rul
 
 ### 제한된 JUnit 4 Rule 지원
 
-위에 명시한 것 처럼 JUnit Jupiter에서 JUnit4의 rule은 더 이상 네이티브하게 지원하지 않는다. 
+위에 명시한 것 처럼 JUnit Jupiter에서 JUnit4의 rule은 더 이상 네이티브하게 지원하지 않는다. 그러나 이미 많은 대규모 조직에서 JUnit 4 기반의 커스텀 rule을 사용하고 있다. 이러한 조직을 위해서 점진적인 마이그레이션이 가능하도록 JUnit 팀은 JUnit4 rule을  JUnit Jupiter에서 그대로 지원하기로 결정했다. This support is based on adapters and is limited to those rules that are semantically compatible to the JUnit Jupiter extension model, i.e. those that do not completely change the overall execution flow of the test.
+
+JUnit jupiter에 있는 `junit-jupiter-migrationsupport` 이 현재 다음의 3개 탕비의 Rule을 지원한다.
+
+- org.junit.rules.ExternalResource(org.junit.rules.TemporaryFolder 포함)
+- org.junit.rules.Verifier (org.junit.rules.ErrorCollector 포함)
+- org.junit.rules.ExpectedException
+
+As in JUnit 4, Rule-annotated fields as well as methods are supported. By using these class-level extensions on a test class such Rule implementations in legacy code bases can be left unchanged including the JUnit 4 rule import statements.
+
+This limited form of Rule support can be switched on by the class-level annotation @EnableRuleMigrationSupport. This annotation is a composed annotation which enables all rule migration support extensions: VerifierSupport, ExternalResourceSupport, and ExpectedExceptionSupport. You may alternatively choose to annotate your test class with @EnableJUnit4MigrationSupport which registers migration support for rules and JUnit 4’s @Ignore annotation (see JUnit 4 @Ignore Support).
+
+However, if you intend to develop a new extension for JUnit 5 please use the new extension model of JUnit Jupiter instead of the rule-based model of JUnit 4.
+
+> JUnit 4 Rule support in JUnit Jupiter is currently an experimental feature. Consult the table in Experimental APIs for detail.
+
+### JUnit 4 @Ignore 지원
+
+Jupiter의 @Disabled 어노테이션과 비슷하게 JUnit4의 @Ignore 어노테이션은 `junit-jupiter-migrationsupport` 모듈에서 지원한다. 
+
+JUnit Jupiter 기반의 테스트에서 @Ignore을 사용하려면, 빌드안에 `junit-jupiter-migrationsupport` 테스트 의존성을 설정한 다음 테스트 클래스에 @ExtendWith(IgnoreCondition.class) 나 @EnableJunit4MigrationSupport를 붙이면 된다.  @EnableJunit4MigrationSuppor는 자동으로 제한된 JUnit Rule 지원과 함께 IgnoreCondition을 등록한다. IgnoreCondition은 테스트 클래스나 메서드에 @Ignore 어노테이션이 붙은 것들을 비활성화 하는 ExecutionCondition이다.
+
+```java
+import org.junit.Ignore;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.migrationsupport.EnableJUnit4MigrationSupport;
+
+// @ExtendWith(IgnoreCondition.class) 
+@EnableJUnit4MigrationSupport 
+class IgnoredTestsDemo {
+
+	@Ignore
+  @Test 
+  void testWillBeIgnored() { }
+
+	@Test 
+  void testWillBeExecuted() { }
+
+}
+```
+
+
+
+## 테스트 실행하기
+
+### IDE 지원
+
+#### Intellij IDEA
+
+Intellij는 2016.2 버전부터 JUnit 플랫폼에서 테스트 실행을 지원한다. 자세한 내용은 [Intellij IDEA blog](https://blog.jetbrains.com/idea/2016/08/using-junit-5-in-intellij-idea/) 에 있다. 그러나 2017.3 또는 최신버전을 사용하는걸 추천하는데, IDEA가 프로젝트에 사용하고 있는 API 버전(junit-platform-launcher, junit-jupiter-engine, junit-vintage-engine)을 자동적으로 다운로드 하기 때문이다. 
+
+예를 들어 5.7.0 같은 JUnit 5의 다른 버전을 사용하고 싶으면 다음과 같이 사용하면 된다.
+
+**Gradle**
+
+```groovy
+// Only needed to run tests in a version of IntelliJ IDEA that bundles older versions testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.7.0") testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0") testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.0")
+```
+
+**maven**
+
+```xml
+<!-- Only needed to run tests in a version of IntelliJ IDEA that bundles older versions -->
+<dependency>
+	<groupId>org.junit.platform</groupId>
+	<artifactId>junit-platform-launcher</artifactId>
+	<version>1.7.0</version>
+	<scope>test</scope>
+</dependency>
+<dependency>
+	<groupId>org.junit.jupiter</groupId>
+	<artifactId>junit-jupiter-engine</artifactId>
+	<version>5.7.0</version>
+	<scope>test</scope>
+</dependency>
+<dependency>
+	<groupId>org.junit.vintage</groupId>
+	<artifactId>junit-vintage-engine</artifactId>
+	<version>5.7.0</version>
+	<scope>test</scope>
+</dependency>
+```
+
+이클립스,넷빈즈,VS코는는 생략
+
+
+
+### 빌드 지원 
+
+#### Gradle
+
+> JUnit 플랫폼 Gradle 플러그인은 현재 중단되었다.
+>
+> JUnit 팀이 만든 `junit-platform-gradle-plugin` 은 JUnit Platform 1.2에서 deprecated 되었으며, 1.3에서 중단이 되었다. Gradle의 스탠다드 test task로 변경해야 한다.
+
+4.6버전부터 Gradle은 JUnit 플랫폼에서 테스트를 실행할 수 있도록 네이티브로 지원한다. 활성화 하려면 다음과 같이 build.gradle 안에 test task안에 userJunitPlatform()을 지정해줘야 한다. 
+
+```groovy
+test { 
+  useJUnitPlatform() 
+}
+```
+
+태그나 엔진으로 필터링 하는것 도 지원한다.
+
+```groovy
+test {
+		useJUnitPlatform { 
+      includeTags 'fast', 'smoke & feature-a'
+      // excludeTags 'slow', 'ci' 
+      includeEngines 'junit-jupiter' 
+      // excludeEngines 'junit-vintage' }
+}
+```
+
