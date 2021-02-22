@@ -2226,9 +2226,7 @@ Intellij는 2016.2 버전부터 JUnit 플랫폼에서 테스트 실행을 지원
 	<artifactId>junit-platform-launcher</artifactId>
 	<version>1.7.0</version>
 	<scope>test</scope>
-</dependency>
-<dependency>
-	<groupId>org.junit.jupiter</groupId>
+</dependency>rd>
 	<artifactId>junit-jupiter-engine</artifactId>
 	<version>5.7.0</version>
 	<scope>test</scope>
@@ -2261,7 +2259,7 @@ test {
 }
 ```
 
-태그나 엔진으로 필터링 하는것 도 지원한다.
+태그나 엔진으로 필터링 하는것도 지원한다.
 
 ```groovy
 test {
@@ -2273,3 +2271,66 @@ test {
 }
 ```
 
+[Gradle 공식문서](https://docs.gradle.org/current/userguide/java_plugin.html#sec:java_test) 에 들어가면 좀 더 종합적인 옵션들을 볼 수 있다.
+
+**설정 파라미터**
+
+The standard Gradle test task currently does not provide a dedicated DSL to set JUnit Platform configuration parameters to influence test discovery and execution. However, you can provide configuration parameters within the build script via system properties (as shown below) or via the junit-platform.properties file.
+
+```groovy
+test {
+  // ...
+  systemProperty 'junit.jupiter.conditions.deactivate', '*'
+  systemProperties = [
+    'junit.jupiter.extensions.autodetection.enabled':'true',
+    'junit.jupiter.testinstance.lifecycle.default':'per_class'
+    ] 
+  // ...
+}
+```
+
+
+
+**테스트 엔진 설정하기**
+
+테스트를 실행하기 위해 클래스패스에 TestEngine 구현이 있어야 한다.
+
+JUnit jupiter 기반의 테스트 지원을 설정하기 위해 다음과 같이 JUnit Jupiter API에 대한  `testImplementation` 의존성 및 JUnit Jupiter TestEngine 구현에 대한 testRuntimeOnly 의존성을 구성해야 한다.
+
+```groovy
+dependencies { 
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1") 
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.1") 
+}
+```
+
+다음과 같이 JUnit 플랫폼은  `testImplementation` 의존성을 JUnit4 용과 Junit Vintage  `TestEngine` 구현체를 다음과 같이 설정하면 JUnit4 기반의 테스트를 이용할 수 있다.
+
+```groovy
+dependencies { 
+  testImplementation("junit:junit:4.13")
+  testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.7.1") 
+}
+```
+
+**로깅 추가하기 (선택)**
+
+JUnit은 warning 로깅과 디버그 정보를 찍기 위해 일명 JUL이라는 `java.util.logging` 패키지안에 있는 자바 로깅 API를 사용한다. 자세한 내용은 [LogManager](https://docs.oracle.com/javase/8/docs/api/java/util/logging/LogManager.h tml) 설정 옵션을 참고하면 된다.
+
+아니면 대안적으로 Log4J나 Logback같은 다른 로깅 프레임워크를 이용해 로그 메세지를 이용하는 것도 가능하다. LogManger의 커스텀 구현으로 제공되는 로깅 프레임워크를 사용하고 싶다면, 사용할 할  LogManager 구현체의 풀네임으로 `java.util.logging.manager` 시스템 변수에 설정한다. 다음의 예제는 Log4j 2.x 버전을 설정하는 예제다.
+
+```groovy
+test { 
+  systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager
+}
+```
+
+
+
+#### Maven 
+
+> JUnit Platfrom Maven Surefire Provider는 중단되었다.
+>
+> `junit-platform-surefire-provider` 는 원래 JUnit 팀이 개발했었는데, JUnit Platform 1.3에서 deprecated 되었으며, 1.4에서는 중단되었다. 대신 Maven Surefire's native 를 사용하자. 
+
+version 2.22.0 부터, Maven Surefire와 Maven Failsafe는 JUnit Platform에서 실행되는 테스트에 대해  [native 지원](https://maven.apache.org/surefire/maven-surefire-plugin/examples/junit-platform.html) 을 한다. Junit5-jupiter-starter-maven `pom.xml` 파일
