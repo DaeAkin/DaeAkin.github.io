@@ -2,19 +2,23 @@
 
 이전 JUnit 버전과 다르게, JUnt5는 세개의 서브 프로젝트로 이루어져 있다.
 
-JUnit5 = JUnit Platform + JUnit Jupiter + JUnit Vintage
+JUnit5 = `JUnit Platform` + `JUnit Jupiter` + `JUnit Vintage`
 
-JUnit Platform은 JVM에서 테스팅 프레임워크를 실행하는데 기초를 제공한다. 또한 TestEngine API를 제공해 테스팅 프레임워크를 개발할 수 있다.
+**JUnit Platform**
 
-JUnit Jupiter는 JUnit 5에서 테스트를 작성하고 확장을 하기 위한 새로은 프로그래밍 모델과 확장 모델의 조합이다.
+JUnit Platform은 **JVM에서 테스팅 프레임워크를 실행하는데 기초**를 제공한다. 또한 TestEngine API를 제공해 테스팅 프레임워크를 개발할 수 있다.
 
-JUnit Vintage는 하위 호완성을 위해 JUnit3과 JUnt4를 기반으로 돌아가는 플랫폼에 TestEngine을 제공해준다.
+**JUnit Jupiter**
+
+JUnit Jupiter는 JUnit 5에서 테스트를 작성하고 확장을 하기 위한 새로운 프로그래밍 모델과 확장 모델의 조합이다.
+
+**JUnit Vintage**
+
+JUnit Vintage는 **<u>하위 호완성을</u>** 위해 JUnit3과 JUnt4를 기반으로 돌아가는 플랫폼에 `테스트 엔진`을 제공해준다.
 
 ## 요구사항
 
 JUnit5은 java 8부터 지원하며, 이전 버전으로 작성된 테스트 코드여도 컴파일이 정상적으로 지원된다.
-
-
 
 ## 테스트 작성해보기
 
@@ -22,18 +26,19 @@ JUnit5은 java 8부터 지원하며, 이전 버전으로 작성된 테스트 코
 
 ```java
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import example.util.Calculator; import org.junit.jupiter.api.Test; 
+import example.util.Calculator; 
+import org.junit.jupiter.api.Test; 
+
 class MyFirstJUnitJupiterTests {
 
 	private final Calculator calculator = new Calculator();
+  
   @Test 
   void addition() {
     assertEquals(2, calculator.add(1, 1)); 
   }
 }
 ```
-
-
 
 ### 어노테이션
 
@@ -72,13 +77,11 @@ class MyFirstJUnitJupiterTests {
 
 - @Timeout : 주어진 시간안에 테스트가 끝나지 않으면 실패한다.
 
-- @ExtendWith : Used to register extensions declaratively. Such annotations are inherited.
+- @ExtendWith : extension을 등록한다. 이 어노테이션은 상속이 된다.
 
-- @RegisterExtension : Used to register extensions programmatically via fields. Such fields are inherited unless they are shadowed.
+- @RegisterExtension : 필드를 통해 extension을 등록한다. 이런 필드는 private이 아니라면 상속된다.
 
 - @TempDir : 필드 주입이나 파라미터 주입을 통해 임시적인 디렉토리를 제공할 때 사용한다. 
-
-### 
 
 ### 메타 어노테이션과 컴포즈 어노테이션
 
@@ -103,8 +106,6 @@ void myFastTest() {}
 
 더 나아가서 `@Tag("fast")` 와 `@Test` 를 합쳐 @FastTest 로 만들어도 좋다.
 
-
-
 ## 테스트 클래스와 메소드
 
 **<u>테스트 클래스란</u>** 최상위 클래스나, 스태틱 멤버 클래스나, @Nested 클래스에 적어도 한개의 test 메소드가 포함되있는 걸 말한다. 테스트 클래스는 `abstract` 이면 안되고, 하나의 생성자가 있어야 한다.
@@ -115,21 +116,15 @@ void myFastTest() {}
 
 테스트 메소드와 라이플사이클 메소드는 테스트 할 클래스나, 상속한 부모클래스 또는 인터페이스에 선언된다. 추가로 테스트 메소드와 라이프사이클 메소드는 `abstract` 선언하면 안되고, 어떠한 값도 리턴되선 안된다.
 
-> 테스트 클래스, 테스트 메소드, 라이플사이클 메소드는 접근제어자를 `public` 으로 선언을 꼭 안해줘도 됩니다. 그러나 `private` 으로 선언하면 안됩니다.
-
-
+> 테스트 클래스, 테스트 메소드, 라이플사이클 메소드는 접근제어자를 `public` 으로 선언을 꼭 안해줘도 된다. 그러나 `private` 으로 선언하면 안된다.
 
 ## Display Names 
 
-테스트 클래스와 테스트 메소드는 `@DisplayName` 을 이용해서 테스트 이름을 변경해줄 수 있다. 공백이나 특수문자나, 이모지도 가능하다.
-
-
+테스트 클래스와 테스트 메소드는 `@DisplayName` 을 이용해서 테스트 이름을 개발자가 보기 좋게 변경해줄 수 있다. 공백이나 특수문자나, 이모지도 가능하다.
 
 ### Display Name Generators
 
 JUnit Jupiter는 `@DisplayNameGeneration` 어노테이션을 통해 테스트이름을 어떻게 보여줄지 결정할 수 있다.
-
-
 
 - Standard : 메소드이름과 그 뒤에 붙는 괄호 그대로 보여준다.
 - Simple : 메소드이름만 보여준다.
@@ -137,6 +132,8 @@ JUnit Jupiter는 `@DisplayNameGeneration` 어노테이션을 통해 테스트이
 - IndicativeSentences :  테스트 클래스 이름과 테스트 메소드이름 + 괄호를 보여준다.
 
 ### 기본 DisplayName Generator 세팅하기
+
+src/test/resources/junit-platform.properties
 
 ```
 junit.jupiter.displayname.generator.default = \ org.junit.jupiter.api.DisplayNameGenerator$ReplaceUnderscores
@@ -148,13 +145,9 @@ junit.jupiter.displayname.generator.default = \ org.junit.jupiter.api.DisplayNam
 2. `DisplayNameGeneration` 어노테이션 안에 있는  `DisplayNameGenerator`  값
 3. 설정 파라미터를 통해 설정해준 디폴트 `DisplayNameGenerator` 값
 
-
-
 ## Assertions
 
 JUnit Jupiter는 JUnit4로부터 온 assertion 메소드와 새롭게 자바 8 람다 표현식으로 추가된 메소드들이 있다. 모든 JUnit Jupiter assertion은 static 메소드이며, `org.junit.jupiter.api.Assertions` 클래스 안에 있다.
-
-
 
 ```java
 class AssertionsTest {
@@ -227,7 +220,9 @@ class AssertionsTest {
 
 > Preemptive Timeout(선점적인 시간초과) 테스트 assertTimeoutPreemptively()
 >
-> p67쪽 본다음에 정리해야할듯.
+> 선언적 타임아웃인 @timeout과 대조적으로 Assertions에 있는 다양한 assertTimeoutPreemptively() 메소드는 제공된 executable 나 supplier를 다른 스레드에서 실행한다. executable 이나 supplier 실행된 코드들이 <u>ThreadLocal에 의존하게 되면 사이드이펙트가 일어날 수 있다.</u>
+>
+> 흔한 예로 스프링 프레임워크에서 transactional 테스트를 진행할 때이다. Spring의 테스트는 트랜잭션 상태를 `TreadLocal` 을 이용해서 현재 상태를 테스트 메소드가 실행하기 전에 저장해둔다. 결과적으로 assertTimeoutPreemptively()에 제공된  executable이나 supplier가 트랜잭션에 참여하는 스프링 컴포넌트를 호출하게 되면 이 컴포넌트는 테스트가 끝난 후 롤백이 되지 않는다. 
 
 ### 써드 파티 Assertion 라이브러리
 
@@ -249,13 +244,9 @@ public class HamcrestAssertionsTest {
 }
 ```
 
-
-
 ## Assumptions
 
-JUnit Jupiter는 JUnit4에서 제공해주던 assumption 메소드와, Java 8 람다 표현식과, 메소드 레퍼런스를 이용해 몇 개를 더 추가 했다.  모든 assumptions 메소드는 `org.junit.jupiter.api.Assumptions` 클래스안에 있다.
-
-
+JUnit Jupiter는 JUnit4에서 제공해주던 assumption 메소드와, Java 8 람다 표현식과, 메서드 레퍼런스를 이용해 몇 개를 더 추가 했다. 모든 assumptions 메소드는 `org.junit.jupiter.api.Assumptions` 클래스안에 있다.
 
 ```java
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -321,13 +312,11 @@ public class DisabledTest {
 }
 ```
 
-`@Disabled` 는 이유를 명시하지 않고 사용해도 되지만, JUnit 팀에서는 왜 이 테스트가 비활성화 되었는지에 대한 짧은 설명을 추가하는 걸 권장하고 있다. 예를 들어 위에 예제에서는 #42 의 버그가 해결될 떄 까지 비활성화 처럼 말이다. 
-
-
+`@Disabled` 를 사용할 때 이유를 명시하지 않고 사용해도 되지만, JUnit 팀에서는 **왜 이 테스트가 비활성화 되었는지**에 대한 짧은 설명을 추가하는 걸 권장하고 있다. 예를 들어 위에 예제에서는 **#42 의 버그가 해결될 떄 까지 비활성화** 처럼 말이다. 
 
 ## 테스트 실행 조건
 
-JUnit Juptier에 있는 `ExecutionCondition` API는 개발자가 특정 조건에 따라 테스트를 실행할지 말지 결정한다.심플한 예로  `@Disabled` 어노테이션을 지원하는 내장된 `DisabledCondition` 이다. JUnit Jupiter는 또한 `@Disabled` 이외에도  개발자가 선언적으로 테스트를 활성화하거나 비활성화 하기 위해 `org.junit.jupiter.api.condition` 패키지에 있는 어노테이션 기반 조건을 지원한다. 여러 개의 `ExecutionCondition` 이 등록되면 여러개 조건중 하나라도 비활성화 조건에 걸리면, 테스트를 비활성화 한다. 이 테스트가 왜 비활성화 되었는지 알려주고 싶다면, 모든 어노테이션은 `disabledReson` 속성을 지정할 수 있으므로, 이걸 이용하며 된다.
+JUnit Juptier에 있는 `ExecutionCondition` API는 개발자가 특정 조건에 따라 테스트를 실행할지 말지 결정한다.심플한 예로  `@Disabled` 어노테이션을 지원하는 내장된 `DisabledCondition` 이다. JUnit Jupiter는 또한 `@Disabled` 이외에도  개발자가 선언적으로 테스트를 활성화하거나 비활성화 하기 위해 `org.junit.jupiter.api.condition` 패키지에 있는 어노테이션 기반 조건을 지원한다. 여러 개의 `ExecutionCondition` 이 등록되면 여러개 조건중 하나라도 비활성화 조건에 걸리면, 테스트를 비활성화 한다. 이 테스트가 왜 비활성화 되었는지 알려주고 싶다면, 모든 어노테이션은 `disabledReason` 속성을 지정할 수 있으므로, 이걸 이용하면 된다.
 
 ### OS 따라 테스트 실행하기
 
@@ -368,6 +357,67 @@ public class ConditionalTest {
 ### 자바 환경변수에 따라 실행하기
 
 특정 JRE 버전에 따라 테스트를 활성화 비활성화 할 수 있습니다. `@EnabledOnJre` 와 `@DisabledOnJre` 어노테이션을 이용해서 활성화할 JRE 버전을 명시하고, `@EnabledForJreRange` 와 `@DisabledForJreRange`  어노테이션을 이용하면 여러개의JRE 버전을 테스트 할 수 있다. 
+
+```java
+public class JreConditionalTest {
+    @Test
+    @EnabledOnJre(JAVA_8)
+    void onlyOnJava8() {
+        // ...
+    }
+
+    @Test
+    @EnabledOnJre({JAVA_9, JAVA_10})
+    void onJava9Or10() {
+        // ...
+    }
+
+    @Test
+    @EnabledForJreRange(min = JAVA_9, max = JAVA_11)
+    void fromJava9to11() {
+        // ...
+    }
+
+    @Test
+    @EnabledForJreRange(min = JAVA_9)
+    void fromJava9toCurrentJavaFeatureNumber() {
+        // ...
+    }
+
+    @Test
+    @EnabledForJreRange(max = JAVA_11)
+    void fromJava8To11() {
+        // ...
+    }
+
+    @Test
+    @DisabledOnJre(JAVA_9)
+    void notOnJava9() {
+        // ...
+    }
+
+    @Test
+    @DisabledForJreRange(min = JAVA_9, max = JAVA_11)
+    void notFromJava9to11() {
+        // ...
+    }
+
+    @Test
+    @DisabledForJreRange(min = JAVA_9)
+    void notFromJava9toCurrentJavaFeatureNumber() {
+        // ...
+    }
+
+    @Test
+    @DisabledForJreRange(max = JAVA_11)
+    void notFromJava8to11() {
+        // ...
+    }
+}
+
+```
+
+
 
 ### 시스템 속성 조건
 
@@ -417,16 +467,17 @@ public class EnvironmentVariableConditionalTest {
 `@EnabledIf` 와 `@DisabledIf` 어노테이션을 사용하여 지정해준 메소드가 반환하는 boolean의 값에 따라 테스트를 활성화 또는 비활성화 할 수 있다. 어노테이션 안에 메소드 이름을 작성주면 되고, 만약 테스트 클래스 밖에 있는 메소드라면, 클래스 까지 써줘야 한다. 필요하다면 메소드는 하나의 파라미터를 갖을 수 있다.
 
 ```java
+package dev.donghyeon.junitstudy.conditional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.condition.EnabledIf;
 
 public class CustomConditionalTest {
     @Test
-    @EnabledIf("customCondition")
+    @EnabledIf("dev.donghyeon.junitstudy.conditional.ExternalClass#eCustomCondition")
     void enabled() {
-
-
+        System.out.println("test enabled active");
     }
 
     @Test
@@ -439,13 +490,17 @@ public class CustomConditionalTest {
         return true;
     }
 }
+
+class ExternalClass {
+
+    static boolean eCustomCondition() {
+        return true;
+    }
+}
+
 ```
 
-> `@EnabledIf` 나 `@DisabledIf` 를 클래스 레벨에 사용할 때 컨디션 메소드는 반드시 `static` 으로 선언되어야 한다. 외부 클래스에 위치한 컨디션 메소드도 `static` 으로 선언되어야 한다.
-
-external 클래스에 위치한 메소드는 안되나?
-
-
+> `@EnabledIf` 나 `@DisabledIf` 를 클래스 레벨에 사용할 때 컨디션 메서드는 반드시 `static` 으로 선언되어야 한다. 또한 외부 클래스에 위치한 컨디션 메서드도 `static` 으로 선언되어야 하며, 사용할 때는 패키지를 포함한 전체 이름을 ㅈㅓㄱ어줘야 한다.
 
 ## 태그와 필터링
 
@@ -463,25 +518,32 @@ external 클래스에 위치한 메소드는 안되나?
   - !
   - &
 
+```java
+@Tag("fast")
+@Tag("model")
+class TaggingTest {
+
+    @Test
+    @Tag("taxes")
+    void testingTaxCalculation() {
+    }
+}
+```
+
 ## 테스트 실행 순서 바꾸기
 
 일반적으로 단위테스트는 테스트 순서에 영향을 받지 않지만, 통합 테스트를 작성할 때나, 테스트의 순서가 중요한 함수형 테스트를 할 때 테스트 실행 순서를 바꾸고 싶을 때가 있다. 
 
+제대로 작성된 단위 테스트는 일반적으로 실행순서에 상관없지만, 가끔 강제로 특정 순서에 맞게 지정해줄 필요가 생긴다. 
+
 테스트 메소드가 실행되는 순서를 바꾸고 싶으면 테스트 클래스나 메소드에 `@TestMethodOrder` 를 이용하여 `MethodOrderer` 를 원하는대로 구현하면 된다. `MethodOrderer` 를 커스텀해서 구현하거나, 이미 내장된 `MethodOrderer` 구현 중 하나를 사용하면 된다.
 
 - DisplayName : displayName 기반으로 정렬한다.
-
 - MethodName : 메소드 이름으로 정렬한다.
-
 - OrderAnnotation : `@Order` 어노테이션에 명시된 순서대로 정렬한다.
-
 - Random : 랜덤으로 정렬한다.
 
-- Alphanumeric : sorts test methods alphanumerically based on their names and formal parameter
-
-  28 lists.
-
-> MethodName은 6.0에 Deprecated 될 예정임.
+다음의 예제는 @Order 어노테이션을 사용하여 특정 순서대로 테스트를 실행한다.
 
 ```java
 import org.junit.jupiter.api.MethodOrderer;
@@ -508,11 +570,9 @@ public class OrderedTest {
 }
 ```
 
-
-
 ### 메소드 실행 순서 디폴트 설정하기
 
-`junit.jupiter.testmethod.order.default` 설정 파라미터를 이용하여 디폴트로 사용할 `MethodOrderer` 를 설정해줄 수 있다. 테스트 클래스에 `@TestMethodOrder` 가 없으면 모든 테스트들은 디폴트 순서를 사용한다.
+`junit.jupiter.testmethod.order.default` 설정 파라미터를 이용하여 디폴트로 사용할 `MethodOrderer` 를 설정해줄 수 있다. 테스트 클래스에 `@TestMethodOrder` 가 없으면 파라미터에 준 값으로 모든 테스트들에 디폴트 순서를 사용한다.
 
 예를 들어 `OrderAnnotation ` 클래스를 디폴트로 사용하고 싶다면 클래스 이름 전체를 설정 파라미터에 설정하면 된다.
 
@@ -523,21 +583,21 @@ junit.jupiter.testmethod.order.default = \
 	org.junit.jupiter.api.MethodOrder$OrderAnnotation
 ```
 
-
+이렇게 사용하면 `@TestMethodOrder` 어노테이션이 붙지 않은 테스트 클래스에 @Order 어노테이션이 명시된 순서대로 테스트가 실행하게 된다.
 
 ## 테스트 LifeCycle
 
-사이드 이펙트를 줄이고, 테스트 메서드를 격리된 환경에서 독립적으로 실행시키기 위해 JUnit은 테스트 메소드를 실행시키기 전에 각각의 테스트 클래스의 새로운 인스턴스를 만든다.  이렇게 메소드마다 테스트 라이프사이클을 갖는다.
+테스트 인스턴스 상태의 변경가능성 때문에 일어나는 사이드 이펙트를 줄이고, 테스트 메서드를 격리된 환경에서 독립적으로 실행시키기 위해 JUnit은 테스트 메소드를 실행시키기 전에 각각의 테스트 클래스의 새로운 인스턴스를 만든다. 이렇게 메소드마다 테스트 라이프사이클을 갖는 동작은 이전 버전의 JUnit과 똑같은 동작이며, 디폴트 동작이다.
 
-> 테스트 메소드에 `@Disabled` ,`@DisabledOnOs` 를 붙여 테스트 메소드를 비활성화 해도 똑같은 테스트 라이플 사이클을 가진다
+> 테스트 메소드에 `@Disabled` ,`@DisabledOnOs` 를 붙여 테스트 메소드를 비활성화 해도 해당 테스트에 대해 새로운 인스턴스를 만든다. 
 
-만약 같은 인스턴스에서 모든 테스트 메소드를 모두 실행하고 싶다면 테스트 클래스에 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 사용하면 된다. 이 어노테이션을 사용하면 **<u>테스트 클래스 단위로</u>** 새로운 테스트 인스턴스가 생기게 된다. 그러므로 그 안에 있는 인스턴스 변수를 테스트 메소드들이 공유를 하므로 `@BeforeEach` 나 `@AfterEach` 를 사용하여 내부 상태를 리셋을 시켜줘야 한다.
+만약 **같은 인스턴스 안에서 모든 테스트 메소드를 모두 실행**하고 싶다면 테스트 클래스에 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 사용하면 된다. 이 어노테이션을 사용하면 **<u>테스트 클래스 단위로</u>** 새로운 인스턴스가 생기게 된다. 그러므로 그 안에 있는 인스턴스 변수를 테스트 메소드들이 공유를 하므로 `@BeforeEach` 나 `@AfterEach` 를 사용하여 내부 상태를 리셋을 시켜 줄 수 있다.
 
-**PER-CLASS** 는 테스트 인스턴스의 기본 생성 방식인**PER-METHOD** 를 사용할 때와 같은 이점을 얻는다. 특히 PER-CLASS는 `@BeforeAll` 과 `@AfterAll` 를 붙인 메소드에 static을 사용하지 않아도 되고 인터페이스의 `deafult` 메소드에서도 사용하지 않아도 된다. 또한   **PER-CLASS** 는`@Nested` 테스트 클래스에서 `@BeforeAll` 과 `@AfterAll` 메소드를 사용할 수 있게 해준다.
+**PER-CLASS** 는 테스트 인스턴스의 기본 생성 방식인 **PER-METHOD** 를 사용할 때와 같은 이점을 얻는다. 특히 PER-CLASS는 `@BeforeAll` 과 `@AfterAll` 를 붙인 메소드에 **static**을 붙여서 사용하지 않아도 되고 인터페이스의 `deafult` 메소드에서도 사용하지 않아도 된다. 또한   **PER-CLASS** 는`@Nested` 테스트 클래스에서 `@BeforeAll` 과 `@AfterAll` 메소드를 사용할 수 있게 해준다.
 
 ### 디폴트 테스트 인스턴스 라이플사이클 변경하기
 
-테스트 클래스에 `@TestInstance` 어노테이션이 없으면 기본 라이플사이클을 사용한다. 기본 모드는 PER_METHOD 이다. 그러나 전체 테스트에 디폴트 라이프사이클을 변경할 수 있다. 변경하기 위해선 `junit.jupiter.testinstnace.lifecycle.default` 설정 파라미터에 `TestInstnace.LifeCycle` enum클래스를 써주면 된다. JUnit 설정파일이나, LauncherDiscoveryRequest를 Launcher로 전달한 설정 파라미터를 이용해 JVM 시스템 변수로 제공해줄 수 있다. 
+테스트 클래스에 `@TestInstance` 어노테이션이 없으면 기본 라이플사이클을 사용한다. 기본 모드는 메소드마다 새로운 인스턴스를 만드는 **PER_METHOD** 이다. 그러나 전체 테스트에 디폴트 라이프사이클을 변경할 수 있다. 변경하기 위해선 `junit.jupiter.testinstance.lifecycle.default` 설정 파라미터에 `TestInstnace.LifeCycle` enum클래스를 써주면 된다. JUnit 설정파일이나, LauncherDiscoveryRequest를 Launcher로 전달한 설정 파라미터를 이용해 JVM 시스템 변수로 제공해줄 수 있다. 
 
 예를 들어 라이플사이클 모드를 `LifeCycle_PER_CLASS` 로 변경하고 싶으면 JVM을 실행할 때 다음과 같이 실행한다.
 
@@ -635,17 +695,21 @@ class TestingStack {
 }
 ```
 
-오직 non-static인 nested 클래스(예를 들어 inner 클래스)만 `@Nested` 를 붙일 수 있다. 
+위에 코드를  Intellij에서 돌려보면 코드처럼 트리구조로 결과가 나온다.
 
-Only non-static nested classes (i.e. inner classes) can serve as @Nested test classes. Nesting can be arbitrarily deep, and those inner classes are considered to be full members of the test class family with one exception: @BeforeAll and @AfterAll methods do not work by default. The reason is that Java does not allow static members in inner classes. However, this restriction can be circumvented by annotating a @Nested test class with @TestInstance(Lifecycle.PER_CLASS) (see Test Instance Lifecycle).
+![]({{site.url}}/images/junit5/nestedResult.png)
+
+여기서 WhenNew.createNewStack() 메서드가 새로운 Stack 클래스를 만들어주는 역할을 한다. 이 메서드에 적힌 @BeforeEach 어노테이션은 라이프사이클 메서드로 이 메서드가 포함된 클래스 아래 레벨에 있는 모든 메서드까지 영향을 준다.
+
+> 오직 non-static인 nested 클래스(예를 들어 inner 클래스)만 `@Nested` 를 붙일 수 있다. 중첩은 개발자 마음대로 할 수 있으며, 이너 클래스는 한가지만 제외하고 라이프사이클을 가진다. 바로 `@BeforeAll` 과 `@AfterAll` 메서드는 기본적으로 작동하지 않는다. 그 이유는 자바는 이너 클래스안에 `static` 멤버 변수를 두는걸 허락하지 않기 때문이다. 이런 제약을 우회하는 방법으로 테스트 클래스에 @Nested 을 붙이고 @TestInstance(Lifecycle.PER_CLASS)를 사용하여 우회하는 수 밖에 없다.
 
 ## 생생자와 메소드 의존성 주입
 
-이전 JUnit 버전들에서는 테스트 생성자나 메소드에 파라미터를 갖지 못하게 했다. JUnit juptier의 주요 변화로 테스트 생성자와 메소드가 이제는 파라미터를 갖을 수 있도록 변경되었다. 이런 변화는 코드의 유연성과 생성자와 메소드에 의존성 주입을 가능하게 해준다. 
+이전 JUnit 버전들에서는 테스트 클래스에 생성자나 메소드에 파라미터를 갖지 못하게 했다. JUnit juptier의 주요 변화로 **테스트 클래스의 생성자와 메소드가 이제는 파라미터를 갖을 수 있도록 변경되었다.** 이런 변화는 코드의 유연성과 생성자와 메소드에 의존성 주입을 가능하게 해준다. 
 
-**ParameterResolver** 는 런타임시 동적으로 파라미터를 결정하는 테스트 익스텐션에 관한 API가 정의되어 있다. 테스트 클래스 생성자나, 테스트메소드나, 라이플사이클 메소드가 파라미터를 받고 싶다면, 파라미터는 `ParameterResolver` 를 등록함으로써 런타임시 결정을 해야 한다.
+**ParameterResolver** 는 런타임시 동적으로 파라미터를 결정하는 <u>테스트 익스텐션</u>에 관한 API가 정의되어 있다. 테스트 클래스의 생성자나, 메서드나, 라이플사이클 메서드가 파라미터를 받고 싶다면, 파라미터는 `ParameterResolver` 를 등록함으로써 런타임시 결정 해야 한다.
 
-현재 자동적으로 등록되는 3개의 내장된 리졸버들이 있다.
+현재 자동적으로 등록되는 **3개의 내장된 리졸버**들이 있다.
 
 - [TestInfoParameterResolver](https://github.com/junit-team/junit5/blob/r5.7.0/junit-jupiter-engine/src/main/java/org/junit/jupiter/engine/extension/TestInfoParameterResolver.java) : 생성자나 메소드 파라미터가 TestInfo의 타입이면 TestInfoParameterResolver가  현재 컨테이너나, 테스트에 일치하는 값을 TestInfo 인스턴스로 제공해준다. 제공받은 TestInfo는 현재 컨테이너 또는 테스트에 관한 display name, 테스트클래스, 테스트메소드, 관련된 태그들의 테스트 정보를 가져올 때 사용한다. 
 
@@ -686,7 +750,7 @@ Only non-static nested classes (i.e. inner classes) can serve as @Nested test cl
 다른 리졸버를 사용하고 싶으면, `@ExtendWith` 을 통해서 상속을 하면 된다.
 
 ```java
-ExtendWith(RandomParametersExtension.class)
+@ExtendWith(RandomParametersExtension.class)
 class MyRandomParameterTest {
 
     @Test
@@ -703,7 +767,41 @@ class MyRandomParameterTest {
 }
 ```
 
->   RandomParametersExtension은 아직 정식출시가 안되었다.
+RandomParametersExtension은 다음과 같이 만들어졌다.
+
+```java
+public class RandomParametersExtension implements ParameterResolver {
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.PARAMETER)
+    public @interface Random {
+    }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+        return parameterContext.isAnnotated(Random.class);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) {
+        return getRandomValue(parameterContext.getParameter(), extensionContext);
+    }
+
+    private Object getRandomValue(Parameter parameter, ExtensionContext extensionContext) {
+        Class<?> type = parameter.getType();
+        java.util.Random random = extensionContext.getRoot().getStore(ExtensionContext.Namespace.GLOBAL)//
+                .getOrComputeIfAbsent(java.util.Random.class);
+        if (int.class.equals(type)) {
+            return random.nextInt();
+        }
+        if (double.class.equals(type)) {
+            return random.nextDouble();
+        }
+        throw new ParameterResolutionException("No random generator implemented for " + type);
+    }
+
+}
+```
 
 실제 사용 사례로는 MockitoExtension과 SpringExtension을 많이 쓴다.
 
@@ -711,7 +809,7 @@ class MyRandomParameterTest {
 
 ## 테스트 인터페이스와 디폴트 메소드
 
-@Test, @RepeatedTest, @ParameterizedTest , @TestFactory, @TestTemplate, @BeforeEach, @AfterEach는 인터페이스 디폴트 메소드에 선언을 해도 된다.만약 테스트 인터페이스나 테스트 클래스에 @TestInstnace(Lifecycle.PER_CLASS)로 되어 있다면  @BeforeAll과 @AfterAll은 static으로 인터페이스 디폴트 메소드와 테스트 인터페이스에 선언해도 된다. 
+@Test, @RepeatedTest, @ParameterizedTest , @TestFactory, @TestTemplate, @BeforeEach, @AfterEach는 인터페이스 디폴트 메소드에 선언을 해도 된다.  만약 테스트 인터페이스나 테스트 클래스에 `@TestInstnace(Lifecycle.PER_CLASS)`로 되어 있다면  @BeforeAll과 @AfterAll은 static 메서드로 만들거나 디폴트 메서드로 만들어야 한다.
 
 ```java
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -720,7 +818,7 @@ interface TestLifecycleLogger {
     static final Logger logger = Logger.getLogger(TestLifecycleLogger.class.getName());
 
     @BeforeAll
-    default void beforeAllTests() {
+    static void beforeAllTests() {
         logger.info("Before all tests");
     }
 
@@ -756,7 +854,74 @@ interface TestInterfaceDynamicTestsDemo {
 
 @ExtendWith과 @Tag는 테스트 인터페이스에 선언할 수 있어서 이 테스트 인터페이스를 선언한 구현체는 자동으로 tag와 extension을 상속 받는다.
 
-나중에 다시정리해야겠따. 40p.
+```java
+@Tag("timed")
+@ExtendWith(TimingExtension.class)
+public class TimeExecutingLogger {
+}
+```
+
+**TimingExtension.java**
+
+```java
+public class TimingExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
+
+	private static final Logger logger = Logger.getLogger(TimingExtension.class.getName());
+
+	private static final String START_TIME = "start time";
+
+	@Override
+	public void beforeTestExecution(ExtensionContext context) throws Exception {
+		getStore(context).put(START_TIME, System.currentTimeMillis());
+	}
+
+	@Override
+	public void afterTestExecution(ExtensionContext context) throws Exception {
+		Method testMethod = context.getRequiredTestMethod();
+		long startTime = getStore(context).remove(START_TIME, long.class);
+		long duration = System.currentTimeMillis() - startTime;
+
+		logger.info(() ->
+			String.format("Method [%s] took %s ms.", testMethod.getName(), duration));
+	}
+
+	private Store getStore(ExtensionContext context) {
+		return context.getStore(Namespace.create(getClass(), context.getRequiredTestMethod()));
+	}
+
+}
+```
+
+TimingExtension 클래스는 메서드 이름에서도 알 수 있듯이, 테스트를 실행하기 전과 후에 호출할 콜백 메서드를 구현해놓은 클래스이다.
+
+이렇게 구현 후 테스트 클래스를 만들어 인터페이스들을 상속해보자.
+
+```java
+public class TestInterfaceDemo implements TestLifecycleLogger,
+        TimeExecutingLogger, TestInterfaceDynamicTestsDemo {
+
+    @Test
+    @DisplayName("동일 테스트")
+    void isEqualValue() {
+        Assertions.assertEquals(1, "a".length(), "항상 같음");
+    }
+}
+```
+
+이 테스트를 돌려보면 콘솔에 다음과 같이 찍힌다.
+
+```
+2월 25, 2021 10:21:15 오전 dev.donghyeon.junitstudy.testinterface.TestLifecycleLogger beforeAllTests
+정보: Before all tests
+2월 25, 2021 10:21:15 오전 dev.donghyeon.junitstudy.testinterface.TestLifecycleLogger beforeEachTest
+정보: About to execute [동일 테스트]
+2월 25, 2021 10:21:15 오전 dev.donghyeon.junitstudy.testinterface.TimingExtension afterTestExecution
+정보: Method [isEqualValue] took 7 ms.
+2월 25, 2021 10:21:15 오전 dev.donghyeon.junitstudy.testinterface.TestLifecycleLogger afterEachTest
+정보: Finished executing [동일 테스트]
+2월 25, 2021 10:21:15 오전 dev.donghyeon.junitstudy.testinterface.TestLifecycleLogger afterAllTests
+정보: After all tests
+```
 
 ## @Repeated Test 
 
@@ -770,7 +935,7 @@ void repeatedTest() {
 }
 ```
 
-또한 반복의 수를 지정해 줄 때, 각각의 반복되는 테스트에 대해서 보여줄 display name도 설정할 수 있다. 게다가, display name은 스트링과 정적 placeholder로 조합해서 패턴을 만들 수 있다.  다음은 지원되는 placeholder 이다.
+또한 반복의 수를 지정해 줄 때, 각각의 반복되는 테스트에 대해서 보여줄 display name도 설정할 수 있다. 게다가, display name은 스트링과 정적 placeholder로 조합해서 패턴을 만들 수 있다. 다음은 지원되는 placeholder 이다.
 
 - DisplayName : @RepeatedTest 메소드의 보여줄 이름
 - {currentRepetition} : 현재 반복 횟수
@@ -780,7 +945,7 @@ void repeatedTest() {
 
 **"repetition {currentRepetition} of {totalRepetitions}"**
 
-그래서 위에 있는 repeatedTest()는 "repetition 1 of 10, repetition 2 of 10" 이렇게 보여진다. 메소드 이름을 포함하고 싶으면 사전 정의된, RepeatedTest.LONG_DISPLAY_NAME을 사용하면 된다. 
+그래서 위에 있는 repeatedTest()는 "repetition 1 of 10, repetition 2 of 10" 이렇게 보여진다. 메소드 이름을 포함하고 싶으면 사전 정의된, `RepeatedTest.LONG_DISPLAY_NAME`을 사용하면 된다. 
 
 현재 반복 정보와 반복의 수를 구하기 위해서 개발자가 @RepeatedTest ,@BeforeEach ,@AfterEach 메소드에 **RepetitionInfo의** 인스턴스를 주입시켜야 한다.
 
@@ -834,7 +999,7 @@ public class RepeatTest2 {
 
 
 
-Console 결과
+**Console 결과**
 
 ```
 INFO: About to execute repetition 1 of 10 for repeatedTest
@@ -863,7 +1028,7 @@ INFO: About to execute repetition 5 of 5 for repeatedTestInGerman
 
 
 
-테스트 이름 결과
+**테스트 이름 결과**
 
 ```
 ├─ RepeatedTestsDemo ✔
@@ -925,15 +1090,13 @@ palindromes(String) ✔
 
 ### 인자 사용하기
 
-파라미터화 테스트 메소드는 일반적으로 미리 정해놓은 파라미터 소스들과 1:1 매칭이 된다. 그러나 
-
-Parameterized test methods typically consume arguments directly from the configured source (see Sources of Arguments) following a one-to-one correlation between argument source index and method parameter index (see examples in @CsvSource). However, a parameterized test method may also choose to aggregate arguments from the source into a single object passed to the method (see Argument Aggregation). Additional arguments may also be provided by a ParameterResolver (e.g., to obtain an instance of TestInfo, TestReporter, etc.). Specifically, a parameterized test method must declare formal parameters according to the following rules.
+파라미터화 테스트 메소드는 일반적으로 미리 정해놓은 파라미터 소스들와 메서드 파라미터 인덱스와 1:1 매칭이 된다. 그러나 파라미터화 테스트 메서드가 소스로부터 하나의 객체만 메서드로 전달해 줄 수 있다. 게다가 인자는 `ParameterResolver` 에 의해 제공될 수 있다(TestInfo나 TestReporter 같은 것들).  특히 파라미터화 테스트 메서드는 반드시 다음의 규칙을 따른 형태로 선언되야 한다.
 
 - 인덱스화된 인자들은 반드시 처음에 선언되어야 한다.
 - aggregator는 그 다음에 선언되어야 한다.
 - ParameterResolver에 의해 제공되는 인자는 반드시 마지막에 선언되어야 한다.
 
-In this context, an indexed argument is an argument for a given index in the Arguments provided by an ArgumentsProvider that is passed as an argument to the parameterized method at the same index in the method’s formal parameter list. An aggregator is any parameter of type ArgumentsAccessor or any parameter annotated with @AggregateWith.
+In this context, an indexed argument is an argument for a given index in the Arguments provided by an ArgumentsProvider that is passed as an argument to the parameterized method at the same index in the method’s formal parameter list. An aggregator is any parameter of type ArgumentsAccessor or any parameter annotated with @AggregateWith.??
 
 ### 인자 제공하기
 
@@ -967,14 +1130,14 @@ void testWithValueSource(int argument) {
 
 **Null and Empty Sources**
 
-잘못된 인풋이 들어올 수 있는 코너케이스(corner 케이스가 뭐지?) 확인하고 적절한 행동을 검증하기 위해서 파라미터화 테스트에 null 또는 빈 값을 제공해주는 것이 유용하다. 다음의 어노테이션은 null 과 빈 값을 제공해준다.
+잘못된 인풋이 들어올 수 있는 경우를 확인하고 적절한 행동을 검증하기 위해서 파라미터화 테스트에 null 또는 빈 값을 제공해주는 것이 유용하다. 다음의 어노테이션은 null 과 빈 값을 제공해준다.
 
 - @NullSource : @ParameterizedTest 메소드에 null을 제공한다.
-- @EmptySource : 다음과 같은 타입 String ,List ,Set, Map, 프리미티브 배열 예) int[] ,char[] ..., 객체 배열 예) String[] ,Intger[] ... 같은 인자에 빈값을 제공한다.
+- @EmptySource : 다음과 같은 타입 String ,List ,Set, Map, primitive 배열 예) int[] ,char[] ..., 객체 배열 예) String[] ,Intger[] ... 같은 인자에 빈값을 제공한다.
   - 지원되는 타입중에 서브타입들은 지원하지 않는다.
 - @NullAndEmptySource : @NullSource 와 @EmptySource 기능들을 합친 어노테이션이다.
 
-만약 파라미터화 테스트로 다양한 빈 스트링을 제공해주고 싶다면 다음과 같이 사용하면 된다.
+다음과 같이 만약 파라미터화 테스트로 다양한 빈값의 스트링을 제공해주고 싶다면 다음과 같이 사용하면 된다.
 
 ```java
 @ValueSource(Strings = {" ", "    ", "\t", "\n"})
@@ -1017,7 +1180,11 @@ void testWithEnumSource(TemporalUnit unit) {
 }
 ```
 
-value 속성은 선택이다. 생략하면 메소드에 선언된 첫번 째 타입 파라미터가 사용된다. enum 타입을 참조하지 않으면 테스트는 실패 한다. 위에 예제는 메소드 파라미터가 `TemporalUnit` 으로 선언되어 있기 때문에 value 속성이 필요하다. i.e. the interface implemented by ChronoUnit, which isn’t an enum type. Changing the method parameter type to ChronoUnit allows you to omit the explicit enum type from the annotation as follow
+value 속성은 선택이다. 생략하면 메소드에 선언된 첫번 째 타입 파라미터가 사용된다. enum 타입을 참조하지 않으면 테스트는 실패 한다. 위에 예제는 메소드 파라미터가 `TemporalUnit` 으로 선언되어 있기 때문에 value 속성이 필요하다(하지만 생략하면 첫번 째 파라미터가 사용됨).
+
+아래 예제는 Enum타입이 아닌 ChronoUnit을 바로 인자로 사용했는데, 이렇게 사용하면 @EnumSource의 타입설정을 생략해줄 수 있다.
+
+**@EnumSource의 enum Type 생략**
 
 ```java
 @ParameterizedTest 
@@ -1027,9 +1194,9 @@ void testWithEnumSourceWithAutoDetection(ChronoUnit unit) {
 }
 ```
 
+이 @EnumSource 속성으로 어떤 상수를 사용할지 지정해주는 추가적인 name 속성을 사용할 수 있다. 생략하면 모든 상수가 사용된다.
 
-
-이 어노테이션은 어떤 상수를 사용할지 지정해주는 추가적인 name 속성을 사용할 수 있다. 생략하면 모든 상수가 사용된다.
+**ChronoUnit 상수 중 DAYS와 HOURS만 테스트하기**
 
 ```java
 @ParameterizedTest
@@ -1041,6 +1208,8 @@ void testWithEnumSourceInclude(ChronoUnit unit) {
 
 @EnumSource 어노테이션은 mode 라는 추가적인 속성을 제공하는데, 이 속성은 어떤 상수를 테스트 메소드에 넘길지, 섬세하게 조절할 수 있는 기능이 있다. 예를 들어, enum 상수 풀 이나 특정 정규식에서 다음과 같이 특정 name만을 제외할 수 있다.
 
+**ChronoUnit 상수 중 EARS와 FOREVER 제외하고 테스트하기**
+
 ```java
 @ParameterizedTest 
 @EnumSource(mode = EXCLUDE, names = { "ERAS", "FOREVER" })
@@ -1049,7 +1218,7 @@ void testWithEnumSourceExclude(ChronoUnit unit) {
 }
 ```
 
-
+**ChronoUnit 상수 중 DAYS로 끝나는 상수만 테스트하기**
 
 ```java
 @ParameterizedTest 
@@ -1059,15 +1228,11 @@ void testWithEnumSourceRegex(ChronoUnit unit) {
 }
 ```
 
-
-
 **@MethodSource**
 
-@MethodSource는 하나 이상의 테스트 클래스 또는 외부 클래스 팩토리 메소드를 참조할 수 있다.
+@MethodSource는 하나 이상의 테스트 클래스 또는 외부 클래스 팩토리 메서드를 참조할 수 있다.
 
- 테스트 클래스 안에 있는 팩토리 메서드는 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 테스트 클래스에 붙이지 않았으면, 반드시 static을 붙여줘야 하며 외부 클래스에 있는 팩토리 메서드는 반드시 static을 붙여줘야 한다. 게다가 이런 팩토리 메서드는 어떠한 인자도 갖지 않는다.
-
-각각의 팩토리 메서드는 반드시 인자의 stream을 만들며, stream안의 각각의 인자들은 @ParameterizedTest 가 붙은 메소드의 독립적인 호출에 대하여 물리적인 인자를 제공한다. 일반적으로 말하면 인자의 Stream으로 번역해주는 것이지만, 실제 구체적인 반환 타입은 다양한 형태를 가질 수 있다. 여기서의 stream은 JUnit이 Stream으로 변환할 수 있는 어떤 것이든 해당한다, 예를 들어, Stream, DoubleStream, LongStream, IntStream, Collection, Iterator, Iterable 객체배열, 원시배열 등이다. stream안에 "인자"는 인자의 인스턴스로 제공될 수 있다. an array of objects (e.g., Object[]), or a single value if the parameterized test method accepts a single argument.
+테스트 클래스 안에 있는 팩토리 메서드는 `@TestInstance(Lifecycle.PER_CLASS)` 어노테이션을 테스트 클래스에 붙이지 않았으면, **반드시 static을 붙여줘야** 하며 **외부 클래스에 있는 팩토리 메서드는 반드시 static을 붙여줘야 한다**. 게다가 이런 팩토리 메서드는 어떠한 인자도 있으면 안된다.
 
 만약 하나의 파라미터만 필요하다면 다음과 같이 파라미터 타입의 인스턴스의 Stream을 리턴한다.
 
@@ -1083,11 +1248,14 @@ static Stream<String> stringProvider() {
 }
 ```
 
-@MethodSource를 통해서 팩토리 메소드 이름을 명시적으로 제공해주지 않으면, @ParamterizedTest 메소드가 붙은 현재 테스트 메소드 이름을 기준으로 팩토리 메소드를 찾는다.
+@MethodSource를 통해서 팩토리 메소드 이름을 명시적으로 제공해주지 않으면, @ParamterizedTest 메소드가 붙은 현재 테스트 메소드 이름을 기준으로 팩토리 메서드를 찾는다.
+
+**@MethodSource에서 메서드 이름 생략**
 
 ```java
 @ParameterizedTest 
-@MethodSource void testWithDefaultLocalMethodSource(String argument) { 	
+@MethodSource 
+void testWithDefaultLocalMethodSource(String argument) { 	
   assertNotNull(argument); 
 }
 
@@ -1096,7 +1264,9 @@ static Stream<String> testWithDefaultLocalMethodSource() {
 }
 ```
 
-다음과 같이 DoubleStream, IntStream, LongStream의 프리미트 타입의 Stream도 지원한다
+다음과 같이 DoubleStream, IntStream, LongStream의 primitive 타입의 Stream도 지원한다
+
+**primitive 타입 사용 예제**
 
 ```java
 @ParameterizedTest 
@@ -1109,9 +1279,11 @@ static IntStream range() {
 }
 ```
 
-파라미터화 테스트 메소드가 여러개의 파라미터를 갖고 있으면 collection , stream , 인자인스턴스의 배열, 객체 배열을 리턴해야 한다. 
+파라미터화 테스트 메서드가 여러 개의 파라미터를 갖고 있으면 collection , stream , 인자 인스턴스의 배열, 객체 배열을 리턴해야 한다. 
 
-arguments(Obejct)는 Arguments 인터페이스에 정의된 정적 팩토리 메소드 이다. arguments(Object)의 대안으로 Arguments.of(Object)를 사용할 수도 있다.
+arguments(Obejct)는 Arguments 인터페이스에 정의된 정적 팩토리 메서드 이다 arguments(Object)의 대안으로 Arguments.of(Object)를 사용할 수도 있다.
+
+**테스트 메서드 파라미터가 여러 개 일 때**
 
 ```java
 @ParameterizedTest 
@@ -2333,4 +2505,167 @@ test {
 >
 > `junit-platform-surefire-provider` 는 원래 JUnit 팀이 개발했었는데, JUnit Platform 1.3에서 deprecated 되었으며, 1.4에서는 중단되었다. 대신 Maven Surefire's native 를 사용하자. 
 
-version 2.22.0 부터, Maven Surefire와 Maven Failsafe는 JUnit Platform에서 실행되는 테스트에 대해  [native 지원](https://maven.apache.org/surefire/maven-surefire-plugin/examples/junit-platform.html) 을 한다. Junit5-jupiter-starter-maven `pom.xml` 파일
+version 2.22.0 부터, Maven Surefire와 Maven Failsafe는 JUnit Platform에서 실행되는 테스트에 대해  [native 지원](https://maven.apache.org/surefire/maven-surefire-plugin/examples/junit-platform.html) 을 한다. Junit5-jupiter-starter-maven안의  `pom.xml` 파일은 Maven Surefire 플러그인을 어떻게 사용하는지 보여주며, 메이븐 빌드를 위한 설정을 시작할 수 있다.
+
+**Test Engines 설정하기**
+
+Maven Surefire와 Maven Failsafe가 어디서든지 테스트를 실행하기 위해서 테스트클래스패스에 적어도 한개의 `TestEngine` 구현체가 필요하다.
+
+JUnit jupiter 기반 테스트를 설정하려면 JUnit Jupiter API와 JUnit Jupiter `TestEngine` 구현의 의존성을 test 범위로 설정해준다.
+
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>2.22.2</version>
+		</plugin>
+		<plugin>
+			<artifactId>maven-failsafe-plugin</artifactId>
+			<version>2.22.2</version>
+		</plugin>
+	</plugins>
+</build>
+<!-- ... -->
+<dependencies>
+	<!-- ... -->
+	<dependency>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter-api</artifactId>
+		<version>5.7.1</version>
+		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter-engine</artifactId>
+		<version>5.7.1</version>
+		<scope>test</scope>
+	</dependency>
+	<!-- ... -->
+</dependencies>
+<!-- ... -->
+```
+
+Maven Surefire과 Maven Failsafe는 다음과 같이 test 범위로 JUnit4와  JUnit Vintage `TestEngine` 구현체를 설정하면 JUnit4 기반의 테스트를 돌릴 수 도 있다.
+
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>2.22.2</version>
+		</plugin>
+		<plugin>
+			<artifactId>maven-failsafe-plugin</artifactId>
+			<version>2.22.2</version>
+		</plugin>
+	</plugins>
+</build>
+<!-- ... -->
+<dependencies>
+	<!-- ... -->
+	<dependency>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter-api</artifactId>
+		<version>5.7.1</version>
+		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter-engine</artifactId>
+		<version>5.7.1</version>
+		<scope>test</scope>
+	</dependency>
+	<!-- ... -->
+</dependencies>
+<!-- ... -->
+<build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>2.22.2</version>
+		</plugin>
+		<plugin>
+			<artifactId>maven-failsafe-plugin</artifactId>
+			<version>2.22.2</version>
+		</plugin>
+	</plugins>
+</build>
+<!-- ... -->
+<dependencies>
+	<!-- ... -->
+	<dependency>
+		<groupId>junit</groupId>
+		<artifactId>junit</artifactId>
+		<version>4.13</version>
+		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.junit.vintage</groupId>
+		<artifactId>junit-vintage-engine</artifactId>
+		<version>5.7.1</version>
+		<scope>test</scope>
+	</dependency>
+	<!-- ... -->
+</dependencies>
+```
+
+
+
+**테스트 클래스 이름으로 필터링 하기**
+
+Maven Surefire 플러그인은 다음의 패턴에 전부 일치하는 테스트 클래스를 스캔할 수 있다.
+
+- `**/Test*.java` 
+- `**/*Test.java` 
+- `**/*Tests.java` 
+- `**/*TestCase.java` 
+
+게다가 static 멤버 클래스를 포함해서 모든 중첩 클래스는 기본적으로 제외된다.
+
+그러나 pom.xml 파일안에 설정하면 기본동작을 변경할 수 있다. 예를 들어 static 멤버 클래스만 제외하고 싶으면 다음과 같이 규칙을 오버라이드 하면 된다.
+
+```xml
+<!-- ... -->
+<build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>2.22.2</version>
+			<configuration>
+				<excludes>
+					<exclude/>
+				</excludes>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+<!-- ... -->
+```
+
+좀 더 자세한 내용은 [여기](https://maven.apache.org/surefire/maven-surefire-plugin/examples/inclusion-exclusion.html) 를 참고하면 된다. 
+
+**태그로 필터링 하기**
+
+테스트를 다음과 같이 속성을 설정하면 tag과 tag expression으로 필터링할 수 있다.
+
+- tag나 tag expression을 포함하고 싶으면 `groups` 를 사용하자.
+- tag나 tag expression을 제외하고 싶으면 `excludedGroups` 를 사용하자.
+
+```xml
+<!-- ... -->
+<build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>2.22.2</version>
+			<configuration>
+				<groups>acceptance | !feature-a</groups>
+				<excludedGroups>integration, regression</excludedGroups>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+<!-- ... -->
+```
+
