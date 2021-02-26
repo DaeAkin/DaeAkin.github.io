@@ -1310,8 +1310,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 class ExternalMethodSourceDemo {
 
-@ParameterizedTest 
-@MethodSource("example.StringsProviders#tinyStrings") 
+  @ParameterizedTest 
+  @MethodSource("example.StringsProviders#tinyStrings") 
   void testWithExternalMethodSource(String tinyString) { 
     // test with tiny string 
   }
@@ -1346,7 +1346,7 @@ void testWithCsvSource(String fruit, int rank) {
 
 기본 구분자는 콤마를 사용하지만, delimiter 속성을 이용해서 다른 문자를 기본 구분자로 사용할 수도 있다. 또한 대안적으로 delimiterString 속성을 쓰면 문자 대신 문자열로 구분자를 사용할 수 있다. 그러나 delimiter 속성과 delimiterString을 동시에 사용하면 안된다.
 
-@CsvSource uses a single quote ' as its quote character. See the 'lemon, lime' value in the example above and in the table below. An empty, quoted value '' results in an empty String unless the emptyValue attribute is set; whereas, an entirely empty value is interpreted as a null reference. By specifying one or more nullValues, a custom value can be interpreted as a null reference (see the NIL example in the table below). An ArgumentConversionException is thrown if the target type of a null reference is a primitive type.
+`''` 의 결과는 emptyValue 속성이 설정되어 있지 않으면 빈 String을 반환하고, 아예 빈 값이면 null 값을 반환한다. 만약  null이 리턴하는 대상 타입이 primitive 타입일 경우 `ArgumentConversionException` 예외를 발생시킨다.
 
 | Example Input                                                | Resulting Argument List |
 | ------------------------------------------------------------ | ----------------------- |
@@ -1358,13 +1358,11 @@ void testWithCsvSource(String fruit, int rank) {
 
 **@CsvFileSource**
 
-@CsvFileSource는 클래스패스나 로컬 파일 시스템에 있는 CSV 파일을 사용합니다. CSV 파일에 있는 각각의 라인의 결과로 파라미터화 테스트에서는 오직 한번만 호출됩니다.
+@CsvFileSource는 클래스패스나 로컬 파일 시스템에 있는 CSV 파일을 사용합니다. CSV 파일에 있는 각각의 라인마다 파라미터화 테스트가 호출 된다.
 
-기본 구분자는 콤마(,)지만, delimiter 속성을 설정해서 다른 문자를 사용할 수 있습니다. 또한 대안적으로 delimiterString 속성을 쓰면 문자 대신 문자열로 구분자를 사용할 수 있다. 그러나 delimiter 속성과 delimiterString을 동시에 사용하면 안된다.
+기본 구분자는 콤마(,)지만, delimiter 속성을 설정해서 다른 문자를 사용할 수 있다. 또한 대안적으로 delimiterString 속성을 쓰면 문자 대신 문자열로 구분자를 사용할 수 있다. 그러나 delimiter 속성과 delimiterString을 동시에 사용하면 안된다.
 
 > CSV 파일안에 있는 #기호는 주석으로 처리됩니다.
-
-
 
 ```java
 @ParameterizedTest 
@@ -1390,10 +1388,6 @@ Sweden, 1
 Poland, 2
 "United States of America", 3
 ```
-
-In contrast to the syntax used in @CsvSource, @CsvFileSource uses a double quote " as the quote character. See the "United States of America" value in the example above. An empty, quoted value "" results in an empty String unless the emptyValue attribute is set; whereas, an entirely empty value is interpreted as a null reference. By specifying one or more nullValues, a custom value can be interpreted as a null reference. An ArgumentConversionException is thrown if the target type of a null reference is a primitive type.
-
-> An unquoted empty value will always be converted to a null reference regardless of any custom values configured via the nullValues attribute.
 
 
 
@@ -1425,9 +1419,9 @@ public class MyArgumentsProvider implements ArgumentsProvider {
 
 #### **인자 변환**
 
-**Widening 변환**
+**확대 변환 (Widening 변환)**
 
-@ParaterizedTest에 제공된 인자들은 Widening Primitive 변환을 지원한다. 예를 들어 @ValueSoue(ints = {1, 2, 3})이 적힌 파라미터화 테스트에서 int 타입 뿐만 아니라, long, float, double 타입들을 받을 수 있다. 
+@ParaterizedTest에 제공된 인자들은 확대 Primitive 변환을 지원한다. 예를 들어 @ValueSoue(ints = {1, 2, 3})이 적힌 파라미터화 테스트에서 int 타입 뿐만 아니라, long, float, double 타입들을 받을 수 있다. 
 
 **묵시적 변환**
 
@@ -1477,26 +1471,39 @@ String 인스턴스는 묵시적으로 ChronoUnit인 타켓 타입으로 묵시�
 | java.tim e.MonthD ay       | "--03-14" → MonthDay.of(3, 14)                               |
 | java.tim e.Offset DateTime | "2017-03-14T12:34:56.789Z" → OffsetDateTime.of(2017, 3, 14, 12, 34, 56, 789_000_000, ZoneOffset.UTC) |
 | java.tim e.Offset Time     | "12:34:56.789Z" → OffsetTime.of(12, 34, 56, 789_000_000, ZoneOffset.UTC) |
-| java.tim e.Period          | P2M6D" → Period.of(0, 2, 6)"                                 |
+| java.tim e.Period          | "P2M6D" → Period.of(0, 2, 6)                                |
 | java.tim e.YearMo nth      | "2017-03" → YearMonth.of(2017, 3)                            |
 | java.tim e.Year            | "2017" → Year.of(2017)                                       |
 | java.tim e.ZonedD ateTime  | "2017-03-14T12:34:56.789Z" → ZonedDateTime.of(2017, 3, 14, 12, 34, 56, 789_000_000, ZoneOffset.UTC) |
-| java.tim e.ZoneId          | Europe/Berlin" → ZoneId.of("Europe/Berlin")"                 |
+| java.tim e.ZoneId          | "Europe/Berlin" → ZoneId.of("Europe/Berlin")                |
 | java.tim e.ZoneOf fset     | "+02:30" → ZoneOffset.ofHoursMinutes(2, 30)                  |
 | java.uti l.Curren cy       | "JPY" → Currency.getInstance("JPY")                          |
-| java.uti l.Locale          | en" → new Locale("en")"                                      |
+| java.uti l.Locale          | "en" → new Locale("en")                                     |
 | java.uti l.UUID            | "d043e930-7b3b-48e3-bdbe-5a3ccfb833db" → UUID.fromString("d043e930-7b3b-48e3-bdbe- 5a3ccfb833db") |
 
 **Fallback String to-Object 변환** 
 
-또한 위에 있는 테이블에 있는 것 처럼 String 타입을 변환하려는 대상 타입으로 묵시적으로 변환할 수 있다. JUnit Jupiter는 만약 대상 타입이 아래에 적힌 것 처럼 정확히 하나의 팩토리 메소드 또는 팩토리 생성자에 알맞은 경우를 위해 String 타입을 자동적으로 변환해주는 fallback 메카니즘을 제공한다.
+위에 있는 테이블에 있는 것 처럼 String 타입을 변환하려는 대상 타입으로 묵시적으로 변환할 수 있지만, JUnit Jupiter는 만약 대상 타입이 아래에 적힌 것 처럼 **정확히 하나의 팩토리 메소드** 또는 팩토리 생성자에 알맞은 경우를 위해 String 타입을 자동적으로 변환해주는 fallback 메카니즘을 제공한다.
 
-- factory method : 접근자가 private가 아니여야함, static method declared in the target type that accepts a single String argument and returns an instance of the target type. The name of the method can be 55 arbitrary and need not follow any particular convention.
-- factory constructor : a non-private constructor in the target type that accepts a single String argument. Note that the target type must be declared as either a top-level class or as a static nested class
+- factory method : 접근자가 private가 아니여야 하며, 생성하고자 하는 클래스 내에 String 인자를 받으며 해당 타입을 리턴하는 static 메서드가 존재해야 한다. 네이밍컨벤션을 딱히 따르지 않아도 됨.
 
-> If multiple factory methods are discovered, they will be ignored. If a factory method and a factory constructor are discovered, the factory method will be used instead of the constructor.
+  ```java
+  public class Book {
+  
+    private final String title;
+    
+    public static Book fromTitle(String title) {
+  		return new Book(title); 
+    }
+  
+  }
+  ```
 
-아래 예제에서, @ParameterizedTest 메소드에서, Book 인자는 Book.fromTitle(String) 팩토리 메소드가 호출될 때 생성되며, title의 값으로 "42 Cats" 전달 된다.
+- factory constructor : 대상 클래스에 private 아닌 생성자로 하나의 String을 받는 생성자가 있어야 한다.
+
+> 만약 여러개의 팩토리 메서드가 있으면 무시된다. 팩토리 메서드와 팩터리 생성자 두개가 있으면 생성자 대신 팩터리 메서드를 사용한다.
+
+아래 예제에서, @ParameterizedTest 메소드에서, Book 인자는 `Book.fromTitle(String)` 팩토리 메서드가 호출될 때 생성되며, title의 값으로 "42 Cats" 전달 된다.
 
 ```java
 @ParameterizedTest 
@@ -1580,8 +1587,6 @@ public class ToLengthArgumentConverter extends TypedArgumentConverter<String, In
 
 명시적 인자 컨버터는 테스트를 구현하거나, authors ?를  확장할 때 사용한다, 그러므로 junit-jupiter-params는 참조 구현(reference implementation)을 제공하는 JavaTimeArgumentConverter 오직 하나의 명시적 인자 컨버터만 제공한다. JavaTimeConversionPattern 어노테이션을 사용할 때 사용된다. 
 
-
-
 ```java
 @ParameterizedTest 
 @ValueSource(strings = { "01.01.2017", "31.12.2017" }) 
@@ -1592,13 +1597,11 @@ void testWithExplicitJavaTimeConverter(
 }
 ```
 
-
-
 #### **인자 수집**
 
-기본적으로 @ParameterizedTest 메소드에 제공되는 각각의 인자들은 하나의 메소드 파라미터와 일치한다. 결과적으로 많은 인자가 제공될 것이 예상 되는 인자 소스는 많은 메소드 시그니쳐를 낳게 된다.
+기본적으로 @ParameterizedTest 메소드에 제공되는 각각의 인자들은 하나의 메소드 파라미터와 일치한다. 만약에 테스트 메서드가 많은 인자들을 요구 할 경우 인자 수 만큼 파라미터의 개수가 늘어나게 된다.
 
-이런 경우때문에 `ArgumentsAccessor` 는 여러개의 파라미터를 대신하여 사용한다. 이 API를 사용하기 위해 테스트 메소드에 제공된 하나의 인자를 통해서 접근할 수 있다. 게다가 위에서 묵시적 변환에서 얘기한 것 처럼 타입 변환이 지원 된다.
+이런 경우때문에 `ArgumentsAccessor` 는 여러 개의 파라미터를 대신하여 사용한다. 이 API를 사용하기 위해 테스트 메소드에 제공된 하나의 인자를 통해서 접근할 수 있다. 게다가 위에서 **묵시적 변환에서 얘기한 것 처럼 타입 변환이 지원 된다.**
 
 ```java
 @ParameterizedTest 
@@ -1624,15 +1627,11 @@ void testWithArgumentsAccessor(ArgumentsAccessor arguments) {
 
 ArgumentsAccessor 인스턴스는 자동으로 ArgumentsAccessor 타입의 파라미터에 주입된다.
 
-
-
 **커스텀 수집**
 
-ArgumentsAccessor를 @ParameterizedTest 인자로 직접적으로 접근하는걸 제외하고, 커스텀하고, 재사용 가능한 수집기를 사용할 수 있다.
+ArgumentsAccessor를 @ParameterizedTest 인자로 직접적으로 접근하는걸 제외하고, 사용자 정의의 재사용 가능한 수집기를 사용할 수 있다.
 
 커스텀 수집기를 사용하기 위해서 ArgumentsAggregator 인터페이스를 구현해서, @AggregateWith 어노테이션을 통해서 등록해야 한다. 
-
-Note that an implementation of ArgumentsAggregator must be declared as either a top-level class or as a static nested class.
 
 ```java
 @ParameterizedTest 
@@ -1683,8 +1682,6 @@ void testWithCustomAggregatorAnnotation(@CsvToPerson Person person) {
 public @interface CsvToPerson { }
 ```
 
-
-
 #### DispalyName 커스텀 하기
 
 기본적으로 파라미터화 테스트 호출의 display name은 호출된 index와 특정 호출에 관련한 모든 인자를 나타내는 String으로 이루어져 있다. 각각 앞에 파라미터 변수 이름이 붙는다. 
@@ -1720,63 +1717,62 @@ name 속성은 `MessageFormat` 패턴을 사용한다. 그래서 작은따옴표
 | {argumentsWithNames} | the complete, comma-separated arguments list with parameter names |
 | {0}, {1}, …          | 0번째 인자 1번째 인자..                                      |
 
+> 인자를 displayname에 표현할 때, 최대 표현 글자 수가 넘어가면 생략된다. 이 설정은 기본값은 512이며, `junit.jupiter.params.displayname.argument.maxlength` 에서 변경가능하다.
+>
 
+#### 생명주기와 상호작용(Interoperability) 
 
-> When including arguments in display names, their string representations are truncated if they exceed the configured maximum length. The limit is configurable via the junit.jupiter.params.displayname.argument.maxlength configuration parameter and defaults to 512 characters.
+@BeforeEach 메소드는 호출 전에 실행 되듯이, 파라미터화 테스트는 호출마다 @Test 메소드와 동일한 생명주기를 갖는다. 다이나믹 테스트와 비슷하게, 호출마다 테스트이 트리가 하나씩 IDE에 보여진다. 일반적인 @Test 메소드와 @ParamterizedTest 메소드를 같은 테스트 클래스안에 혼합해서 사용해도 된다.
 
+그러나 @ParamterizedTest를 사용할 때는 항상 인자를 받는 파라미터가 먼저 와야한다.
 
-
-#### 생명주기와 상호작용성?(Interoperability) 
-
-@BeforeEach 메소드는 호출 전에 실행 되듯이, 파라미터화 테스트는 호출마다 @Test 메소드와 동일한 생명주기를 갖는다. 다이나믹 테스트와 비슷하게, 호출마다 테스트이 트리가 하나씩 IDE에 보여진다. 일반적인 @Test 메소드와 @ParamterizedTest 메소드를 같은 테스트 클래스안에 혼합해서 사용할 수 있다.
-
-@ParameterizedTest 메소드를 ParamterResolver를 확장해서 사용하지만, argument source에 의해 제공되는 메소드 파라미터들은 인자 리스트에 먼저 와야한다, 테스트 클래스가 
-
-
-
-ou may use ParameterResolver extensions with @ParameterizedTest methods. However, method parameters that are resolved by argument sources need to come first in the argument list. Since a test class may contain regular tests as well as parameterized tests with different parameter lists, values from argument sources are not resolved for lifecycle methods (e.g. @BeforeEach) and test class constructors.
+**잘못된 파라미터 순서를 가진 @ParamterizedTest 예제**
 
 ```java
-@BeforeEach void beforeEach(TestInfo testInfo) {
+@ParameterizedTest
+@ValueSource(strings = "apple")
+void testWithRegularParameterResolver(TestReporter testReporter,String argument) {
+    testReporter.publishEntry("argument", argument);
+}
+```
 
-// ...
+**올바른 예**
 
-} @ParameterizedTest @ValueSource(strings = "apple") void testWithRegularParameterResolver(String argument, TestReporter testReporter) {
-
-testReporter.publishEntry("argument", argument); } @AfterEach void afterEach(TestInfo testInfo) {
-
-// ... }
+```java
+@ParameterizedTest
+@ValueSource(strings = "apple")
+void testWithRegularParameterResolver(String argument,TestReporter testReporter) {
+    testReporter.publishEntry("argument", argument);
+}
 ```
 
 
 
 ### 테스트 템플릿
 
-@TestTemplate 메소드는 일반적인 테스트 케이스보단 테스트 케이스에 대한 템플릿 이다. 등록된 프로바이더가 리턴하는 컨텍스트 호출 수에 따라 여러번 호출 되도록 디자인 되었다. 그래서 반드시 등록된 TestTemplateInvocationContextProvider와 함 께 사용해야 한다. 테스트 템플릿 메소드의 각각의 호출은 일반적인 @Test 메소드처럼 실행된다. 
+@TestTemplate 메소드는 일반적인 테스트 케이스보단 **테스트 케이스에 대한 템플릿** 이다. 등록된 프로바이더가 리턴하는 컨텍스트 호출 수에 따라 여러번 호출 되도록 디자인 되었다. 그래서 반드시 등록된 `TestTemplateInvocationContextProvider`와 함 께 사용해야 한다. 테스트 템플릿 메소드의 각각의 호출은 일반적인 @Test 메소드처럼 실행된다. 
 
-> Repared Test와 Parameterized Test는 내장된 테스트 템플릿 중 하나이다.
+> Repeated Test와 Parameterized Test는 내장된 테스트 템플릿 중 하나이다.
 
 
 
 ### Dynamic Test (동적 테스트)
 
-JUnit Jupiter의 @Test 어노테이션은 Junit 4의 @Test 어노테이션과 굉장히 유사하다. 둘다 테스트 케이스에 대한 내용이 메소드 안에 있다. 이런 테스트 케이스는 그 상태로 정적이며, 컴파일 시간에 정해지며, 런타임 시에도 아무 변화가 없다.  
+JUnit Jupiter의 @Test 어노테이션은 Junit 4의 @Test 어노테이션과 굉장히 유사하다. 둘다 테스트 케이스에 대한 내용이 메소드 안에 있다. **<u>이런 테스트 케이스는 그 상태로 정적이며, 컴파일 시간에 정해지며, 런타임 시에도 아무 변화가 없다.</u>**  
 
-Junit Jupiter는 이 기본 테스트들에 대해 완전히 새로운 테스트 프로그래밍 모델을 소개 했다. 이 새로운 종류의 테스트는 @TestFactory 어노테이션이 붙은 팩토리 메소드에 의해 런타임시 만들어지는 동적 테스트이다.
+Junit Jupiter는 이 기본 테스트들에 대해 완전히 새로운 테스트 프로그래밍 모델을 소개 했다. 이 모델은 **@TestFactory 어노테이션이 붙은 팩토리 메소드에 의해 런타임시 만들어지는 동적 테스트이다.**
 
-@Test 어노테이션을 사용하는 메소드와 반대로, @TestFactory 메소드는 그 자체로 테스트는 아니며, 팩토리 메소드가 테스트 케이스다. 그래서, 동적 테스트는 팩토리의 제품이다. 기술적으로 말하자면, @TestFactory 메소드는 반드시 하나의 DynamicNode나, Stream,Collection,Interable,Interator 나 DynamicNode 인스턴스의 배열을 리턴해야 한다. DynamicContainer 인스턴스는 dispalyName과랜덤으로 dynamic node의 중첩 계층을 만들 수 있는 동적 자식 노드의 리스트로 이루어져 있다. DynamicTest 인스턴스는 lazy 실행되어 테스트 케이스의 동적 생성과 비 결정적(non-deterministic) 생성이 가능하다.
+@Test 어노테이션을 사용하는 메소드와 반대로, @TestFactory 메소드는 그 자체로 테스트는 아니며, 팩토리 메소드가 테스트 케이스다. 그래서, 동적 테스트는 팩토리의 산물이다. 기술적으로 말하자면, @TestFactory 메소드는 반드시 하나의 **DynamicNode ,Stream, Collection, Interable, Interator, DynamicNode** 인스턴스의 배열을 리턴해야 한다. DynamicContainer 인스턴스는 dispalyName 과 랜덤으로 dynamic node의 중첩 계층을 만들 수 있는 동적 자식 노드의 리스트로 이루어져 있다. DynamicTest 인스턴스는 lazy 실행되어 테스트 케이스의 동적 생성과 비 결정적(non-deterministic) 생성이 가능하다.
 
 @TestFactory 가 리턴하는 Stream은 stream.close()을 호출해서 닫아줘야 Files.lines() 같은 리소스를 안전하게 사용할 수 있다.
 
 @Test 메소드를 같이 쓰려면,  @TestFactory를 반드시 private나  static으로 선언하면 안되며, 선택적으로 ParameterResolver에서 파라미터를 제공해주는 걸 사용할 수 있다.
 
-그래서 DynamicTest는 런타임시 만들어지는 테스트케이스를 말한다. displayname과  A DynamicTest is a test case generated at runtime. It is composed of a display name and an Executable. Executable is a @FunctionalInterface which means that the implementations of dynamic tests can be provided as lambda expressions or method references.
+그래서 DynamicTest는 런타임시 만들어지는 테스트케이스를 말한다. DynamicTest는 display name과 다이나믹 테스트에서 람다 표현식이나 메서드추론 방식으로 제공될 수 있는 펑셔널인터페이스의 조합이라고 볼 수 있다.
 
-> 동적 테스트 생명주기
+> Dynamic 테스트 생명주기
 >
-> 동적 테스트의 생명주기는 @Test 어노테이션과는 좀 다르다. 특히 콜백 라이플 사이클이 존재하지 않는데, @BeforeEach 와 @AfterEach 메소드는 @TestFactory 메소드에서는 실행하는데, 각각의 동적테스트에 대해서는 실행하지 않는다. 다른 말로, 동적테스트 관한 람다 표현식안의 테스트 인스턴스의 필드에 접근하기위해서 해당 필드는 초기화 되지 않는 다는 말이다. 
-
-JUnit Jupiter 5.7.0이 되면서 동적 테스트는 반드시 항상 factory 메소드가 만들어야 한다. however, this might be complemented by a registration facility in a later release.
+> Dynamic 테스트의 생명주기는 @Test 어노테이션과는 좀 다르다. 특히 콜백 라이플 사이클이 존재하지 않는데, @BeforeEach 와 @AfterEach 메소드는 @TestFactory 메소드에서는 실행하는데, 각각의 Dynamic 테스트에 대해서는 실행하지 않는다. 다른 말로, Dynamic 테스트 관한 람다 표현식안의 테스트 인스턴스의 필드에 접근하기위해서 해당 필드는 초기화 되지 않는 다는 말이다. 
 
 #### 동적 테스트 예제
 
@@ -1784,53 +1780,19 @@ JUnit Jupiter 5.7.0이 되면서 동적 테스트는 반드시 항상 factory �
 
 첫번 째 메소드는 유효하지 않은 타입을 반환한다. 유효하지 하지 않는 타입을 리턴하는건 컴파일 시에 알수 없고 런타임시에 알 수 있기 때문에, 발견되면 JUnitException을 던진다.
 
-다음 5개의 메소드는 DynamicTest 인스턴스의 Collection, Iterable, Iterator, Stream을 만드는 간단한 예제이다. 대부분의 예제는 동적 동작을 제대로 보여주진 않고, 그저 규칙에 맞게 지원되는 리턴 타입을 반환하기만 한다. 그러나 dynamicTestFromStream() 과 dynamicTestsFromIntStream()은 주어진 string의 set과 인풋 숫자의 범위로 동적 테스트를 얼마나 쉽게 만드는지 보여준다.
-
-그 다음 메소드는 정말로 다이나믹하다. generateRandomNumberOfTests()는 랜덤 숫자를 만드는 Iterator, display name generator, test executor를 만들어, 이 세개를 DynamicTest.stream()에게 제공한다.  generateRandomNumberOfTests()의 비 결정적(non-deterministic) 동작 때문에 반복되는 테스트와 충돌은 날수 있기 때문에 사용에 주의 해야 한다. 동적 테스트는 표현력이 뛰어나다.
-
-그 다음 메소드는 유연셩 측면에서 generateRandomNumberOfTests()와 비슷하다. 그러나 dynamicTestsFromStreamFactoryMethod()는  DynamicTest.stream 팩토리 메소드를 통해서 다이나믹 테스트의 stream을 만들어낸다.
-
-증명하기 위해서, dynamicNodeSingleTest()메소드는 stream 대신 하나의 DynamicTest를 만든다. the dynamicNodeSingleContainer() method generates a nested hierarchy of dynamic tests utilizing DynamicContainer.
+**DynamicNode ,Stream, Collection, Interable, Interator, DynamicNode** 중 하나를 리턴하지 않아서 실패한다.
 
 ```java
-package dev.donghyeon.junitstudy.dynamic;
+@TestFactory
+List<String> dynamicTestsWithInvalidReturnType() {
+  return Arrays.asList("Hello");
+}
+```
 
-import static dev.donghyeon.junitstudy.StringUtils.isPalindrome;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
-import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+다음 5개의 메소드는 DynamicTest 인스턴스의 Collection, Iterable, Iterator, Stream을 만드는 간단한 예제이다. 대부분의 예제는 동적 동작을 제대로 보여주진 않고, 그냥 규칙에 맞게 지원되는 리턴 타입을 반환하기만 한다. 그러나 `dynamicTestFromStream()` 과 `dynamicTestsFromIntStream()`은 주어진 string의 set과 인풋 숫자의 범위로 동적 테스트를 얼마나 쉽게 만드는지 보여준다.
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-
-import dev.donghyeon.junitstudy.Calculator;
-import org.junit.jupiter.api.DynamicNode;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.TestFactory;
-import org.junit.jupiter.api.function.ThrowingConsumer;
-
-class DynamicTestsDemo {
-
-    private final Calculator calculator = new Calculator();
-
-    // This will result in a JUnitException!
-    @TestFactory
-    List<String> dynamicTestsWithInvalidReturnType() {
-        return Arrays.asList("Hello");
-    }
-
-    @TestFactory
+```java
+	  @TestFactory
     Collection<DynamicTest> dynamicTestsFromCollection() {
         return Arrays.asList(
                 dynamicTest("1st dynamic test", () -> assertTrue(isPalindrome("madam"))),
@@ -1876,12 +1838,15 @@ class DynamicTestsDemo {
         return IntStream.iterate(0, n -> n + 2).limit(10).mapToObj(n -> dynamicTest("test" + n, () -> assertTrue(n % 2 == 0)));
 
     }
+```
 
+그 다음 메소드는 정말로 다이나믹하다. generateRandomNumberOfTests()는 랜덤 숫자를 만드는 Iterator, display name generator, test executor를 만들어, 이 세개를 DynamicTest.stream()에게 제공한다.  generateRandomNumberOfTests()의 비 결정적(non-deterministic) 동작 때문에 반복되는 테스트와 충돌은 날수 있기 때문에 사용에 주의 해야 한다. 동적 테스트는 뛰어난 표현력을 갖고 있다.
+
+```java
     @TestFactory
     Stream<DynamicTest> generateRandomNumberOfTestsFromIterator() {
-
-        // Generates random positive integers between 0 and 100 until
-        // a number evenly divisible by 7 is encountered.
+      
+				// 0~100 부터 랜덤한 int 값을 만들어 7로 나누어지지 않는 수를 만든다.
         Iterator<Integer> inputGenerator = new Iterator<Integer>() {
             Random random = new Random();
             int current;
@@ -1898,34 +1863,40 @@ class DynamicTestsDemo {
             }
 
         };
-        // Generates display names like: input:5, input:37, input:85, etc.
+        // 다음과 같이 표시할 display name을 만든다 : input:5, input:37, input:85, etc.
         Function<Integer, String> displayNameGenerator = (input) -> "input:" + input;
-        // Executes tests based on the current input value.
+        // 현재 input 값에 대하여 테스트를 실행한다.
         ThrowingConsumer<Integer> testExecutor = (input) -> assertTrue(input % 7 != 0);
 
-        // Returns a stream of dynamic tests.
-
+        // dynamic tests의 스트림을 반환한다.
         return DynamicTest.stream(inputGenerator, displayNameGenerator, testExecutor);
-
     }
+```
 
-    @TestFactory
+그 다음 메소드는 유연셩 측면에서 generateRandomNumberOfTests()와 비슷하다. 그러나 dynamicTestsFromStreamFactoryMethod()는  DynamicTest.stream 팩토리 메소드를 통해서 다이나믹 테스트의 stream을 만들어낸다.
+
+```java
+	  @TestFactory
     Stream<DynamicTest> dynamicTestsFromStreamFactoryMethod() {
 
-        // Stream of palindromes to check
+        // 검사할 회문의 stream을 만든다.
         Stream<String> inputStream = Stream.of("racecar", "radar", "mom", "dad");
 
-        // Generates display names like: racecar is a palindrome
-        Function<String, String> displayNameGenerator = text -> text + " is a palindrome";
+        // 보여줄 displayname을 만든다 : racecar는 회문이다.
+        Function<String, String> displayNameGenerator = text -> text + " 는 회문이다.";
 
-        // Executes tests based on the current input value.
+        // 현재 input에 대해 테스트를 실행한다. 
         ThrowingConsumer<String> testExecutor = text -> assertTrue(isPalindrome(text));
 
-        // Returns a stream of dynamic tests.
+        // dynamic tests의 stream을 리턴
         return DynamicTest.stream(inputStream, displayNameGenerator, testExecutor);
 
     }
+```
 
+`dynamicNodeSingleTest()` 메소드는 하나의 테스트 케이스에 대해서 DynamicTest를 만들기 때문에 Stream으로 리턴하는 대신 바로 DynamicNode를 리턴한다. 
+
+```java
     @TestFactory
     Stream<DynamicNode> dynamicTestsWithContainers() {
 
@@ -1951,10 +1922,9 @@ class DynamicTestsDemo {
                         .map(text -> dynamicTest(text, () -> assertTrue(isPalindrome(text)))
                 ));
     }
-
-}
-
 ```
+
+
 
 
 
