@@ -5,3 +5,7 @@ Thumbs.db
 _drafts
 .ruby-version
 Gemfile.lock
+
+_posts/.DS_Store
+
+.DS_Store
