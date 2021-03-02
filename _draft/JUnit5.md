@@ -2072,7 +2072,7 @@ void pollUntil() throws InterruptedException {
 
 디버그모드로 테스트를 돌릴 때, 고정된 타임아웃 제한은 테스트결과에 영향이 있을 수 있다. 예를 들어 모든 검증이 성공했음에도 테스트가 실패할 수 있다.
 
-Junit jupiter는 `junit.jupiter.execution.timeout.mode` 설정 파라미터를 지원해서 원할 때 enabled, disabled, disabled_on_debug 세가지 모드로 변경할 수 있다. 기본 값은 enabled 이다. VM 런타임이 인풋 파라미터가 -agentlib:jdwp로 시작하는 파라미터가 있으면 디버그 모드로 실행된다. 
+Junit jupiter는 `junit.jupiter.execution.timeout.mode` 설정 파라미터를 지원해서 enabled, disabled, disabled_on_debug 세가지 모드로 변경할 수 있다. 기본 모드는 enabled 이다. VM 런타임이 인풋 파라미터가 -agentlib:jdwp로 시작하는 파라미터가 있으면 디버그 모드로 실행된다. 
 
 ### 병렬적 실행
 
@@ -2098,45 +2098,51 @@ Junit jupiter는 `junit.jupiter.execution.timeout.mode` 설정 파라미터를 �
 junit.jupiter.execution.parallel.enabled = true junit.jupiter.execution.parallel.mode.default = concurrent
 ```
 
-기본 실행 모드는 Lifecycle.PER_CLASS 모드 또는 MethodOrderer를 사용하는 테스트 클래스르 제외하고 테스트 트리의 모든 노드에 적용 된다. Lifecycle.PER_CLASS의 경우 테스트 작성자는 테스트 클래스가 스레드로부터 안전한지 확인해야 한다. MethodOrderer 경우, 동시 실행이 구성된 실행순서와 충돌할 수 있다. 따라서 두 경우 모두 이러한 테스트 클래스의 테스트 메서드는 @Execution(CONCURRENT)주석이 테스트 클래스 또는 메서드에 있는 경우에만 병렬적으로 실행된다.
+기본 실행 모드는 Lifecycle.PER_CLASS 모드 또는 MethodOrderer 둘 중 하나가 테스트 트리의 모든 노드에 적용 된다. Lifecycle.PER_CLASS을 사용할 경우 테스트 작성자는 **테스트 클래스가 스레드로부터 안전한지 확인해야 한다.** MethodOrderer 경우, 동시 실행이 구성된 실행순서와 충돌할 수 있다. 따라서 두 경우 모두 `@Execution(CONCURRENT)`주석이 테스트 클래스 또는 메서드에 있는 경우에만 병렬적으로 실행된다.
 
-CONCURRENT 실행 모드로 구성된 테스트 트리의 모든 노드는 선언적 동기화 메커니즘을 관찰하면서 제공된 구성에 따라 완전히 병렬로 실행된다. Please note that Capturing Standard Output/Error needs to be enabled separately.
+CONCURRENT 실행 모드로 구성된 테스트 트리의 모든 노드는 선언적 동기화 메커니즘을 관찰하면서 제공된 구성에 따라 완전히 병렬로 실행된다. 
 
-추가적으로 junit.jupiter.execution.parallel.mode.classes.default 설정 파라미터를 클래스 최상단에 설정할 수 있다. 이 설정을 위에 설정해준거랑 같이 써주면 병렬적으로 실행되지만, 메소드들은 같은 스레드에서 실행된다.
+추가적으로 `junit.jupiter.execution.parallel.mode.classes.default` 설정 파라미터를 클래스 설정할 수 있다. 이 설정을 위에 설정해준거랑 같이 사용하면 병렬적으로 실행되지만, **메소드들은 같은 스레드에서 실행된다.**
+
+**테스트 클래스를 병렬적으로 실행하지만 클래스 마다 메서드를 같은 스레드안에서 실행하는 설정 파라미터**
 
 ```
 junit.jupiter.execution.parallel.enabled = true junit.jupiter.execution.parallel.mode.default = same_thread junit.jupiter.execution.parallel.mode.classes.default = concurrent
 ```
 
-이와 반대적인 설정은, 하나의 클래스의 모든 메소드는 병렬적으로 실행되지만, 최상위 클래스는 순차적으로 실행된다.
+이와 반대적인 설정은, 하나의 클래스의 모든 메소드는 병렬적으로 실행되지만, 클래스 마다 순차적으로 실행된다.
+
+**테스트 클래스를 순차적으로 실행하지만 그 안에 있는 메서드는 병렬적으로 실행한다.**
 
 ```
 junit.jupiter.execution.parallel.enabled = true junit.jupiter.execution.parallel.mode.default = concurrent junit.jupiter.execution.parallel.mode.classes.default = same_thread
 ```
 
-![스크린샷 2021-01-07 오전 8.44.54](/Users/donghyeonmin/Library/Application Support/typora-user-images/스크린샷 2021-01-07 오전 8.44.54.png)
+즉 junit.jupiter.execution.parallel.mode.default 은 테스트 메서드들을 병렬적으로 실행할건지에 대한 설정이고, junit.jupiter.execution.parallel.mode.classes.default 은 테스트 클래스들을 병렬적으로 실행할건지에 대한 설정이다.
 
-If the junit.jupiter.execution.parallel.mode.classes.default configuration parameter is explicitly set, the value for junit.jupiter.execution.parallel.mode.default will be used instead.
+**파라미터에 따른 실행 예시**
 
+![]({{site.url}}/images/junit5/parallelExecute.png)
 
+`junit.jupiter.execution.parallel.mode.default` 가 설정되지 않았으면,  `junit.jupiter.execution.parallel.mode.classes.default` 의 값으로 대신 사용된다.
 
 #### 설정
 
-`ParallelExecutionConfigurationStrategy` 을 이용하여 원하는 병렬과, 최대 풀 사이즈의 프로퍼티들을 설정할 수 있다. dynamic과 fixed 두개의 구현을 제공한다. 아니면 커스텀해서 사용해도 된다.
+`ParallelExecutionConfigurationStrategy` 을 이용하여 원하는 병렬과, 최대 풀 사이즈의 프로퍼티들을 설정할 수 있다. dynamic과 fixed 두개의 구현을 제공하며 커스텀해서 사용해도 된다.
 
-사용하고 싶은 구현을 선택하려면 junit.jupiter.execution.parallel.config.strategy 설정 파라미터를 사용해야 한다.
+사용하고 싶은 구현을 선택하려면 `junit.jupiter.execution.parallel.config.strategy` 설정 파라미터를 사용해야 한다.
 
 **dynamic**
 
-junit.jupiter.execution.paralle.config.dynamic.factor 설정 파라미터에 설정된 값과 사용가능한 프로세스/ 코어 수를 곱하여 원하는 병렬 처리를 계산한다. (기본 값은 1)
+`junit.jupiter.execution.paralle.config.dynamic.factor` 설정 파라미터에 설정된 값과 사용가능한 프로세스와 코어 수를 곱하여 원하는 병렬 처리를 계산한다. (기본 값은 1)
 
 **fixed**
 
-필수적인 junit.jupiter.execution.parallel.config.fixed.parallelism 설정 파라미터를 원하는 병렬 처리로 사용 한다.
+필수적인 `junit.jupiter.execution.parallel.config.fixed.parallelism` 설정 파라미터를 원하는 병렬 처리로 사용 한다.
 
 **custom**
 
-필수적인 junit.jupiter.execution.parallel.config.custom.class 설정 파라미터를 통해 사용자 지정 ParallelExecutionConfigurationStrategy 구현을 지정하여 원하는 설정을 결정한다.
+필수적인 `junit.jupiter.execution.parallel.config.custom.class` 설정 파라미터를 통해 사용자 지정 ParallelExecutionConfigurationStrategy 구현을 지정하여 원하는 설정을 결정한다.
 
 만약 어떠한 전략도 설정되지 않았으면, factor 1을 가진 dynamic 설정을 이용한다. 그렇게 되면, 병렬 구성은 프로세서/코어의 사용 가능한 수로 사용된다.
 
@@ -2148,9 +2154,9 @@ junit.jupiter.execution.paralle.config.dynamic.factor 설정 파라미터에 설
 
 #### 동기화(Synchronization)
 
-@Execution 어노테이션을 이용해서 실행 모드를 컨트롤 하기 위해, Junit은 또 다른 어노테이션 기반 선언적 동기화 메카니즘을 제공한다. @ResourceLock 어노테이션은 테스트 클래스나 메서드에 선언할 수 있으며, 안정적인 테스트 실행 보장하기 위해 동기화된 접근이 필요한 특정 공유 자원에 사용한다.
+실행 모드를 컨트롤 하기 위해서 @Execution 어노테이션을 이용한다. Junit은 또 다른 어노테이션 기반 선언적 동기화 메카니즘을 제공한다. @ResourceLock 어노테이션은 테스트 클래스나 메서드에 선언할 수 있으며, **안정적인 테스트 실행 보장하기 위해 동기화된 접근이 필요한 특정 공유 자원에 사용한다.**
 
-공유 자원은 String타입으로 유일한 이름을 갖도록하여 식별한다. 이름은 사용자가 정의하거나, Resources 안에 미리 선언된 SYSTEM_PROPERTIES, SYSTEM_OUT, SYSTEMERR, LOCALE, TIME_ZONE을 사용할 수 있다.
+이런 공유 자원은 String 타입으로 유일한 이름을 갖도록하여 식별한다. 이름은 사용자가 정의하거나, Resources 상수 안에 미리 선언된 SYSTEM_PROPERTIES, SYSTEM_OUT, SYSTEMERR, LOCALE, TIME_ZONE을 사용할 수 있다.
 
 만약 아래의 테스트가 @ResourceLock 어노테이션 없이 병렬하게 실행된다면 테스트가 이상해진다. 가끔은 테스트가 패스되고,  가끔은 race condition 때문에 실패하기도 한다. 
 
@@ -2202,17 +2208,15 @@ class SharedResourcesDemo {
 }
 ```
 
-
-
 ### Built-in Extensions
 
-Junit 팀은 재사용 가능한 extension이 패키징되고 유지되도록 권장하지만, Junit Jupiter API 아티팩트는 일반적으로 유옹하여 사용자가 다른 의존성을 추가할 필요 없이 몇 가지의 extension이 포함되어 있다.
+Junit 팀은 재사용 가능한 extension이 분리된 라이브러리로 패키징되고 유지되도록 권장하지만, Junit Jupiter API 아티팩트는 일반적으로 유용하며 사용자가 다른 의존성을 추가할 필요 없이 몇 가지의 extension이 포함되어 있다.
 
 #### TempDirectory Extension
 
 > @TempDir는 experimental 기능이다.
 
-TempDirectory extension은 테스트클래스 안에 있는 독립적인 테스트 또는 모든 테스트에 대해 임시 디렉토리를 생성하거나, 정리를 할 때 사용한다. 이 기능을 사용하려면 접근 제어자가 private이 아닌 `java.nio.file.Path` 나 `java.io.File` 필드에 @TempDir 어노테이션을 붙이거나, 파라미터에 붙여준다.  
+TempDirectory extension은 테스트클래스 안에 있는 독립적인 테스트 또는 모든 테스트에 대해 **임시 디렉토리를 생성하고 정리를 할 때** 사용한다. 이 기능을 사용하려면 접근 제어자가 private이 아닌 `java.nio.file.Path` 나 `java.io.File` 필드에 `@TempDir` 어노테이션을 붙이거나, 파라미터에 붙여준다.  
 
 ```java
 @Test 
@@ -2227,7 +2231,9 @@ void writeItemsToFile(@TempDir Path tempDir) throws IOException {
 
 
 
-다음의 예제는 static field에 있는 공유 임시 디렉토리에 저장한다. This allows the same sharedTempDir to be used in all lifecycle methods and test methods of the test class.
+다음의 예제는 static field에 있는 공유 임시 디렉토리에 저장한다. 이렇게 작성하면 모든 라이프사이클 메서드와 테스트 메서드가 같은 `sharedTempDir`을 사용하게 된다.
+
+**모든 테스트가 임시 디렉토리를 공유하는 테스트 클래스**
 
 ```java
 class SharedTempDirectoryDemo {
@@ -2254,15 +2260,15 @@ class SharedTempDirectoryDemo {
 
 ## Junit4에서 마이그레이션 하기
 
-JUnit Juptier 프로그래밍 모델과 extensiom 모델은 Junit4 특징인 Rules과 Runners에 네이티브하게 지원되지는 않지만, 반드시 버전업을 해야되는건 아니다.
+JUnit Juptier 프로그래밍 모델과 extension 모델은 Junit4 특징인 Rules과 Runners에 네이티브하게 지원되지는 않지만, 반드시 JUnit5로 버전업을 해야되는건 아니다.
 
-대신 JUnit은 Junit 플랫폼 인프라를 이용해  JUnit3와 와  JUnit4 기반의 테스트를 실행시켜주는  Junit Vintage 테스트 엔진을 통해 마이그레이션을 지원해준다. 모든 클래스와 어노테이션들은 새로운 패키지인 org.junit.jupiter 베이스 안에 존재하기 때문에 JUnit4와  JUnit Jupiter는 클래스패스에서 충돌날 일이 없다. 게다가 JUnit 팀은 Junit4에 대하여 지속적인 유지보수와 버그수정 릴리즈 진행하고 있다.
+대신 JUnit은 Junit 플랫폼 인프라를 이용해  JUnit3와 와  JUnit4 기반의 테스트를 실행시켜주는  **Junit Vintage 테스트 엔진**을 통해 마이그레이션을 지원해준다. 모든 클래스와 어노테이션들은 새로운 패키지인 `org.junit.jupiter` 베이스 안에 존재하기 때문에 JUnit4와  JUnit Jupiter는 클래스패스에서 충돌날 일이 없다. 게다가 JUnit 팀은 Junit4에 대하여 지속적인 유지보수와 버그수정 릴리즈 진행하고 있다.
 
-### JUnit 플랫폼에서  JUnit4 테스트 실행하기
+### JUnit Platform에서  JUnit4 테스트 실행하기
 
 먼저`junit-vintage-engine` 이 테스트 런타임 패스에 있는지 확인하자. 
 
-#### Categories Support
+#### Categories 지원
 
 @Category 어노테이션이 붙은 테스트 클래스나 메서드를 실행하기 위해, JUnit Vintage 테스트 엔진에 해당 테스트 식별자의 태그로 카테고리의 패키지를 포함한 클래스 이름을 적어야 한다. 예를 들어 `@Category(Example.class)` 어노테이션이 붙은 테스트 메서드가 있으면  JUnit 4에서는 Categories 러너에  `com.acme.Example`  태그와 같다. 
 
@@ -2274,7 +2280,6 @@ JUnit Juptier 프로그래밍 모델과 extensiom 모델은 Junit4 특징인 Rul
 - Assertion은 `org.junit.jupiter.api.Assertions` 에 있다.
   - `org.junit.Asssert` 에 있는 assertion 메서드나 다른 assertion 라이브러리인 AssertJ, Hamcrest, Truth 등을 사용해도 된다.
 - Assumption은 `org.junit.jupiter.api.Assumptions` 에 있다.
-  - JUnit 5.4 버전이나 그 후 버전은JUnit 4의 `org.junit.Assume` 클래스의 assumption을 지원한다.  Specifically, JUnit Jupiter supports JUnit 4’s AssumptionViolatedException to signal that a test should be aborted instead of marked as a failure.
 - @Before 와 @After는 더 이상 없다. 대신 @BeforeEach와 @AfterEach를 사용해야 한다.
 - @BeforeClass와 @AFterClass는 더 이상 없다. 대신 @BeforeAll와 @AfterAll를 사용해야 한다.
 - @Ignore는 더이상 없다. 대신 @Disabled나 내장된 조건실행(execution condition)을 사용하면 된다.
@@ -2284,27 +2289,27 @@ JUnit Juptier 프로그래밍 모델과 extensiom 모델은 Junit4 특징인 Rul
 
 ### 제한된 JUnit 4 Rule 지원
 
-위에 명시한 것 처럼 JUnit Jupiter에서 JUnit4의 rule은 더 이상 네이티브하게 지원하지 않는다. 그러나 이미 많은 대규모 조직에서 JUnit 4 기반의 커스텀 rule을 사용하고 있다. 이러한 조직을 위해서 점진적인 마이그레이션이 가능하도록 JUnit 팀은 JUnit4 rule을  JUnit Jupiter에서 그대로 지원하기로 결정했다. This support is based on adapters and is limited to those rules that are semantically compatible to the JUnit Jupiter extension model, i.e. those that do not completely change the overall execution flow of the test.
+JUnit4 Rule은 테스트 케이스를 실행하기 전후에 추가 코드를 실행할 수 있도록 도와준다. @Before와 @After로 선언된 메서드에서도 실행 전후처리로 코드를 넣을 수 있지만, JUnit4 Rule로 작성하면 재사용하거나 더 확장 가능한 기능으로 개발할 수 있는 장점이 있다..
 
-JUnit jupiter에 있는 `junit-jupiter-migrationsupport` 이 현재 다음의 3개 탕비의 Rule을 지원한다.
+위에 명시한 것 처럼 JUnit Jupiter에서 JUnit4의 rule은 지금도 지원하지 않고, 앞으로도 더 이상 네이티브하게 지원하지 않는다. 그러나 이미 많은 대규모 조직에서 JUnit 4 기반의 커스텀 rule을 사용하고 있다. 이러한 조직들을 위해서 점진적인 마이그레이션이 가능하도록 JUnit 팀은 JUnit4 rule을  JUnit Jupiter에서 그대로 지원하기로 결정했다. 
+
+JUnit jupiter에 있는 `junit-jupiter-migrationsupport` 이 현재 다음의 3개 타입의 Rule을 지원한다.
 
 - org.junit.rules.ExternalResource(org.junit.rules.TemporaryFolder 포함)
 - org.junit.rules.Verifier (org.junit.rules.ErrorCollector 포함)
 - org.junit.rules.ExpectedException
 
-As in JUnit 4, Rule-annotated fields as well as methods are supported. By using these class-level extensions on a test class such Rule implementations in legacy code bases can be left unchanged including the JUnit 4 rule import statements.
+JUnit4와 마찬가지고 Rule 어노테이션을 필드와 메서드에 지원한다. 테스트 클래스에서 이러한 extension을 클래스 레벨에 사용하여 확장하면 JUnit4의 Rule 클래스 import 문을 포함하여 레거시 코드에  Rule 구현체를 변경하지 않고 유지할 수 있다.
 
-This limited form of Rule support can be switched on by the class-level annotation @EnableRuleMigrationSupport. This annotation is a composed annotation which enables all rule migration support extensions: VerifierSupport, ExternalResourceSupport, and ExpectedExceptionSupport. You may alternatively choose to annotate your test class with @EnableJUnit4MigrationSupport which registers migration support for rules and JUnit 4’s @Ignore annotation (see JUnit 4 @Ignore Support).
+이런 Rule 지원의 제약조건들은 클래스 레벨에 `@EnableRuleMigrationSupport` 어노테이션을 사용함으로써 완화할 수 있다. 이 어노테이션은 rule 마이그레이션 지원 extension인 VerifierSupport, ExternalResourceSupport, ExpectedExceptionSupport을 활성화 해주는 어노테이션으로 이루어져 있다. 대안적으로 마이그레이션을 지원하는 rules과 JUnit4의 @Ignore 어노테이션을 등록해주는 `@EnableRuleMigrationSupport` 을 활용할 수 있다.
 
-However, if you intend to develop a new extension for JUnit 5 please use the new extension model of JUnit Jupiter instead of the rule-based model of JUnit 4.
-
-> JUnit 4 Rule support in JUnit Jupiter is currently an experimental feature. Consult the table in Experimental APIs for detail.
+그러나 JUnit5용의 새로운 extension을 개발할 계획이 있다면 JUnit4의 rule 기반 모델 대신 JUnit Jupiter 모델을 사용하도록 하자.
 
 ### JUnit 4 @Ignore 지원
 
 Jupiter의 @Disabled 어노테이션과 비슷하게 JUnit4의 @Ignore 어노테이션은 `junit-jupiter-migrationsupport` 모듈에서 지원한다. 
 
-JUnit Jupiter 기반의 테스트에서 @Ignore을 사용하려면, 빌드안에 `junit-jupiter-migrationsupport` 테스트 의존성을 설정한 다음 테스트 클래스에 @ExtendWith(IgnoreCondition.class) 나 @EnableJunit4MigrationSupport를 붙이면 된다.  @EnableJunit4MigrationSuppor는 자동으로 제한된 JUnit Rule 지원과 함께 IgnoreCondition을 등록한다. IgnoreCondition은 테스트 클래스나 메서드에 @Ignore 어노테이션이 붙은 것들을 비활성화 하는 ExecutionCondition이다.
+JUnit Jupiter 기반의 테스트에서 @Ignore을 사용하려면, 빌드안에 `junit-jupiter-migrationsupport` 테스트 의존성을 설정한 다음 테스트 클래스에 `@ExtendWith(IgnoreCondition.class)` 나 `@EnableJunit4MigrationSupport`를 붙이면 된다.  `@EnableJunit4MigrationSuppor`는 자동으로 제한된 JUnit Rule 지원과 함께 IgnoreCondition을 등록한다. IgnoreCondition은 테스트 클래스나 메서드에 @Ignore 어노테이션이 붙은 것들을 비활성화 하는 ExecutionCondition이다.
 
 ```java
 import org.junit.Ignore;
@@ -2365,7 +2370,7 @@ Intellij는 2016.2 버전부터 JUnit 플랫폼에서 테스트 실행을 지원
 </dependency>
 ```
 
-이클립스,넷빈즈,VS코는는 생략
+이클립스,넷빈즈,VS 코드는 생략
 
 
 
@@ -2401,7 +2406,9 @@ test {
 
 **설정 파라미터**
 
-The standard Gradle test task currently does not provide a dedicated DSL to set JUnit Platform configuration parameters to influence test discovery and execution. However, you can provide configuration parameters within the build script via system properties (as shown below) or via the junit-platform.properties file.
+표준 Gradle test task는 JUnit 플랫폼의 설정 파라미터를 설정하기 위한 DSL(도메 특화 언어)를 현재 제공하지 않는다. 그러나 시스템 프로퍼티나 `junit-platform.priperties` 파일을 통해서 빌드 스크립트 안에 설정 파일을 제공해줄 수 있다.
+
+우리가 계속적으로 살펴봤던 설정 파라미터를 빌드 할 때 다음과 같이 작성해 줄 수 있는 것이다.
 
 ```groovy
 test {
@@ -2415,11 +2422,9 @@ test {
 }
 ```
 
-
-
 **테스트 엔진 설정하기**
 
-테스트를 실행하기 위해 클래스패스에 TestEngine 구현이 있어야 한다.
+테스트를 실행하기 위해 클래스패스에 TestEngine 구현체가 있어야 한다.
 
 JUnit jupiter 기반의 테스트 지원을 설정하기 위해 다음과 같이 JUnit Jupiter API에 대한  `testImplementation` 의존성 및 JUnit Jupiter TestEngine 구현에 대한 testRuntimeOnly 의존성을 구성해야 한다.
 
@@ -2447,7 +2452,7 @@ JUnit은 warning 로깅과 디버그 정보를 찍기 위해 일명 JUL이라는
 
 ```groovy
 test { 
-  systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager
+  systemProperty 'java.util.logging.manager', 'org.apache.logging.log4j.jul.LogManager'
 }
 ```
 
