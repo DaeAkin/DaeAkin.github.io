@@ -2628,3 +2628,181 @@ Maven Surefire 플러그인은 다음의 패턴에 전부 일치하는 테스트
 <!-- ... -->
 ```
 
+**설정 파라미터** 
+
+```xml
+<!-- ... -->
+<build>
+	<plugins>
+		<plugin>
+			<artifactId>maven-surefire-plugin</artifactId>
+			<version>2.22.2</version>
+			<configuration>
+				<properties>
+					<configurationParameters> junit.jupiter.conditions.deactivate = * junit.jupiter.extensions.autodetection.enabled = true junit.jupiter.testinstance.lifecycle.default = per_class </configurationParameters>
+				</properties>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+<!-- ... -->
+```
+
+
+
+### 콘솔 런처 
+
+콘솔 런처는  콘솔에서 JUnit 플랫폼을 실행할 수 있게 해주는 커맨드라인 자바 애플리케이션이다. JUnit Vintage와 JUnit Jupiter 테스트를 실행한 후 테스트의 결과를 콘솔로 출력해준다.
+
+모든 의존성을 포함한 `junit-platform-console-standalone-1.7.0.jar`  는 Maven Central 레파지토리 안에 junit-platform-console-standalone 디렉토리 안에 있다.
+
+아래와 같이 독립적인 콘솔런처를 실행할 수 있다.
+
+**java -jar junit-platform-console-standalone-1.7.0.jar**
+
+```
+├─ JUnit Vintage
+│ └─ example.JUnit4Tests
+│ └─ standardJUnit4Test ✔
+└─ JUnit Jupiter
+	├─ StandardTests
+  │ ├─ succeedingTest() ✔
+  │ └─ skippedTest() ↷ for demonstration purposes
+  └─ A special test case
+		├─ Custom test name containing spaces ✔
+		├─ ╯°□°)╯ ✔
+		└─ 挐 ✔
+
+Test run finished after 64 ms 
+[ 5 containers found ]
+[ 0 containers skipped ]
+[ 5 containers started ]
+[ 0 containers aborted ]
+[ 5 containers successful ]
+[ 0 containers failed ]
+[ 6 tests found ] 
+[ 1 tests skipped ]
+[ 5 tests started ]
+[ 0 tests aborted ]
+[ 5 tests successful ]
+[ 0 tests failed ]
+```
+
+> Exit Code
+>
+> 테스트가 실패하면 status 코드가 1 ,테스트할 메서드가 존재하지 않고, 실행시 `--fail-if-no-tests` 실행옵션을 줬으면 status 코드가 2, 그 외에는 0이다.
+
+#### 
+
+
+
+## Extension Model
+
+JUnit4을 위한 extension인 `Runner` , `TestRule` ,`MethodRule` 과 대조적으로 JUnit Jupiter의 extension 모델은 단일적이고 일관성이 있다. 
+
+### Extension 등록하기
+
+Extension은 `@ExtendWith` 를 이용해서 선언적으로 Extension을 등록할 수 있다. 혹은 @RegisterExtension 이나 Java의 ServiceLoader 메카니즘을 이용해 자동적으로 등록할 수도 있다.
+
+#### 선언적 Extension 등록
+
+테스트 인터페이스, 테스트 클래스, 테스트 메서드, `@ExtendWith(..)`  이 포함된 커스텀 어노테이션에 어노테이션을 이용해 선언적으로 선언하여 등록할 extension을 제공해줌으로써 extension을 등록할 수 있다.
+
+예를 들어특정 테스트 메서드에 커스텀 `RandomParametersExtension` 을 등록하고 싶다면 다음과 같이 사용하면 된다.
+
+```java
+@ExtendWith(RandomParametersExtension.class)
+@Test
+void test(@Random int i) {
+  // ...
+}
+```
+
+특정 클래스와 서브클래스에 등록하고 싶다면 다음과 같이 사용한다.
+
+```java
+@ExtendWith(RandomParametersExtension.class)
+class MyTests {
+  
+}
+```
+
+여러 개의 extension을 등록하려면 다음과 같이 사용한다.
+
+```java
+@ExtendWith({ DatabaseExtension.class, WebServerExtension.class})
+class MyFirstTests {
+  
+}
+```
+
+아니면 다음과 같이 분리해서 사용해도 된다.
+
+```java
+@ExtendWith(DatabaseExtension.class)
+@ExtendWith(WebServerExtension.class)
+class MySecondTests {
+  
+}
+```
+
+> Extension 등록 순서
+>
+> Extension의 등록 순서에 따라 코드가 실행된다. 위에 코드로 예를 들면 DatabaseExtension이 먼저 실행 된 후 WebServerExtension 이 실행 된다.
+
+재 사용 가능한 여러개의 extension을 조합하고 싶다면 다음과 같이 커스텀으로 조합된 어노테이션을 사용하면 된다.
+
+```java
+@Target({ ElementType.TYPE, ElementType.METHOD }) 
+@Retention(RetentionPolicy.RUNTIME)
+@ExtendWith({ DatabaseExtension.class, WebServerExtension.class })
+public @interface DatabaseAndWebServerExtension { }
+```
+
+
+
+#### 코드로 extension 등록하기
+
+테스트 클래스 안에서 `@RegisterExtension` 어노테이션을 필드에 선언해서 extension을 등록할 수 있다.
+
+`@ExtendWith` 을 통해서 선언적으로 extension이 등록 될 때 어노테이션으로 통해서만 설정이 가능하다. 이와 반대로 `@RegisterExtension` 을 통해서 extensin을 등록하면 extension의 생성자나 정적 팩터리 메서드나 빌더 API에게 인자를 넘겨주는 일도 가능하다.
+
+> Extension 등록 순서
+>
+> 기본적으로 `@RegisterExtension` 으로 등록된 extension은 내부적으로 이미 결정된 순서에 따라 실행된다.  그러므로 명시적으로 순서를 정해주고 싶다면 `@RegisterExtension` 필드에 `@Order` 어노테이션으로 순서를 정해주자.
+>
+> `@Order` 어노테이션이 붙지 않은 `@RegisterExtension` 필드는 Integer.MAX_VALUE 를 2로 나눈 값을 가진 디폴트 순서를 가진다.  이를 통해 `@Order` 어노테이션이 추가 된 필드를 어노테이션이 없는 필드 앞이나 뒤에 명시적으로 정렬할 수 있다. 기본 순서 값이 명시된 순서 값 보다 낮은 extension은 어노테이션이 붙지 않은 extension보다 먼저 등록된다.
+
+`@RegisterExtension` 필드는 반드시  private 또는 null이 아니여야 하며 static이나 non-static 이여도 된다.
+
+**Static Fields**
+
+`@RegisterExtension` 어노테이션이 적용된 필드가 static 이라면 extension은 클래스 레벨에 선언된  `@ExtendWith` 어노테이션의 extension들이 먼저 등록된 후 등록된다. 이런 static extension은 구현 가능한 extension API로 제한되지 않는다. 그러므로 static 필드를 통해서 등록된 extension은 클래스레벨에 구현하거나 `BeforeAllCallback` , `AfterAllCallback` , `TestInstancePostProcessor` , `TestInstancePreDestroyCallback`와 인스턴스 레벨에 구현하거나 `BeforeEachCallback` 같은 메소드 레벨에 구현해야 한다.
+
+다음의 예제에서는 테스트 클래스에 있는 server 필드가 `WebServerExtension` 이 지원해주는 빌더 패턴으로 초기화 된다. 예를 들어 모든 테스트가 시작하기 전에 서버를 시작하고 모든 테스트가 끝난 후 서버를 종료하는 `WebServerExtension` 은 클래스 레벨에 extension 으로 자동으로 등록된다. 추가적으로 `@BeforeAll`  `@AfterAll` static 라이프사이클 메서드 과 `@BeforeEach` , `@AfterEach` `@Teset` 메서드는 필요하면 server 필드를 통해서 extension의 인스턴스에 접근할 수 있다.
+
+**static 필드를 통해서 등록된 extension 예제**
+
+```java
+class WebServerDemo {
+
+    @RegisterExtension
+    static WebServerExtension server = WebServerExtension.builder()
+            .enableSecurity(false)
+            .build();
+
+    @Test
+    void getProductList() {
+      WebClient webClient = new WebClient();
+      String serverUrl = server.getServerUrl(); 
+      assertEquals(200, webClient.get(serverUrl + "/products").getResponseStatus());
+    }
+
+}
+```
+
+**Instacne Fields**
+
+만약 `@RegisterExtension` 어노테이션이 붙은 필드가 static이 아니라면(인스턴스 변수라면), 이 extension은 테스트 클래스가 초기화되고 각각의 등록된  `TestInstancePostProcessor` 가 테스트 인스턴스를 후 처리된 후 등록 됩니다. 그러므로 이런 extension 들은 `BeforeAllCallback` , `AfterAllCallback` , `TestInstancePostProcessor` 를 이용해서 구현해야 한다. 기본적으로 인스턴스 extension은 `@ExtendWtih` 어노테이션을 통해 메서드 레벨에 등록된 extension 다음에 등록된다. 그러나 만약 테스트 클래스가  `@TestInstance(Lifecycle.PER_CLASS)` 가 설정이 되어있다면, 인스턴스 extension은   `@ExtendWtih` 어노테이션을 통해 메서드 레벨에 등록된 extension 전에 등록된다.
+
+다음의 예제는 테스트 클래스에 있는
