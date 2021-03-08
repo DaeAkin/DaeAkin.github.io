@@ -391,4 +391,165 @@ MySQL에서 UNION 쿼리는 임시테이블을 생성하게 되는데, 실행 �
 
 #### SUBQUERY
 
-일반적으로 서브 쿼리라고 하면 여러 가지를 통틀어서 이야기할 때가 많은데, 여기서  SUBQUERY라고 하는 것은 FROM 절 이외에서 사용되는 서브 쿼리만을 의미한다. 
+일반적으로 서브 쿼리라고 하면 여러 가지를 통틀어서 이야기할 때가 많은데, 여기서  SUBQUERY라고 하는 것은 **<u>FROM 절 이외에서 사용되는 서브 쿼리</u>**만을 의미한다. 
+
+```sql
+EXPLAIN
+select
+    e.first_name,
+    (select count(*) from dept_emp de, dept_manager dm where dm.dept_no = de.dept_no) as cnt
+from employees e
+where e.emp_no = 30000;
+```
+
+| id   | select\_type | table | partitions | type  | possible\_keys | key     | key\_len | ref                   | rows  | filtered | Extra       |
+| :--- | :----------- | :---- | :--------- | :---- | :------------- | :------ | :------- | :-------------------- | :---- | :------- | :---------- |
+| 1    | PRIMARY      | e     | NULL       | const | PRIMARY        | PRIMARY | 4        | const                 | 1     | 100      | NULL        |
+| 2    | SUBQUERY     | dm    | NULL       | index | PRIMARY        | PRIMARY | 20       | NULL                  | 24    | 100      | Using index |
+| 2    | SUBQUERY     | de    | NULL       | ref   | PRIMARY        | PRIMARY | 16       | employees.dm.dept\_no | 38278 | 100      | Using index |
+
+FROM 절에서 사용된 서브쿼리는 select_type이 DERIVED 라고 표시되고, 그 밖의 위치에서 사용된 서브 쿼리는 전부 SUBQUERY라고 표시 된다.
+
+> 서브 쿼리의 종류
+>
+> - 중첩된 쿼리(Nested Query)
+>
+>   SELECT 되는 칼럼에 사용된 서브 쿼리를 네스티드 쿼리라고 한다.
+>
+> - 서브 쿼리(Sub Query)
+>
+>   WHERE 절에 사용된 경우에는 일반적으로 그냥 서브 쿼리라고 한다.
+>
+> - 파생 테이블(Derived)
+>
+>   FROM 절에 사용된 서브 쿼리를 MySQL에서는 파생 테이블이라고 하며, 일반적으로 RDBMS 전체적으로 인라인 뷰 또는 서브 셀렉트라고 부르기도 한다.
+>
+> 또한 서브 쿼리가 반환하는 값의 특성에 따라 다음과 같이 구분하기도 한다.
+>
+> - 스칼라 서브 쿼리 (Scalar SubQuery)
+>
+>   하나의 값만(칼럼이 단 하나인 레코드 1건만) 반환하는 쿼리
+>
+> - 로우 서브 쿼리(Row Sub Query)
+>
+>   칼럼의 개수에 관계없이 하나의 레코드만 반환하는 쿼리
+
+
+
+#### DEPENDENT SUBQUERY
+
+서브 쿼리가 바깥쪽의 정의된 컬럼을 사용하는 경우를 DEPENDENT SUBQUERY 라고 한다.
+
+```sql
+EXPLAIN
+select e.first_name,
+    (select count(*)
+        from dept_emp de, dept_manager dm
+        where dm.dept_no=de.dept_no and de.emp_no=e.emp_no) AS cnt
+from employees e
+where e.emp_no = 30000;
+```
+
+| id   | select\_type       | table | partitions | type  | possible\_keys              | key                 | key\_len | ref                   | rows | filtered | Extra       |
+| :--- | :----------------- | :---- | :--------- | :---- | :-------------------------- | :------------------ | :------- | :-------------------- | :--- | :------- | :---------- |
+| 1    | PRIMARY            | e     | NULL       | const | PRIMARY                     | PRIMARY             | 4        | const                 | 1    | 100      | NULL        |
+| 2    | DEPENDENT SUBQUERY | de    | NULL       | ref   | PRIMARY,ix\_empno\_fromdate | ix\_empno\_fromdate | 4        | const                 | 1    | 100      | Using index |
+| 2    | DEPENDENT SUBQUERY | dm    | NULL       | ref   | PRIMARY                     | PRIMARY             | 16       | employees.de.dept\_no | 2    | 100      | Using index |
+
+안쪽의 서브 쿼리가 바깥족에 있는 employess 테이블의 컬럼을 사용하고 있어 의존적이기 때문에 DEPENDENT라는 키워드가 붙는다. **DEPENDENT가 붙으면 외부 쿼리가 먼저 수행된 후 내부 쿼리를 실행돼야 하기 때문에 일반 서브 쿼리보다는 처리 속도가 느릴 때가 많다.**
+
+#### DERIVED
+
+서브 쿼리가 FROM 절에 사용된 경우 MySQL은 항상 select_type이 DERIVED인 실행 계획을 만든다. DERIVED는 단위 SELECT 쿼리의 실행 결과를 메모리나 디스크에 임시 테이블을 생성하는 것을 의미 한다.
+
+안타깝게도 MySQL은 FROM 절에 사용된 서브 쿼리를 제대로 최적하하지 못할 때가 대부분이다. **파생테이블은 인덱스가 전혀 없으므로 다른 테이블과 조인할 때 성능상 불리할 때가 많다.**
+
+```sql
+EXPLAIN
+select *
+from
+(select de.emp_no from dept_emp de) tb,
+     employees e
+where e.emp_no = tb.emp_no;
+```
+
+**MySQL 5.4에서 결과**
+
+| id   | select\_type | table            | type    | possible\_keys | key          | key\_len | ref        | rows   | Extra                           |
+| :--- | :----------- | :--------------- | :------ | :------------- | :----------- | :------- | :--------- | :----- | :------------------------------ |
+| 1    | PRIMARY      | &lt;derived2&gt; | ALL     | NULL           | NULL         | NULL     | NULL       | 306663 | Using temporary; Using filesort |
+| 1    | PRIMARY      | e                | eq\_ref | PRIMARY        | PRIMARY      | 4        | tb.emp\_no | 1      |                                 |
+| 2    | DERIVED      | de               | index   | NULL           | ix\_fromdate | 3        | NULL       | 309245 | Using index                     |
+
+**MySQL 8.0에서 결과**
+
+| id   | select\_type | table | partitions | type    | possible\_keys      | key          | key\_len | ref                  | rows   | filtered | Extra       |
+| :--- | :----------- | :---- | :--------- | :------ | :------------------ | :----------- | :------- | :------------------- | :----- | :------- | :---------- |
+| 1    | SIMPLE       | de    | NULL       | index   | ix\_empno\_fromdate | ix\_fromdate | 3        | NULL                 | 306228 | 100      | Using index |
+| 1    | SIMPLE       | e     | NULL       | eq\_ref | PRIMARY             | PRIMARY      | 4        | employees.de.emp\_no | 1      | 100      | NULL        |
+
+위의 SQL은 서브 쿼리를 간단히 제거하고 조인으로 처리할 수 있다. 실제로 다른 DBMS에서는 이렇게 쿼리를 재작성하는 형태의 최적화 기능도 제공한다.
+
+MySQL 5.4에서는 FROM 절의 서브 쿼리를 임시테이블로 만들어서 처리한다.
+
+MySQL 6.0이상 버전부터는 FROM 절의 서브 쿼리에 대한 최적화 부분이 많이 개선되어서 위에와 같이 타입이 DERIVED인 타입이 없다. 하지만 그전까지는 FROM 절의 서브 쿼리는 상당히 신경 써서 개발하고 튜닝 해야 한다.
+
+#### UNCACHEABLE SUBQUERY
+
+하나의 쿼리 문장에서 서브 쿼리가 하나만 있더라도 실제 그 서브 쿼리가 한 번만 실행되는 것은 아니다. 그런데 조건이 똑같은 서브 쿼리가 실행될 때는 다시 실행하지 않고 이전의 실행 결과를 그대로 사용할 수 있게 서브 쿼리의 결괴를 내부적인 캐시 공간에 담아둔다.
+
+**Subquery 경우**
+
+서브쿼리는 바깥쪽 영향을 받지 않으므로 처음 한 번만 실행해서 그 결과를 캐시하고 필요할 때 캐시된 결과를 이용한다.
+
+**Dependent Subquery 경우**
+
+디펜던트 서브쿼리는 의존하는 바깥쪽 쿼리의 컬럼의 값 단위로 캐시해두고 사용한다.
+
+unchacheable subquery는 캐시를 사용할 수 있냐 없느냐에 차이가 있다. 서브 쿼리에 포함된 요소에 의해 캐시 자체가 불가능할 수 있는데 이 경우 select_type이 UNCACHEABLE SUBQUERY로 표시 된다. 캐시를 사용하지 못하도록 하는 요소로는 대표적으로 다음과 같은 것 들이 있다.
+
+- 사용자 변수가 서브 쿼리에 사용된 경우
+- NOT-DETERMINISTIC 속성의 스토어드 루틴이 서브 쿼리내에 사용된 경우
+- UUID()나 RAND()와 같이 결과값이 호출할 때마다 달라지는 함수가 서브 쿼리에 사용된 경우
+
+
+
+**사용자 변수 @status를 사용한 쿼리**
+
+```sql
+EXPLAIN
+select *
+from employees e
+where e.emp_no = (
+    select @status from dept_emp de where de.dept_no='D005'
+    );
+```
+
+
+
+| id   | select\_type         | table | type | possible\_keys | key     | key\_len | ref   | rows   | Extra                    |
+| :--- | :------------------- | :---- | :--- | :------------- | :------ | :------- | :---- | :----- | :----------------------- |
+| 1    | PRIMARY              | e     | ALL  | NULL           | NULL    | NULL     | NULL  | 282916 | Using where              |
+| 2    | UNCACHEABLE SUBQUERY | de    | ref  | PRIMARY        | PRIMARY | 4        | const | 139228 | Using where; Using index |
+
+
+
+#### UNCACHEABLE UNION 
+
+UNCACHEABLE UNION이란 UNCACHEABLE 과 UNION 두 개의 키워드 조합된 select_type을 의미한다. MySQL 5.1부터 추가되었다.
+
+### table 컬럼
+
+MySQL의 실행계획은 단위 SELECT 쿼리 기준이 아니라 **테이블 기준으로 표시**된다. 만약 테이블의 이름에 별칭이 부여된 경우에는 별칭이 표시된다.
+
+```sql
+EXPLAIN select now();
+```
+
+| id   | select\_type | table | type | possible\_keys | key  | key\_len | ref  | rows | Extra          |
+| :--- | :----------- | :---- | :--- | :------------- | :--- | :------- | :--- | :--- | :------------- |
+| 1    | SIMPLE       | NULL  | NULL | NULL           | NULL | NULL     | NULL | NULL | No tables used |
+
+### <>의 의미
+
+Table 칼럼에 <derived\> 또는 <union\> 과 같이 "<>"로 둘러싸인 이름이 명시되는 경우가 많은데, 이 테이블은 임시 테이블을 의미한다.
