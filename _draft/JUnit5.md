@@ -2806,3 +2806,8 @@ class WebServerDemo {
 만약 `@RegisterExtension` 어노테이션이 붙은 필드가 static이 아니라면(인스턴스 변수라면), 이 extension은 테스트 클래스가 초기화되고 각각의 등록된  `TestInstancePostProcessor` 가 테스트 인스턴스를 후 처리된 후 등록 됩니다. 그러므로 이런 extension 들은 `BeforeAllCallback` , `AfterAllCallback` , `TestInstancePostProcessor` 를 이용해서 구현해야 한다. 기본적으로 인스턴스 extension은 `@ExtendWtih` 어노테이션을 통해 메서드 레벨에 등록된 extension 다음에 등록된다. 그러나 만약 테스트 클래스가  `@TestInstance(Lifecycle.PER_CLASS)` 가 설정이 되어있다면, 인스턴스 extension은   `@ExtendWtih` 어노테이션을 통해 메서드 레벨에 등록된 extension 전에 등록된다.
 
 다음의 예제는 테스트 클래스에 있는
+
+
+
+
+
