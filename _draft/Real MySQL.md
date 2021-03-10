@@ -460,9 +460,9 @@ where e.emp_no = 30000;
 
 #### DERIVED
 
-서브 쿼리가 FROM 절에 사용된 경우 MySQL은 항상 select_type이 DERIVED인 실행 계획을 만든다. DERIVED는 단위 SELECT 쿼리의 실행 결과를 메모리나 디스크에 임시 테이블을 생성하는 것을 의미 한다.
+**<u>서브 쿼리가 FROM 절에 사용된 경우</u>** MySQL은 항상 select_type이 DERIVED인 실행 계획을 만든다. DERIVED는 단위 SELECT 쿼리의 실행 결과를 메모리나 디스크에 임시 테이블을 생성하는 것을 의미 한다.
 
-안타깝게도 MySQL은 FROM 절에 사용된 서브 쿼리를 제대로 최적하하지 못할 때가 대부분이다. **파생테이블은 인덱스가 전혀 없으므로 다른 테이블과 조인할 때 성능상 불리할 때가 많다.**
+안타깝게도 MySQL은 FROM 절에 사용된 서브 쿼리를 제대로 최적화하지 못할 때가 대부분이다. **파생테이블은 인덱스가 전혀 없으므로 다른 테이블과 조인할 때 성능상 불리할 때가 많다.**
 
 ```sql
 EXPLAIN
@@ -550,6 +550,15 @@ EXPLAIN select now();
 | :--- | :----------- | :---- | :--- | :------------- | :--- | :------- | :--- | :--- | :------------- |
 | 1    | SIMPLE       | NULL  | NULL | NULL           | NULL | NULL     | NULL | NULL | No tables used |
 
-### <>의 의미
+### <derived N\>의 의미
 
-Table 칼럼에 <derived\> 또는 <union\> 과 같이 "<>"로 둘러싸인 이름이 명시되는 경우가 많은데, 이 테이블은 임시 테이블을 의미한다.
+Table 칼럼에 <derived\> 또는 <union\> 과 같이 "<>"로 둘러싸인 이름이 명시되는 경우가 많은데, 이 테이블은 임시 테이블을 의미한다. 또한 "<>"안에 항상 표시되는 숫자는 단위 SELECT 쿼리의 id를 지칭한다.
+
+| id   | select\_type | table            | type    | possible\_keys | key          | key\_len | ref        | rows   | Extra                           |
+| :--- | :----------- | :--------------- | :------ | :------------- | :----------- | :------- | :--------- | :----- | :------------------------------ |
+| 1    | PRIMARY      | &lt;derived2&gt; | ALL     | NULL           | NULL         | NULL     | NULL       | 306663 | Using temporary; Using filesort |
+| 1    | PRIMARY      | e                | eq\_ref | PRIMARY        | PRIMARY      | 4        | tb.emp\_no | 1      |                                 |
+| 2    | DERIVED      | dept_emp         | index   | NULL           | ix\_fromdate | 3        | NULL       | 309245 | Using index                     |
+
+위의 표를 보면 첫 번째의 table 컬럼의 값이 <drived2\> 인데 이 뜻은 단위 SELECT 쿼리의 아이디가 2번인 실행 계획으로부터 만들어진 파생 테이블을 가리킨다. detp_emp 테이블로부터  select 된 결과가 저장된 파생 테이블이라는 점을 알 수 있다.
+
