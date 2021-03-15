@@ -161,11 +161,11 @@ SELECT ... FROM tb1, tb_test2 tb2 WHERE tb1.id=tb2.id;
 ```
 
 
-그래서 위에 있는 쿼리를 EXPLAIN을 해보면 2개의 id컬럼 값이 나옵니다.
+그래서 위에 있는 쿼리를 EXPLAIN을 해보면 2개의 id컬럼 값이 나온다.
 
 #### 조인일때
 
-만약 하나의 SELETE 문장으로 여러 개의 테이블을 조인하면 조인되는 테이블의 개수만큼 실행 계획 레코드가 출력되지만 **같은 id**가 부여된다.
+**만약 하나의 SELETE 문장으로 여러 개의 테이블을 조인하면 조인되는 테이블의 개수만큼 실행 계획 레코드가 출력되지만 같은 id가 부여된다.**
 
 ```sql
 EXPLAIN
@@ -175,40 +175,10 @@ WHERE e.emp_no=s.emp_no
 LIMIT 10;
 ```
 
-
-
-```json
-[
-  {
-    "id": 1,
-    "select_type": "SIMPLE",
-    "table": "s",
-    "partitions": null,
-    "type": "index",
-    "possible_keys": "PRIMARY",
-    "key": "ix_salary",
-    "key_len": "4",
-    "ref": null,
-    "rows": 1,
-    "filtered": 100,
-    "Extra": "Using index"
-  },
-  {
-    "id": 1,
-    "select_type": "SIMPLE",
-    "table": "e",
-    "partitions": null,
-    "type": "eq_ref",
-    "possible_keys": "PRIMARY",
-    "key": "PRIMARY",
-    "key_len": "4",
-    "ref": "employees.s.emp_no",
-    "rows": 1,
-    "filtered": 100,
-    "Extra": null
-  }
-]
-```
+| id   | select\_type | table | type  | possible\_keys | key           | key\_len | ref                 | rows   | Extra       |
+| :--- | :----------- | :---- | :---- | :------------- | :------------ | :------- | :------------------ | :----- | :---------- |
+| 1    | SIMPLE       | e     | index | PRIMARY        | ix\_firstname | 16       | NULL                | 282916 | Using index |
+| 1    | SIMPLE       | s     | ref   | PRIMARY        | PRIMARY       | 4        | employees.e.emp\_no | 4      |             |
 
 반대로 다음의 쿼리의 실행 게획에서는 쿼리 문장이 3개의 단위 SELECT 쿼리로 구성돼 있으므로 실행 계획의 각 레코드가 각기 다른  id를 갖는다.
 
@@ -561,4 +531,226 @@ Table 칼럼에 <derived\> 또는 <union\> 과 같이 "<>"로 둘러싸인 이�
 | 2    | DERIVED      | dept_emp         | index   | NULL           | ix\_fromdate | 3        | NULL       | 309245 | Using index                     |
 
 위의 표를 보면 첫 번째의 table 컬럼의 값이 <drived2\> 인데 이 뜻은 단위 SELECT 쿼리의 아이디가 2번인 실행 계획으로부터 만들어진 파생 테이블을 가리킨다. detp_emp 테이블로부터  select 된 결과가 저장된 파생 테이블이라는 점을 알 수 있다.
+
+**위에 테이블만 보고 분석해보기**
+
+1. 첫 번째 라인의 테이블이 <derived2\> 인것으로 보아 첫번 째 라인 보다는 id가 2인 쿼리가 먼저 실행 된 후 결과가 파생테이블에 넣어야 한다는걸 알 수 있다. 그럼 id 2번으로 가보자.
+2. id 2번의 select_type 컬럼의 값이 DERIVED이다. 즉 이 라인은 table 컬럼에 표시된 dept_emp 테이블을 읽어서 파생 테이블을 생성한다. 
+3. id 2번의 분석이 끝났으니 다시 첫번 째 라인으로 돌아가자.
+4. 첫 번째라인과 두 번째라인은 같은 id 값을 가지고 있어서 2개 테이블은 서로 조인이 되는 쿼리라는 사실을 알 수 있다. 그런데 <derived2\> 테이블이 e 테이블보다 먼저 표시됐기 때문에 <derived2\>가 드라이빙 테이블이 되고 e 테이블이 드리븐 테이블이 된다는것을 알 수 있다. 즉 <derived2\> 테이블이 먼저 읽어서 e 테이블로 조인을 실행했다는 것을 알 수 있다.
+
+이렇게 분석을하면 다음과 같은 쿼리가 나온다.
+
+```sql
+select *
+from
+	(select de.emp_no from dept_emp de) tb,
+	emplyees e
+where e.emp_no=tb.emp_no;
+```
+
+> MySQL은 다른 DBMS와 달리  FROM 절에 사용된 쿼리인 즉 type이 Derived인 파생테이블은 반드시 별칭을 가져야 한다. 그렇지 않으면 에러가 나온다.
+
+### type 컬럼
+
+쿼리의 실행 계획에서 type 이후의 컬럼은  MySQL 서버가 각 테이블의 레코드를 어떤 방식을 읽었는지 의미를 한다.
+
+- 인덱스를 사용해 읽었는지?
+- 테이블을 처음부터 끝까지 읽는 풀 테이블 스캔으로 읽었는지? 
+
+일반적으로 쿼리를 튜닝할 때 인덱스를 효율적으로 사용하는지 확인하는 것이 중요하다.
+
+> MySQL의 매뉴얼에서는  type 컬럼을 "조인 타입"으로 소개하고 있다.
+
+type 컬럼에 표시되는 값은 버전마다 조금씩 다른데, MySQL5.0,5.1 기준으로 많이 사용되는 값들은 다음과 같다.
+
+- system
+- const 
+- eq_ref
+- ref
+- fulltext
+- ref_or_null
+- unique_sbuquery
+- index_subquery
+- range
+- index_merge
+- index
+- ALL
+
+ALL을 제외한 나머지는 모두 인덱스를 사용하며, ALL은 풀 테이블 스캔을 사용한다.
+
+index_merge를 제외한 나머지는 하나의 인덱스만 사용한다.
+
+#### system
+
+레코드가 1건만 존재하거나, 하나도 존재하지 않는 테이블에 접근하는 방법을 system이라고 한다. 이 접근 방식은 InnoDB 테이블에서는 나타나지 않고 MyISAM이나 MEMORY 테이블에서만 사용된다.
+
+```sql
+EXPLAIN
+select * from tb_dual;
+```
+
+#### const
+
+테이블의 레코드 건수 상관 없이 WHERE 조건으로 PK나 UNIQ 키 컬럼을 이용하여 조회를 하여 반드시 1건을 반환하는 쿼리 방식을 const라고 한다. 다른 DBMS에서는 유니크 인덱스 스캔이라고도 한다.
+
+```sql
+EXPLAIN
+select * from employees where emp_no=30000;
+```
+
+| id   | select\_type | table     | type  | possible\_keys | key     | key\_len | ref   | rows | Extra |
+| :--- | :----------- | :-------- | :---- | :------------- | :------ | :------- | :---- | :--- | :---- |
+| 1    | SIMPLE       | employees | const | PRIMARY        | PRIMARY | 4        | const | 1    |       |
+
+그러나 PK나 UNIQ 키가 여러개 있는데, **일부만 이용하면** const 타입의 접근을 이용할 수 없다. 이 경우에는 실제로 레코드가 1건만 저장돼있더라도 MySQL 엔진이 데이터를 읽어보지 않고서는 레코드가 1건이라는 것을 확신할 수 없기 때문이다.
+
+```sql
+EXPLAIN
+select * from employees where emp_no=30000;
+```
+
+| id   | select\_type | table     | type | possible\_keys | key     | key\_len | ref   | rows   | Extra       |
+| :--- | :----------- | :-------- | :--- | :------------- | :------ | :------- | :---- | :----- | :---------- |
+| 1    | SIMPLE       | dept\_emp | ref  | PRIMARY        | PRIMARY | 4        | const | 139228 | Using where |
+
+일부 조건만 사용하면 const가 아닌 ref로 표시된다.
+
+type 컬럼이 const인 실행 계획은 MySQL의 옵티마이저가 쿼리를 최적화하는 단계에서 모두 상수화 한다. 그래서 실행 계획의 type 컬럼의 값이 상수(const)라고 표시 된다.
+
+#### eq_ref
+
+- 여러테이블이 조인이 되며
+- **조인에서 처음 읽은 테이블의 컬럼 값이**
+- 그 다음 읽어야할 테이블의 PK나 UNIQ 키 컬럼의 검색조건에 사용할 때
+
+이 조건을 만족하는 두 번째 이후에 읽는 테이블의 type 컬럼에 eq_ref가 표시 된다. 또한 두 번째 이후에 읽히는 테이블을 유니크 키로 검색할 때 그 유니크 인덱스는 는  NOT NULL 이어야 하며, 다중 컬럼으로 만들어진 **PK나 UNIQ 인덱스라면 인덱스의 모든 컬럼이 비교 조건에 사용되어야 한다.** 
+
+즉 조인에서 **두 번째 이후에 읽는 테이블에서 반드시 1건만 존재해야 한다는 보장이 있어야 한다.**
+
+```sql
+EXPLAIN
+select * from dept_emp de, employees e
+where e.emp_no=de.emp_no AND de.dept_no='d005';
+```
+
+| id   | select\_type | table | type    | possible\_keys              | key     | key\_len | ref                  | rows   | Extra       |
+| :--- | :----------- | :---- | :------ | :-------------------------- | :------ | :------- | :------------------- | :----- | :---------- |
+| 1    | SIMPLE       | de    | ref     | PRIMARY,ix\_empno\_fromdate | PRIMARY | 4        | const                | 139228 | Using where |
+| 1    | SIMPLE       | e     | eq\_ref | PRIMARY                     | PRIMARY | 4        | employees.de.emp\_no | 1      |             |
+
+#### ref
+
+- 조인의 순서와 관계 없으며
+- PK나  UNIQ 키 등의 제약 조건도 없으며
+- 인덱스의 종류와 관계 없이 동등(Equal) 조건으로 검색할 때.
+
+반환되는 레코드의 값이 반드시 1건이라는 보장이 없으므로 const나  eq_ref보다는 느리다.
+
+```sql
+EXPLAIN
+select * from dept_emp WHERE dept_no='d005';
+```
+
+| id   | select\_type | table     | type | possible\_keys | key     | key\_len | ref   | rows   | Extra       |
+| :--- | :----------- | :-------- | :--- | :------------- | :------ | :------- | :---- | :----- | :---------- |
+| 1    | SIMPLE       | dept\_emp | ref  | PRIMARY        | PRIMARY | 4        | const | 139228 | Using where |
+
+지금까지 살펴본 `const` , `eq_req` ,`ref` select_type은 모두 매우 좋은 접근 방법으로 인덱스의 분포도가 나쁘지 않다면 성능상의 문제를 일으키지 않기 때문에, 쿼리를 튜닝할 때 이 세가지 접근 방법에 대해서는 크게 신경쓰지 않고 넘어가도 무방하다.
+
+#### fulltext
+
+fulltext 접근 방법은 MySQL의 전문 검색 인덱스를 사용해 레코드를 읽는 접근 방법을 의미한다. 
+
+비용 기반의 옵티마이저는 통계 정보를 이용해 비용을 계산하지만, 전문 검색 인덱스는 통계 정보가 관리되지 않으며, 전문 검색 인덱스를 사용하려면 전혀 다른 SQL 문법을 사용해야 한다. 그래서 MySQL 옵티마이저는 전문 인덱스를 사용할 수 있는 SQL에서는 쿼리의 비용과는 관계없이 매번 fulltext 접근 방법을 사용한다.
+
+fulltext 접근 방법보다 명백히 빠른 const나 eq_ref 또는 ref 접근 방법을 사용할 수 있는 쿼리에서는 억지로 fulltext 접근 방법을 선택하지는 않는다.
+
+MySQL의 전문 검색 조건은 우선순위가 상당히 높다. 쿼리에서 전문 인덱스를 사용하는 조건과 그 이외의 일반 인덱스를 사용하는 조건을 함께 사용하면 일반 인덱스의 접근 방법이 const나 eq_ref, 그리고 ref가 아니면 일반적으로 로  MySQL은 전문 인덱스를 사용하는 조건을 선택해서 처리한다.
+
+전문 검색은 "MATCH ... AGAINST"  구문을 사용해서 실행하는데, 반드시 해당 테이블에 전문 검색용 인덱스가 있어야 한다. 만약 테이블에 전문 인덱스가 없다면 쿼리는 오류가 발생하고 중지 된다. 
+
+```sql
+EXPLAIN
+select *
+from employee_name
+where emp_no = 30000
+    AND emp_no BETWEEN 30000 AND 30005
+AND MATCH(first_name, last_name) AGAINST('Matt'  IN BOOLEAN MODE);
+```
+여기 `where emp_no = 30000` 구문은 pk를 이용했기때문에 1건만 조회되는 const 타입의 조건이며 `emp_no BETWEEN 30000 AND 30005` 구문은 나중에 설명할 range 타입의 조건이고, 마지막으론 전문 검색 조건이다.
+
+| id   | select\_type | table          | type  | possible\_keys   | key     | key\_len | ref   | rows | Extra       |
+| :--- | :----------- | :------------- | :---- | :--------------- | :------ | :------- | :---- | :--- | :---------- |
+| 1    | SIMPLE       | employee\_name | const | PRIMARY,fx\_name | PRIMARY | 4        | const | 1    | Using where |
+
+위에 sql문의 실행계획을 살펴보면 다음과 같이 첫번 째 조건인 const 타입을 선택한다.
+
+만약 첫번 째 조건을 제외하고 2번째 조건과 3번째 조건으로 조회하면 실행 계획은 다음과 같다.
+
+```sql
+select *
+from employee_name
+where emp_no BETWEEN 30000 AND 30005
+AND MATCH(first_name, last_name) AGAINST('Matt'  IN BOOLEAN MODE);
+```
+
+| id   | select\_type | table          | type     | possible\_keys   | key      | key\_len | ref  | rows | Extra       |
+| :--- | :----------- | :------------- | :------- | :--------------- | :------- | :------- | :--- | :--- | :---------- |
+| 1    | SIMPLE       | employee\_name | fulltext | PRIMARY,fx\_name | fx\_name | 0        |      | 1    | Using where |
+
+타입이 range가 아니라, 전문 검색 조건을 선택했다. 일반적으로 쿼리에 전문 검색 조건을 사용하면  MySQL은 아무런 주저 없이  fulltext 접근 방식을 사용하는 경향이 있다. 하지만 지금까지의 경험으로 보면 전문 검색 인덱스를 이용하는 fulltext보다 일반 인덱스를 이용하는 range 접근 방법이 더 빨리 처리되는 경우가 더 많았다. 전문 검색 쿼리를 사용할 때는 각 조건별로 성능을 확인해 보는 편이 좋다.
+
+####  ref_or_null
+
+이 접근 방식은 ref 접근 방식과 같은데 NULL 비교가 추가된 형태다. 
+
+-  ref 방식 또는 NULL 비교(IS NULL) 접근 방식
+
+실제 업무에서 많이는 쓰이지 않는다.
+
+```sql
+EXPLAIN
+select *
+from titles
+where to_date = '1985-03-01'
+OR to_date IS NULL;
+```
+
+| id   | select\_type | table  | type          | possible\_keys | key        | key\_len | ref   | rows | Extra                    |
+| :--- | :----------- | :----- | :------------ | :------------- | :--------- | :------- | :---- | :--- | :----------------------- |
+| 1    | SIMPLE       | titles | ref\_or\_null | ix\_todate     | ix\_todate | 4        | const | 2    | Using where; Using index |
+
+#### unique_subquery
+
+- WHERE 조건절에서 사용될 수 있는 IN 형태
+- 서브 쿼리에서 중복되지 않는 유니크한 값을 반환할 때
+
+```sql
+EXPLAIN
+select * from departments
+where dept_no IN (
+    select dept_no from dept_emp where emp_no=30000
+    );
+```
+
+| id   | select\_type       | table       | type             | possible\_keys              | key          | key\_len | ref        | rows | Extra                    |
+| :--- | :----------------- | :---------- | :--------------- | :-------------------------- | :----------- | :------- | :--------- | :--- | :----------------------- |
+| 1    | PRIMARY            | departments | index            | NULL                        | ux\_deptname | 42       | NULL       | 9    | Using where; Using index |
+| 2    | DEPENDENT SUBQUERY | dept\_emp   | unique\_subquery | PRIMARY,ix\_empno\_fromdate | PRIMARY      | 8        | func,const | 1    | Using index; Using where |
+
+위에 쿼리 문장의  IN 부분에서  서브쿼리를 살펴보자. emp_no=30000인 레코드 중에서 부서 번호는 중복이 없기 때문에(dept_emp 테이블에서 PK가 dept_no + emp_no 이니까) 실행 계획의 두번째 라인의  dept_emp 테이블의 접근 방식은  unique_subquery로 표시된 것이다.
+
+> 질문
+>
+> 위에 있는 쿼리를 다음과 같이 두개로 쪼갤 수 잇지 않을까.
+>
+> 1. select * from departments where ??
+> 2. select dept_no from dept_emp where emp_no = 30000
+>
+> 2번의 쿼리 결과로 2개 이상의 쿼리가 나올 수 있다고 생각한다. 왜냐하면  pk가 dept_no + emp_no 이기 때문이다. 그러면  unique 하지 않기 때문에  unique_subquery란 말은 어울리지 않지 않을까?
+>
+> 그런데 내가 임의로 insert 문을 실행해서 데이터를 1개 더 넣었는데, 위에 실행 계획에서 id가 2번인 실행계획의 row는 2가 나와야 하는데 1만 나왔다. 이상하다.
+
+#### index_subquery
 
