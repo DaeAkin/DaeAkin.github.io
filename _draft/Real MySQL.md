@@ -754,3 +754,39 @@ where dept_no IN (
 
 #### index_subquery
 
+IN 연산자 특성상,  IN (subquery) 또는 IN (상수 나열) 형태의 조건은 괄호 안에 있는 값의 목록에서 **중복된 값이 먼저 제거돼야 한다.** 위에서 살펴본 unique_subquery 접근 방법은 IN 조건의 subquery가 **중복된 값을 만들어내지 않는다는 보장이 있으므로** 별도의 중복을 제거할 필요가 없었다. 하지만 IN (subquery)에서 **subquery가 중복된 값을 반환할 수는 있지만 중복된 값을** 인덱스를 이용해 제거할 수 있을 때  index_subquery 접근 방법이 사용 된다.
+
+- unique_subquery
+
+  IN 형태의 조건에서 subquery의 반환 값에는 중복이 없으므로 별도의 중복 제거가 필요하지 않음.
+
+- index_subquery
+
+  IN 형태의 조건에서  subquery의 반환 값에 중복된 값이 있을 수 있지만 인덱스를 이용해 중복된 값을 제거할 수 있음.
+
+두개 모두 중복 값을 아주 낮은 비용으로 제거한다.
+
+```sql
+select * from departments where dept_no IN (
+    select dept_no FROM dept_emp where dept_emp.dept_no BETWEEN 'd001' AND 'd003'
+    );
+```
+
+| id   | select\_type       | table       | type            | possible\_keys | key          | key\_len | ref  | rows  | Extra                    |
+| :--- | :----------------- | :---------- | :-------------- | :------------- | :----------- | :------- | :--- | :---- | :----------------------- |
+| 1    | PRIMARY            | departments | index           | NULL           | ux\_deptname | 42       | NULL | 9     | Using where; Using index |
+| 2    | DEPENDENT SUBQUERY | dept\_emp   | index\_subquery | PRIMARY        | PRIMARY      | 4        | func | 17175 | Using index; Using where |
+
+#### range
+
+range는 하나의 값이 아니라 범위로 검색하는 인덱스 레인지 스캔형태의 접근 방법이다. 주로 <,>, IS NULL, BETWEN , IN , LIKE 등의 연산자를 이용해 인덱스를 검색할 때 사용한다. 주로 애플리케이션이 많이 쓰는 쿼리이며, 우선순위는 낮지만, 이 접근방법도 상당히 빠르며, 어느정도 성능 보장도 된다.
+
+```sql
+select dept_no FROM dept_emp where dept_emp.dept_no BETWEEN 'd001' AND 'd003'
+```
+
+| id   | select\_type | table     | type  | possible\_keys | key     | key\_len | ref  | rows   | Extra                    |
+| :--- | :----------- | :-------- | :---- | :------------- | :------ | :------- | :--- | :----- | :----------------------- |
+| 1    | SIMPLE       | dept\_emp | range | PRIMARY        | PRIMARY | 4        | NULL | 105938 | Using where; Using index |
+
+> 인덱스 레인지 스캔이라고 하면 const , ref, range 라는 세 가지 접근 방법을 모두 묶어서 칭한다.
