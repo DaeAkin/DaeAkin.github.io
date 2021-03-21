@@ -2805,9 +2805,93 @@ class WebServerDemo {
 
 만약 `@RegisterExtension` 어노테이션이 붙은 필드가 static이 아니라면(인스턴스 변수라면), 이 extension은 테스트 클래스가 초기화되고 각각의 등록된  `TestInstancePostProcessor` 가 테스트 인스턴스를 후 처리된 후 등록 됩니다. 그러므로 이런 extension 들은 `BeforeAllCallback` , `AfterAllCallback` , `TestInstancePostProcessor` 를 이용해서 구현해야 한다. 기본적으로 인스턴스 extension은 `@ExtendWtih` 어노테이션을 통해 메서드 레벨에 등록된 extension 다음에 등록된다. 그러나 만약 테스트 클래스가  `@TestInstance(Lifecycle.PER_CLASS)` 가 설정이 되어있다면, 인스턴스 extension은   `@ExtendWtih` 어노테이션을 통해 메서드 레벨에 등록된 extension 전에 등록된다.
 
-다음의 예제는 테스트 클래스에 있는
+다음의 예제는 테스트 클래스에 있는 `docs` 필드는 lookUpDocsDir() 메서드가 호출되고, 결과가 forPath에 전달 됄 때 초기화 된다. 설정된  DocumentationExtension은 자동적으로 메소드 레벨로 extension이 등록된다. 게다가 @BeforeEach, @AfterEach , @Test 메서드는 필요하면 docs 필드를 통해 extension에 접근할 수 있다. 
+
+**인스턴스 필드를 통해서 extension 등록하기**
+
+```java
+class DocumentationDemo {
+
+    static Path lookUpDocsDir() {
+        // 문서 경로를 적는다.
+        return null;
+    }
+
+    @RegisterExtension
+    DocumentationExtension docs = DocumentationExtension.forPath(lookUpDocsDir());
+
+    @Test
+    void generateDocumentation() {
+        // use this.docs ...
+    }
+}
+
+class DocumentationExtension implements AfterEachCallback {
+
+    private final Path path;
+
+    private DocumentationExtension(Path path) {
+        this.path = path;
+    }
+
+    static DocumentationExtension forPath(Path path) {
+        return new DocumentationExtension(path);
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        /* no-op for demo */
+    }
+}
+```
 
 
 
+#### 자동으로 Extension 등록하기
 
+선언적 Extension 등록과 코드로 Extension 등록하는 방법은 어노테이션을 이용하지만,  자바의 `java.util.ServiceLoader` 메카니즘을 이용하여 전역 extension을 등록할 수 있다.이 메카니즘은 서드파티 extension을 자동 감지해서 자동으로 등록할 수 있게 해준다.
+
+특별하게도, 커스텀 정의된 extension은  `/META-INF/services` 폴더 안에 `org.junit.jupiter.api.extension.Extension`으로 된 파일에 해당 extension 클래스 이름을 전체를 제공함으로써 등록할 수 있다.
+
+**자동 Extension 감지 활성화**
+
+자동감지는 고급기능이라서 기본적으로 활성화 되어있지 않다. 활성화 하려면 `junit.jupiter.extensions.autodetection.enabled` 설정 파라미터를  true로 변경해야 한다. `LauncherDiscoveryRequest`의 `Launcher` 를 이용해 설정 파라미터로 JVM 시스템 프로퍼티로 전달 해줄 수도 있거나,  JUnit Platform 설정 파일을 통해서 설정해줄 수 있다.
+
+예를 들어 자동 감지를 활성화 하려면  JVM을 시작할 때 다음과 같은 시스템 변수와 함께 시작시킨다.
+
+`-Djunit.jupiter.extensions.autodetection.enabled=true`
+
+자동 감지가 활성화 되면, JUnit Jupiter의 글로벌 extension이 등록된 후 `ServiceLoader` 메카니즘을 통해서 extension이 등록 된다.
+
+### Extension 상속
+
+등록된 extension은 테스트 클래스 계층에서 상속될 수 있다. 이와 비슷하게 탑레벨에 등록된 extension는 메소드레벨에 상속 된다. 특정 extension 구현체는 주어진 extension context나 부모 context에서 한번만 오직 등록될 수 있다. 결론은 중복된 extension 구현체를 등록하려고 하면 무시된다.
+
+## 조건부 테스트 실행
+
+[ExecutionCondition](https://junit.org/junit5/docs/5.7.0/api/org.junit.jupiter.api/org/junit/jupiter/api/extension/ExecutionCondition.html) 은 조건부 테스트 실행의 관한 Extension API를 정의해 놓았다.
+
+ExecutionCondition은 제공된 `ExtensionContext` 를 바탕으로 이 테스트를 실행할지 말지 각각의 테스트 컨테이너를 확인한다. 
+
+When multiple ExecutionCondition extensions are registered, a container or test is disabled as soon as one of the conditions returns disabled. Thus, there is no guarantee that a condition is evaluated because another extension might have already caused a container or test to be disabled. In other words, the evaluation works like the short-circuiting boolean OR operator.
+
+See the source code of DisabledCondition and @Disabled for concrete examples.
+
+### 조건부 비활성화
+
+가끔 특정 조건부를 비활성화하고 테스트를 돌리고 싶을 때가 있다. 예를 들어 @Disable로 선언된 테스트가 아직도 정상작동 안하는지 확인하고 싶을 때가 있다. 이런 경우 테스트를 실행하려면 `junit.jupiter.conditions.deactive` 설정 파라미터로 어떤 조건을 비활성화 할건지 패턴식으로 제공해주면 된다. 
+
+예를 들어 @Disable 조건을 비활성화 하고 싶으면 JVM 실행할 때 다음의 시스템 변수를 포함해야 한다.
+
+`-Djunit.jupiter.conditions.deactivate=org.junit.*DisabledCondition`
+
+## 테스트 인스턴스 팩토리
+
+[TestInstanceFactory](https://junit.org/junit5/docs/5.7.0/api/org.junit.jupiter.api/org/junit/jupiter/api/extension/TestInstanceFactory.html) 는 테스트 클래스 인스턴스 생성에 관련한 Extension API를 정의해 놓았다.
+
+일반적인 사용 사례는 DI 프레임워크에서 테스트 인스턴스를 가져오거나, 테스트 클래스 인스턴스를 만들기 위해 정적 팩터리 메서드를 호출하는 것이다.
+
+만약 TestInstanceFactory가 등록되지 않았으면, 프레임워크는 테스트 클래스를 초기화 하기 위해 하나의 생성자를 호출한다. 
+
+TestInstnaceFactory를 구현한 Extension은 테스트 인터페이스, 테스트 클래스 탑레벨, @Nested 테스트 클래스에 등록될 수 있다.
 
