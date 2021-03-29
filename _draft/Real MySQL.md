@@ -643,7 +643,7 @@ where e.emp_no=de.emp_no AND de.dept_no='d005';
 
 - 조인의 순서와 관계 없으며
 - PK나  UNIQ 키 등의 제약 조건도 없으며
-- 인덱스의 종류와 관계 없이 동등(Equal) 조건으로 검색할 때.
+- 인덱스의 종류와 관계 없이 **동등(Equal) 조건으로 검색할 때**.
 
 반환되는 레코드의 값이 반드시 1건이라는 보장이 없으므로 const나  eq_ref보다는 느리다.
 
@@ -886,4 +886,125 @@ Possible_keys 컬럼의 인덱스가 사용 후보였다면, Key 컬럼은 최�
 key_len 컬럼은 매우 중요한 정보 중에 하나다. 실제 업무에서 사용하는 테이블은 단일 컬럼으로만 만들어진 인덱스보다 **다중 컬럼으로 만들어진 인덱스가 더 많다.** key_len 컬럼의 값은, 쿼리를 처리하기 위해 다중 컬럼으로 구성된 인덱스에서 **몇 개의 컬럼까지 사용했는지 알려준다.** 더 정확하게는 인덱스의 각 레코드에서 **몇 바이트**까지 사용했는지 알려주는 값이다.
 
 다음은 dept_no + emp_no 두 개의 컬럼으로 만들어진 PK를 포함한 dept_emp 테이블을 조회하는 쿼리다. 이 테이블은  pk 중에서 dept_no만 비교하는데 사용하고 있다.
+
+```sql
+EXPLAIN
+select * from dept_emp where dept_no='d005';
+```
+
+| id   | select\_type | table     | type | possible\_keys | key     | key\_len | ref   | rows   | Extra       |
+| :--- | :----------- | :-------- | :--- | :------------- | :------ | :------- | :---- | :----- | :---------- |
+| 1    | SIMPLE       | dept\_emp | ref  | PRIMARY        | PRIMARY | 12       | const | 139228 | Using where |
+
+dept_no 컬럼의 타입이 CHAR(4) 이기 때문에 PK에서 앞쪽 12바이트만 유효하게 사용했다는 의미다. 이 테이블의 dept_no 컬럼은 utf8 문자집합을 사용하고 있다. 실제 utf8 문자 하나가 차지하는 공간은 1~3바이트로 가변적이지만 MySQL은 무조건 3바이트로 계산 한다. 그래서 key_len 컬럼의 값은  4*3바이트로 12가 된다.
+
+> charset이 latin1 (2바이트), utf8 (가변3바이트), utf8mb4 (가변4바이트)는 저장공간의 크기이다.
+>
+> MySQL/MariaDB 에서도 UTF-8 을 지원한다.
+>
+> 이때! 간과한 사실이 있는데, 전세계 모든 언어가 21bit (3바이트가 조금 안됨)에 저장되기 때문에MYSQL 에서 utf8 을 3바이트 가변 자료형으로 설계하였다.
+>
+> 그렇기 때문에 최근에 나온 4바이트 문자열(Emoji 같은것)을 utf8 에 저장하면 값이 손실되는 현상이 발생한다!
+>
+> 기존에 널리 사용되던 MySQL 구축(설계)에서 환경이, charset 은 utf8 , collation 은 utf8_general_ci 인데 이러한 대부분의 환경에서 문제를 일으키는 것이다. 
+>
+> #### 4바이트 UTF-8 문자열
+>
+> MySQL에서 부랴부랴 원래의 설계대로 가변-4바이트 UTF-8 문자열을 저장할 수 있는 자료형을 추가했다.
+>
+> 2010년 3월 24일에 utf8mb4 라는 charset을 추가하였다. (MYSQL 5.5.3 에 추가됨)
+
+그럼 이번에는 dept_no와 emp_no을 가지고 조회를 해보자.
+
+```sql 
+EXPLAIN
+select * from dept_emp where dept_no='d005' AND emp_no = 34000;
+```
+
+| id   | select\_type | table     | type  | possible\_keys              | key     | key\_len | ref         | rows | Extra |
+| :--- | :----------- | :-------- | :---- | :-------------------------- | :------ | :------- | :---------- | :--- | :---- |
+| 1    | SIMPLE       | dept\_emp | const | PRIMARY,ix\_empno\_fromdate | PRIMARY | 16       | const,const | 1    |       |
+
+dept_emp 때문에 4 * 3바이트가 사용되며, emp_no는 Integer 타입이기 때문에 4바이트를 차지하므로 총 16바이트로 표시된 것이다.
+
+#### 버전별 실행계획
+
+버전별로 key_len 컬럼에 표시되는 바이트수가 다르다.
+
+##### MySQL 5.0 이하
+
+다음의 쿼리를 MySQL 5.0 이하에서 실행해보자.
+
+```sql
+EXPLAIN
+select * from dept_emp where dept_no='d005' AND emp_no <> 34000;
+```
+
+| id   | select\_type | table     | type | key     | key\_len | ref   | rows   | Extra       |
+| :--- | :----------- | :-------- | :--- | :------ | :------- | :---- | :----- | :---------- |
+| 1    | SIMPLE       | dept\_emp | ref  | PRIMARY | 12       | const | 155034 | Using where |
+
+MySQL5.0 이하의 버전은 key_len 값이 12가 되었다. 왜 16이 아닌 12로 줄었을 까? 그 이유는 key_len 값은 인덱스를 이용해 범위를 제한하는 조건의 컬럼까지만 포함되며, 단순히 체크조건(`emp_no <> 34000`)은 key_len에 포함되지 않는다. **그래서 5.0 이하 버전에서는 key_len 컬럼의 값으로 인덱스의 몇 바이트까지가 범위 제한 조건으로 사용됐는지 판단할 수 있다.**
+
+##### MySQL 5.1 이상
+
+| id   | select\_type | table     | type  | possible\_keys              | key     | key\_len | ref  | rows   | Extra       |
+| :--- | :----------- | :-------- | :---- | :-------------------------- | :------ | :------- | :--- | :----- | :---------- |
+| 1    | SIMPLE       | dept\_emp | range | PRIMARY,ix\_empno\_fromdate | PRIMARY | 16       | NULL | 155034 | Using where |
+
+MySQL 5.1 이상의 버전은 key_len이 16으로 표시됐다. 하지만 type 컬럼의 값이 ref가 아니고 range로 바뀌었다. 또한 `emp_no <> 34000` 조건은 단순한 체크 조건임에도 key_len에 같이 포함되어, 인덱스의 몇 바이트까지가 범위 제한 조건으로 사용됐는지를 알아낼 수가 없다.
+
+이렇게 두 버전이 차이가 나는 이유는 **MySQL 엔진과 InnoDB 스토리지 엔진의 역할 분담에 큰 변화가 생긴 것이 원인 이다.** 5.0 에서는 범위 제한 조건으로 사용되는 컬럼만 스토리지 엔진으로 전달했지만. 5.1부터는 모두 스토리 엔진으로 전달하도록 바뀌었다. 이를 "컨디션 푸시 다운"이라고 한다.
+
+### ref
+
+만약 실행 계획의 type이 ref 이면, ref 컬럼의 값이 채워 진다. 이 ref는 참조 조건인 Equal 비교조건이 어떤 값이 제공됐는지 보여 준다. 만약 상수 값을 지정했다면 const로 표시되고, 다른 테이블의 컬럼 값이면 테이블명.컬럼명 으로 표시 된다.
+
+이 컬럼의 출력되는 내용은 그렇게 신경쓰지 않아도 되지만, 다음과 같은 케이스에서는 주의할 필요가 있다.
+
+가끔 ref 값이 `func` 이라고 표시될 때 있다. 이 값은 Function의 줄임말로 참조용으로 사용되는 값을 **그대로 사용한 것이 아니라, 콜레이션 변환이나, 값 자체의 연산을 거쳐서 한번 변환되어 참조**됐다는 걸 의미한다.
+
+```sql
+EXPLAIN
+select *
+from employees e, dept_emp de
+where e.emp_no=de.emp_no;
+```
+
+| id   | select\_type | table | type | possible\_keys      | key                 | key\_len | ref                 | rows   | Extra |
+| :--- | :----------- | :---- | :--- | :------------------ | :------------------ | :------- | :------------------ | :----- | :---- |
+| 1    | SIMPLE       | e     | ALL  | PRIMARY             | NULL                | NULL     | NULL                | 282916 |       |
+| 1    | SIMPLE       | de    | ref  | ix\_empno\_fromdate | ix\_empno\_fromdate | 4        | employees.e.emp\_no | 1      |       |
+
+이 쿼리는 employees 테이블과 dept_emp 테이블을 조인하는데, 조인 조건에 사용된 emp_no 컬럼의 값에 대해 아무런 변환을 주지 않아서 ref 컬럼의 값에 **조인 대상 컬럼의 이름이 그대로 표시된다.**
+
+
+
+```sql
+EXPLAIN
+select *
+from employees e, dept_emp de
+where e.emp_no=(de.emp_no-1)
+```
+
+| id   | select\_type | table | type    | possible\_keys | key     | key\_len | ref  | rows   | Extra       |
+| :--- | :----------- | :---- | :------ | :------------- | :------ | :------- | :--- | :----- | :---------- |
+| 1    | SIMPLE       | de    | ALL     | NULL           | NULL    | NULL     | NULL | 309247 |             |
+| 1    | SIMPLE       | e     | eq\_ref | PRIMARY        | PRIMARY | 4        | func | 1      | Using where |
+
+위와 같이 `(de.emp_no-1)` 과 같이 변환이 이루어지면, ref 컬럼에 조인 컬럼의 이름이 아니라 func이 사용되는걸 알 수 있다.
+
+하지만 이렇게 <u>사용자가 명시적으로 값을 변환할 때 뿐만 아니라</u> MySQL 서버가 내부적으로 값을 변환해야 할 때도 func이 출력된다.
+
+**문자 집합이 일치하지 않는 두 문자열 컬럼을 조인한다거나, 숫자 타입의 컬럼과 문자열 타입의 컬럼으로 조인할 때가 대표적인 예다** 가능하다면 이런 변환을 하지 않아도 되도록 <u>조인 컬럼의 타입을 일치시키는 편</u>이 좋다.
+
+#### row
+
+MySQL 옵티마이저는 각 조건에 대해 가능한 처리 방식을 나열하고, 각 처리 방식의 비용을 비교해 최종적으로 하나의 실행 계획을 수립한다.
+
+이 때 비용을 산정하는 방법은
+
+- 얼마나 많은 레코드를 읽고 비교해야 하는지
+- 대상 테이블에 얼마나 많은 레코드가 포함돼 있는지
+- 각 인덱스 값의 분포도가 어떤지
 
