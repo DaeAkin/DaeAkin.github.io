@@ -2895,3 +2895,11 @@ See the source code of DisabledCondition and @Disabled for concrete examples.
 
 TestInstnaceFactory를 구현한 Extension은 테스트 인터페이스, 테스트 클래스 탑레벨, @Nested 테스트 클래스에 등록될 수 있다.
 
+> `TestInstanceFactory`를 구현한 구현체를 여러개 등록하면 테스트에 예외가 발생한다. 그리고, 부모 클래스에 정의된 구현체를 하위 구현체가 상속 받으니, 실수로 중복된 구현체를 등록하지 않도록 주의하자.
+
+## 테스트 인스턴스 후처리기
+
+[TestInstancePostProcessor](https://junit.org/junit5/docs/5.7.0/api/org.junit.jupiter.api/org/junit/jupiter/api/extension/TestInstancePostProcessor.html)는 테스트 인스턴스의 후처리기를 위한 API를 정의해 놓았다.
+
+일반적안 사용 사례는 테스트인스턴스에 의존성을 주입하거나, 테스터 인스턴스에 있는 커스텀된 초기화 에서드를 호출할 때다.
+
