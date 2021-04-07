@@ -3045,3 +3045,61 @@ INFO: Method [sleep50ms] took 53 ms.
 테스트 실행 중에 발생한 예외는 추가적으로 전파되기 전에 그에 따라 가로채서 처리할 수 있다. 그래서 에러 로깅이나 리소스 해제 같은 특정 액션들은 특별화된 Extension으로 정의하기도 한다. JUnit Jupiter는 TestExecutionExceptionHandler를 통해 @Test 메서드 중에 던져진 예외를 처리하고 LifecycleMethodExecutionExceptionHandler를 통해 테스트 라이플사이클 메서드 (@BeforeAll, @BeforeEach, @AfterEach 및 @AfterAll) 중 하나에서 던져진 예외를 처리하려는 확장 API를 제공한다. 
 
 다음 예제는 IOException이 모든 인스턴스를 삼키gi 다른 유형의 예외를 다시 발생시키는 Extension이다.
+
+```java
+class IgnoreIOExceptionExtension implements TestExecutionExceptionHandler {
+
+    @Override
+    public void handleTestExecutionException(ExtensionContext context, Throwable throwable)
+            throws Throwable {
+
+        if (throwable instanceof IOException) {
+            return;
+        }
+        throw throwable;
+    }
+
+}
+```
+
+
+
+```java
+class RecordStateOnErrorExtension implements LifecycleMethodExecutionExceptionHandler {
+
+    @Override
+    public void handleBeforeAllMethodExecutionException(ExtensionContext context, Throwable ex)
+            throws Throwable {
+        memoryDumpForFurtherInvestigation("Failure recorded during class setup");
+        throw ex;
+    }
+
+    @Override
+    public void handleBeforeEachMethodExecutionException(ExtensionContext context, Throwable ex)
+            throws Throwable {
+        memoryDumpForFurtherInvestigation("Failure recorded during test setup");
+        throw ex;
+    }
+
+    @Override
+    public void handleAfterEachMethodExecutionException(ExtensionContext context, Throwable ex)
+            throws Throwable {
+        memoryDumpForFurtherInvestigation("Failure recorded during test cleanup");
+        throw ex;
+    }
+
+    @Override
+    public void handleAfterAllMethodExecutionException(ExtensionContext context, Throwable ex)
+            throws Throwable {
+        memoryDumpForFurtherInvestigation("Failure recorded during class cleanup");
+        throw ex;
+    }
+
+
+    private void memoryDumpForFurtherInvestigation(String error) {
+
+    }
+
+}
+```
+
