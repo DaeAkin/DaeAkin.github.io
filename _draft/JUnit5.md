@@ -3103,3 +3103,200 @@ class RecordStateOnErrorExtension implements LifecycleMethodExecutionExceptionHa
 }
 ```
 
+
+
+```java
+//@Test, @BeforeEach, @AfterEach @BeforeAll and @AfterAll 에 사용될 핸들러 등록
+@ExtendWith(ThirdExecutedHandler.class)
+class MultipleHandlersTestCase {
+
+    // @Test, @BeforeEach, @AfterEach 에만 사용할 핸들러를 등록.
+    @ExtendWith(SecondExecutedHandler.class)
+    @ExtendWith(FirstExecutedHandler.class)
+    @Test
+    void testMethod() {
+        throw new RuntimeException("예외를 던지면 FirstExecutedHandler가 실행된다.");
+    }
+
+
+    static class FirstExecutedHandler implements TestExecutionExceptionHandler {
+        @Override
+        public void handleTestExecutionException(ExtensionContext context, Throwable ex)
+                throws Throwable {
+            System.out.println("FirstExecutedHandler");
+            throw ex;
+        }
+    }
+
+    static class SecondExecutedHandler implements LifecycleMethodExecutionExceptionHandler {
+        @Override
+        public void handleBeforeEachMethodExecutionException(ExtensionContext context, Throwable ex)
+                throws Throwable {
+            System.out.println("SecondExecutedHandler");
+            throw ex;
+        }
+    }
+}
+
+class ThirdExecutedHandler implements LifecycleMethodExecutionExceptionHandler {
+    @Override
+    public void handleBeforeAllMethodExecutionException(ExtensionContext context, Throwable ex)
+            throws Throwable {
+        System.out.println("ThirdExecutedHandler");
+        throw ex;
+    }
+}
+```
+
+선언 순서에 따라 동일한 라이플사이클 메서드에 대해 여러 실행 예외 처리기를 호출 할 수 있다. 핸들러 중 하나가 처리 된 예외를 삼키면 나머지 예외가 실행되지 않고, 예외가 한번도 던져지지 않은 것 처럼 테스트 실패가 전파되지 않는다. 핸들러는 예외를 다시 던지거나, 다른 예외를 던지도록 선택할 수 있다.
+
+
+
+## 호출 가로채기
+
+[InvocationIntercepot](https://junit.org/junit5/docs/5.7.0/api/org.junit.jupiter.api/org/junit/jupiter/api/extension/InvocationInterceptor.html) 는 테스트 코드의 호출을 가로채기 위해 사용하는 Extension이다.
+
+다음 예제는 Swing의 이벤트 디스패치 스레드에서 모든 테스트 메소드를 실행하는 Extension 이다.
+
+```java
+public class SwingEdtInterceptor implements InvocationInterceptor {
+
+    @Override
+    public void interceptTestMethod(Invocation<Void> invocation,
+                                    ReflectiveInvocationContext<Method> invocationContext,
+                                    ExtensionContext extensionContext) throws Throwable {
+
+        AtomicReference<Throwable> throwable = new AtomicReference<>();
+
+        SwingUtilities.invokeAndWait(() -> {
+            try {
+                invocation.proceed();
+            }
+            catch (Throwable t) {
+                throwable.set(t);
+            }
+        });
+        Throwable t = throwable.get();
+        if (t != null) {
+            throw t;
+        }
+    }
+}
+```
+
+
+
+## 테스트 템플릿을 위한 호출 컨텍스트 제공하기
+
+@TestTemplate 메서드는 오직 적어도 하나의 TestTemplateInvocationContextProvider가 등록되어 있을 때만 실행이 된다. 이런 제공자는 TestTemplateInvocationContext 인스턴스의 Stream을 제공하는데 책임을 갖고 있다. 각각의 컨텍스트는 커스텀된 display name을 지정하거나, @TestTemplate 메서드의 다음 호출에 사용될 추가적인 extension의 리스트를 지정해줘야 한다. 
+
+다음의 예제는 TestTemplateInvocationContextProvider를 구현하고 등록하는 방법과 테스트 템플릿을 작성하는 방법을 보여준다.
+
+```java
+class TestTemplateDemo {
+
+
+    final List<String> fruits = Arrays.asList("apple", "banana", "lemon");
+
+    @TestTemplate
+    @ExtendWith(MyTestTemplateInvocationContextProvider.class)
+    void testTemplate(String fruit) {
+        assertTrue(fruits.contains(fruit));
+    }
+
+
+    static public class MyTestTemplateInvocationContextProvider
+            implements TestTemplateInvocationContextProvider {
+
+        @Override
+        public boolean supportsTestTemplate(ExtensionContext context) {
+            return true;
+        }
+
+        @Override
+        public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(
+                ExtensionContext context) {
+
+            return Stream.of(invocationContext("apple"), invocationContext("banana"));
+        }
+
+        private TestTemplateInvocationContext invocationContext(String parameter) {
+            return new TestTemplateInvocationContext() {
+                @Override
+                public String getDisplayName(int invocationIndex) {
+                    return parameter;
+                }
+
+                @Override
+                public List<Extension> getAdditionalExtensions() {
+                    return Collections.singletonList(new ParameterResolver() {
+                        @Override
+                        public boolean supportsParameter(ParameterContext parameterContext,
+                                                         ExtensionContext extensionContext) {
+                            return parameterContext.getParameter().getType().equals(String.class);
+                        }
+
+                        @Override
+                        public Object resolveParameter(ParameterContext parameterContext,
+                                                       ExtensionContext extensionContext) {
+                            return parameter;
+                        }
+                    });
+                }
+            };
+        }
+    }
+}
+```
+
+위에 예제에서 테스트 템플릿은 두번 호출 된다. 호출의 디스플레이 네임은 invocation 컨텍스트에 지정된 것 처럼 `apple` 과  `banana`가 출력이 된다. 각각의 호출은 메소드 파라미터를 찾기 위한 커스텀된 ParameterResolver를 등록한다.
+
+```
+└─ testTemplate(String) ✔
+	├─ apple ✔
+  └─ banana ✔
+```
+
+TestTemplateInvocationContextProvider Extension API는 주로 다른 컨텍스트에서 테스트와 유사한 메서드의 반복적인 호출에 의존하는 다양한 종류의 테스트를 구현하기위한 것이다. 예를 들어, 다른 매개 변수를 사용하여 테스트 클래스 인스턴스를 다르게 준비하거나 컨텍스트를 수정하지 않고 여러 번 준비한다. 기능을 제공하기 위해 이 extension을 사용하는 Repeated Test 또는 Parameteterized Test 구현을 참조하자.
+
+
+
+## Extension 안에서 상태 유지
+
+보통, extension은 오직 한번만 초기화가 된다. 그래서 다음의 질문을 던질 수 있다." 호출된 extension 상태를 다음 호출까지 어떻게 상태를 유지시킬 수 있을 까?" `ExtensionContext` API는 이런 목적을 위해 `Store` 라는 것을 제공한다. 나중을 위해 store에 저장해 뒀다가 꺼내서 쓸 수 있다. 위에서 살펴본 TimingExtension이 메소드 레벨 범위로 Store를 사용한 예제다. 테스트 실행 동안 `ExtensionContext` 에 저장된 값들은 `ExtensionContext` 에 둘러쌓여있으면 사용이 불가능 하다는걸 명심하자. `ExtensionContext` 는 중첩되기 때문에 안쪽의 context로 제한이 된다. 
+
+> `ExtensionContext.store.CloseableResource` 
+>
+> extension context store는 extension context 라이플사이클과 바운드 된다. extension context의 라이플사이클이 끝나면, 관련된 store는 닫히게 된다. CloseableResource의 인스턴스는 저장된 모든 값은 추가 된 역순으로 close () 메서드를 호출하여 알림을 받게 된다. 
+
+
+
+## Extension 안에서 지원되는 유틸리티
+
+`junit-platform-commons` 는 어노테이션, 클래스, 리플렉션 , 클래스패스 스캔과 함께 작동하는 메서드들이 있다. `TestEngine` 과 `Extension` 저자는 JUnit 플랫폼과 합을 맞추기 위해 이런 지원되는 메서드들을 사용하기를 권장하고 있다.
+
+### Annotation Support
+
+`Annotation Support` 는 패키지, 어노테이션, 클래스, 인터페이스, 생성자, 메서드 , 필드 등과 같은 어노테이션이 붙은 엘리먼트와 동작하기 위한 정적 유틸리티 메서드를 제공해준다. 여기에는 엘리먼트에 어노테이션이 붙었는지 또는 메타 어노테이션이 추가되었는지 확인하고, 특정 어노테이션을 검색하고, 클래스 또는 인터페이스에서 어노테이션이 추가 된 메서드 및 필드를 찾는 메서드가 있다.
+
+### Class Support
+
+`ClassSupport`는 클래스와 관련된 정적 유틸리티 메서드를 제공한다.
+
+### Reflection Support 
+
+`Reflection Support` 는 표준 JDK 리플렉션 및 클래스 로딩 메커니즘 관련 정적 유틸리티 메서드를 제공합니다. 여기에는 지정된 술어와 일치하는 클래스를 검색하여 클래스 경로를 스캔하고, 클래스의 새 인스턴스를 로드 및 작성하고, 메소드를 찾고 호출하는 메소드가 포함된다. 이러한 메서드 중 일부는 클래스 계층 구조를 탐색하여 일치하는 메서드를 찾는다.
+
+### Modifier Support
+
+`ModifierSupport` 는 멤버와 클래스 접근자를 동작하기 위한 정적 유틸리티 메서드를 제공한다. 예를 들어 멤버가 public, private, abstract, static 등으로 선언되어있는지 확인할 수 있다.
+
+
+## 사용자 코드 및 Extension 상대적 실행 순서
+
+하나 이상의 테스트 메서드를 포함하는 테스트 클래스를 실행할 때 사용자 제공 테스트 및 라이플사이클 메서드 외에도 여러 Extension 콜백이 호출 된다. 
+
+
+
+### 유저 코드와 Extension 코드
+
