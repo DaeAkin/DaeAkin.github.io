@@ -3300,3 +3300,199 @@ TestTemplateInvocationContextProvider Extension API는 주로 다른 컨텍스�
 
 ### 유저 코드와 Extension 코드
 
+다음의 다이어그램은 사용자 제공 코드와 extension 코드의 상대적 순서를 표현한 것이다. 유저가 제공한 테스트와 라이플사이클 메서드는 **오렌지로** 표시되었고, extension이 구현한 콜백 코드는 **파란색으로** 표시되었다. 회색 박스는 단일 테스트 메서드의 실행이고, 테스트 클래스 안에서 모든 테스트에 대해 반복적으로 실행되는걸 표시했다.
+
+![스크린샷 2021-04-09 오후 4.35.42](/private/var/folders/lg/mryrdsds5v36x0k1g93ky7tc0000gn/T/TemporaryItems/NSIRD_screencaptureui_5zDmGu/스크린샷 2021-04-09 오후 4.35.42.png)
+
+| Ste p | Interface/An notation                                        | Description                                                  |
+| ----- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 1     | interface org.junit.jup iter.api.exte nsion.BeforeA llCallback | extension code executed before all tests of the container are executed |
+| 2     | annotation org.junit.jup iter.api.Befo reAll                 | user code executed before all tests of the container are executed |
+| 3     | interface org.junit.jup iter.api.exte nsion.Lifecyc leMethodExecu tionException Handler #handleBefore AllMethodExec utionExceptio n | extension code for handling exceptions thrown from @BeforeAll methods |
+| 4     | interface org.junit.jup iter.api.exte nsion.BeforeE achCallback | extension code executed before each test is executed         |
+| 5     | annotation org.junit.jup iter.api.Befo reEach                | user code executed before each test is executed              |
+| 6     | interface org.junit.jup iter.api.exte nsion.Lifecyc leMethodExecu tionException Handler #handleBefore EachMethodExe cutionExcepti on | extension code for handling exceptions thrown from @BeforeEach methods |
+| 7     | interface org.junit.jup iter.api.exte nsion.BeforeT estExecutionC allback | extension code executed immediately before a test is executed |
+| 8     | annotation org.junit.jup iter.api.Test                       | user code of the actual test method                          |
+
+
+
+| Ste p | Interface/An notation                                        | Description                                                  |
+| ----- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 9     | interface org.junit.jup iter.api.exte nsion.TestExe cutionExcepti onHandler | extension code for handling exceptions thrown during a test  |
+| 10    | interface org.junit.jup iter.api.exte nsion.AfterTe stExecutionCa llback | extension code executed immediately after test execution and its corresponding exception handlers |
+| 11    | annotation org.junit.jup iter.api.Afte rEach                 | user code executed after each test is executed               |
+| 12    | interface org.junit.jup iter.api.exte nsion.Lifecyc leMethodExecu tionException Handler #handleAfterE achMethodExec utionExceptio n | extension code for handling exceptions thrown from @AfterEach methods |
+| 13    | interface org.junit.jup iter.api.exte nsion.AfterEa chCallback | extension code executed after each test is executed          |
+| 14    | annotation org.junit.jup iter.api.Afte rAll                  | user code executed after all tests of the container are executed |
+| 15    | interface org.junit.jup iter.api.exte nsion.Lifecyc leMethodExecu tionException Handler #handleAfterA llMethodExecu tionException | extension code for handling exceptions thrown from @AfterAll methods |
+
+
+
+| Ste p | Interface/An notation                                        | Description                                                  |
+| ----- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 16    | interface org.junit.jup iter.api.exte nsion.AfterAl lCallback | extension code executed after all tests of the container are executed |
+
+
+
+### 콜백 동작 랩핑하기
+
+JUnit Jupiter는 항상 BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, BeforeTestExecutionCallback, AfterTestExecutionCallback 처럼 라이플사이클 콜백을 구현한 여러개의 등록된 extension에 대하여 동작을 랩핑할 수 있게 해준다. 
+
+그 말은 즉슨 `Extension1` 과 `Extension2` 두개의 Extension이 있는데, Extension1이 먼저 등록이 되면 항상 Extension1의  before 콜백이 먼저 실행 된다.  따라서 Extension1은 Extension2를 랩핑한다고 한다. 
+
+또한 JUnit Jupiter는 사용자가 제공한 라이플사이클메서드에 대해 같은 클래스와 인터페이스 계층 안에 있다면 랩핑을 지원해준다.
+
+- BeforeAll 메서드는 숨겨져있거나 오버라이딩이 되어있지 않는한 부모클래스로부터 상속을 받는다. 거기에다가, 부모클래스의 @BeforeAll 는 서브클래스의 @beforeAll보다 먼저 실행된다.
+  - 이와 비슷하게,인터페이스 안에선언된 @BeforeAll 메서드는 숨겨져있거나 오버라이딩 되지않는 한 상속된다. 그리고 그 인터페이스를 구현한 구현체의 @BeforeAll 코드가 실행된다.
+- @AfterAll는 숨겨져있거나 오버라이딩 되어있지 않는 한 부모클래스로부터 상속을 받는다. 위와 마찬가지로 부모클래스의 @AfterAll이 먼저 실행 된 후 자식 클래스의 @AfterAll이 실행 된다.
+  - AfterAll 또한 인터페이스 안에 선언된 @AfterAll 메서드는 숨겨져있거나 오버라이딩 되지 않는 한 상속 된다. 그리고 그 인터페이스를 구현한 구현체의 @AfterAll 코드가 실행 된다.
+- @BeforeEach 메서드는 오버라이딩 되지 않는 한 부모클래스로 부터 상속 된다. @BeforeEach 메서드도 또한 부모 클래스에 있는 게 먼저 실행 된다.
+  - 인터페이스에도 위와 같음
+- @AfterEach 또한 @BeforeEach와 같음.
+
+다음의 예제는 랩핑 동작을 증명한다. 
+
+```java
+abstract class AbstractDatabaseTests {
+
+    @BeforeAll
+    static void createDatabase() {
+        beforeAllMethod(AbstractDatabaseTests.class.getSimpleName() + ".createDatabase()");
+    }
+
+    @BeforeEach
+    void connectToDatabase() {
+        beforeEachMethod(AbstractDatabaseTests.class.getSimpleName() + ".connectToDatabase()");
+    }
+
+    @AfterEach
+    void disconnectFromDatabase() {
+        afterEachMethod(AbstractDatabaseTests.class.getSimpleName() + ".disconnectFromDatabase()");
+    }
+
+    @AfterAll
+    static void destroyDatabase() {
+        afterAllMethod(AbstractDatabaseTests.class.getSimpleName() + ".destroyDatabase()");
+    }
+
+}
+```
+
+
+
+```java
+@ExtendWith({ Extension1.class, Extension2.class })
+class DatabaseTestsDemo extends AbstractDatabaseTests {
+
+    @BeforeAll
+    static void beforeAll() {
+        beforeAllMethod(DatabaseTestsDemo.class.getSimpleName() + ".beforeAll()");
+    }
+
+    @BeforeEach
+    void insertTestDataIntoDatabase() {
+        beforeEachMethod(getClass().getSimpleName() + ".insertTestDataIntoDatabase()");
+    }
+
+    @Test
+    void testDatabaseFunctionality() {
+        testMethod(getClass().getSimpleName() + ".testDatabaseFunctionality()");
+    }
+
+    @AfterEach
+    void deleteTestDataFromDatabase() {
+        afterEachMethod(getClass().getSimpleName() + ".deleteTestDataFromDatabase()");
+    }
+
+    @AfterAll
+    static void afterAll() {
+        beforeAllMethod(DatabaseTestsDemo.class.getSimpleName() + ".afterAll()");
+    }
+
+}
+```
+
+
+
+```
+@BeforeAll AbstractDatabaseTests.createDatabase() 
+@BeforeAll DatabaseTestsDemo.beforeAll() 
+	Extension1.beforeEach() 
+	Extension2.beforeEach() 
+		@BeforeEach AbstractDatabaseTests.connectToDatabase() 
+		@BeforeEach DatabaseTestsDemo.insertTestDataIntoDatabase() 
+			@Test DatabaseTestsDemo.testDatabaseFunctionality() 
+		@AfterEach DatabaseTestsDemo.deleteTestDataFromDatabase() 
+		@AfterEach AbstractDatabaseTests.disconnectFromDatabase() 
+	Extension2.afterEach() 
+	Extension1.afterEach() 
+@BeforeAll DatabaseTestsDemo.afterAll() 
+@AfterAll AbstractDatabaseTests.destroyDatabase()
+```
+
+![](https://github.com/DaeAkin/JUnit5-Study/blob/master/images/DatabaseTestsDemo.png?raw=true)
+
+
+
+JUnit Jupiter는 하나의 테스트 클래스나 테스트 인터페이스에 선언된 여러 개의 라이플사이클 메서드의 실행 순서를 보장해 주지 않는다. 이런 메소드들은 알파벳 순서로 호출되는 것 처럼 보이지만, 사실은 아니다. 순서는 단일 테스트 클래스 내에서 @Test 메서드의 순서와 유사하다. 
+
+> 단일 테스트 클래스 또는 테스트 인터페이스 내에서 선언 된 라이플사이클 메서드는 결정적이지만 의도적으로 명확하지 않은 알고리즘을 사용하여 정렬된다. 이렇게하면 테스트의 후속 실행이 동일한 순서로 라이프 사이클 메소드를 실행하여 반복 가능한 빌드를 허용해준다. 
+
+추가적으로 JUnit Jupiter는 단일 테스트 클래스나 테스트 인터페이스에 선언된 여러개의 라이플사이클 메서드에 대해 랩핑을 지원하지 않는다.
+
+다음의 예제는 특이하게, 지역적으로 선언된 라이플사이클 메서드가 실행되서 라이플사이클 메서드 설정이 부서지게 되었다.
+
+```java
+@ExtendWith({ Extension1.class, Extension2.class })
+class BrokenLifecycleMethodConfigDemo {
+
+    @BeforeEach
+    void connectToDatabase() {
+        beforeEachMethod(getClass().getSimpleName() + ".connectToDatabase()");
+    }
+
+    @BeforeEach
+    void insertTestDataIntoDatabase() {
+        beforeEachMethod(getClass().getSimpleName() + ".insertTestDataIntoDatabase()");
+    }
+
+    @Test
+    void testDatabaseFunctionality() {
+        testMethod(getClass().getSimpleName() + ".testDatabaseFunctionality()");
+    }
+
+    @AfterEach
+    void deleteTestDataFromDatabase() {
+        afterEachMethod(getClass().getSimpleName() + ".deleteTestDataFromDatabase()");
+    }
+
+    @AfterEach
+    void disconnectFromDatabase() {
+        afterEachMethod(getClass().getSimpleName() + ".disconnectFromDatabase()");
+    }
+
+}
+```
+
+위에 코드는 다음과 같이 출력 된다.
+
+```
+Extension1.beforeEach() 
+Extension2.beforeEach() 
+	@BeforeEach BrokenLifecycleMethodConfigDemo.insertTestDataIntoDatabase() 
+	@BeforeEach BrokenLifecycleMethodConfigDemo.connectToDatabase() 
+		@Test BrokenLifecycleMethodConfigDemo.testDatabaseFunctionality() 
+	@AfterEach BrokenLifecycleMethodConfigDemo.disconnectFromDatabase() 
+	@AfterEach BrokenLifecycleMethodConfigDemo.deleteTestDataFromDatabase() Extension2.afterEach() 
+Extension1.afterEach()
+```
+
+![](https://github.com/DaeAkin/JUnit5-Study/blob/master/images/BrokenLifecycleMethodConfigDemo.png?raw=true)
+
+
+
+
+
+
+
