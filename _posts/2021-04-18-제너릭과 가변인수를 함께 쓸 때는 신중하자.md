@@ -1,0 +1,169 @@
+---
+layout: post
+title: 제너릭과 가변인수를 함께 쓸 때는 신중하자
+categories: [이펙티브자바]
+comments: true 
+tags:
+- 이펙티브자바
+---
+
+
+
+# 가변인수
+
+가변인수는 메서드에 넘기는 **인수의 개수를 클라이언트가 조절**할 수 있게 해준다.
+
+```java
+public void varargs(String... args) {
+  ...
+}
+```
+
+하지만 가변인수 메서드는 호출하면 **가변인수를 담기 위한 배열**이 자동으로 만들어진다. 그런데 내부로 감춰야 하는 이 배열을 클라이언트에 노출하는 문제가 생긴다.
+
+**그 결과 varargs 매개변수에 제너릭이나 매개변수화 타입이 포함되면 알기 어려운 컴파일 경고가 발생한다.**
+
+
+
+# 문제점
+
+실체화 불가 타입(E , ? 등)은 **런타임에는 컴파일타임보다 타입 관련 정보를 적게 담고 있다.** 그리고 **거의 모든 제너릭과 매개변수화 타입은 실체화되지 않는다.** 메서드를 선언할 때 실체화 불가 타입으로 varargs 매개변수를 선언하면 컴파일러가 경고를 보낸다. 가변인수 메서드를 호출할 때도 varargs 매개변수가 실체화 불가 타입으로 추론되면, 그 호출에 대해서도 경고를 낸다.
+
+```
+warning : 
+[unchecked] Possible heap pollution from parameterized vararg type List<String>
+```
+
+
+
+# 힙 오염(heap pollution)
+
+매개변수화 타입의 변수가 타입이 객체를 참조하게 되면 **힙 오염**이 발생한다.
+
+```java
+static void dangerous(List<String>... stringLists) {
+  List<Integer> intList = List.of(42);
+  Object[] objects = stringLists;
+  objects[0] = intList; // 힙 오염 발생
+  String s = stringLists[0].get(0); // ClassCastException
+}
+```
+
+가변인수때문에 자동으로 배열로 변환되서 이런코드가 가능하다. 
+
+이처럼 타입 안정성이 깨지니 **제너릭 varagrs 배열 매개변수에 값을 저장하는 것은 안전하지 않다.**
+
+
+
+## 가변인수의 존재 이유
+
+제너릭 배열을 개발자가 직접 생성하는 건 허용하지 않으면서, **제너릭 varagrs 매개변수를 받는 메서드를 선언할 수 있게 해주는 이유는 뭘까?**
+
+그 답은 제너릭이나 매개변수화 타입의 varagrs 매개변수를 받는 메서드가 실무에서 매우 유용하기 때문이다. 
+
+자바 라이브러리에도 이런 메서드를 여럿 제공한다.
+
+- **Arrays.asList(T... a)**
+- **Collections.addAll(Collection<? super T> c)**
+- **EnumSet.of(E first, E... rest)**
+
+다행히 이 메서드들은 타입에 안전하다. 
+
+
+
+# @SafeVarargs
+
+**@SafeVarargs 어노테이션은 메서드 작성자가 그 메서드가 타입 안전함을 보장하는 장치이다.** 컴파일러는 이 약속을 받고 그 메서드가 안전하지 않을 수 있다는 경고를 더 이상 하지 않는다.
+
+**메서드가 안전한 게 확실하지 않다면 절대 @SafeVarargs 어노테이션을 달아서는 안 된다.**
+
+
+
+## 메서드가 안전한지 확인하는 방법 
+
+가변인수 메서드를 호출할 때 varargs 매개변수를 담는 제너릭 배열이 만들어진다.
+
+- **varargs 매개변수 배열에 아무것도 저장하지 않는다.**
+- **그 배열(혹은 복제본)을 신뢰할 수 없는 코드에 노출하지 않는다.**
+
+이 두가지를 만족하면 타입에 안전하다.
+
+> @SafeVarargs 어노테이션은 재정의할 수 없는 메서드에만 달아야 한다. 재정의한 메서드도 안전할지는 보장할 수 없기 때문이다. 자바 8에서 이 어노테이션은 오직 정적 메서드와 final 인스턴스에만 붙일 수 있고, 자바 9부터는 private 인스턴스 메서드에도 허용 된다.
+
+이 varargs 매개변수 배열이 호출자로부터 그 메서드로 순순하게 인수들을 전달하는 일만 한다면, 그 메서드는 안전하다. 하지만 varargs 매개변수 배열에 아무것도 저장히자 않는다면 타입 안정성을 깨뜨릴 수 잇다.
+
+**자신의 제너릭 매개변수 배열의 참조를 노출한다. - 안전하지 않음**
+
+```java
+static <T> T[] toArray(T... args) {
+  return args;
+}
+
+public static void main(String[] args) {
+  String[] attributes = pickTwo("좋은","빠른","저렴한"); //ClassCastException
+}
+
+static <T> T[] pickTwo(T a, T b, T c) {
+  switch(ThreadLocalRandom.current().nextInt(3)) {
+    case 0 : return toArray(a,b);
+    case 1 : return toArray(a,c);
+    case 2 : return toArray(b,c);
+  }
+  throw new AssertionError();
+}
+```
+
+이 메서드를 본 컴파일러는 toArray에 넘길 T 인스턴스 2개를 담을 varargs 매개변수 배열을 만드는 코드를 생성한다.
+
+**이 코드가 만드는 배열의 타입은 제너릭소거로 인해 Object[]이다.**
+
+그리고 toArray 메서드가 돌려준 이 배열을 그대로 pickTwo를 호출한 클라이언트까지 전달된다.
+
+여기서 String[] 배열의 변수인 attributes에 전달된 값을 담으려고 하니, **Object[]를 String[]으로 컴파일러가 형변환을 해준다.**
+
+**하지만, Object[]는 Strting[]의 하위 타입이 아니므로 형변환에 실패한다.**
+
+
+
+## 가변인수 대신 List를 사용하는 방법도 좋다.
+
+```java
+public static void main(String[] args) {
+  List<String> attributes = pickTwo("좋은","빠른","저렴한"); 
+}
+
+static <T> List<T> pickTwo(T a, T b, T c) {
+  switch(ThreadLocalRandom.current().nextInt(3)) {
+    case 0 : return List.of(a,b)
+    case 1 : return List.of(a,c);
+    case 2 : return List.of(b,c);
+  }
+  throw new AssertionError();
+}
+```
+
+이 방식의 장점은 컴파일러가 이 메서드의 타입 안전성을 검증할 수 있다는데 있다. @SafeVarargs 어노테이션을 우리가 직접 달지 않아도 되며, 실수로 안전하다고 판단할 걱정도 없다. 단점이라면 클라이언트 코드가 살짝 지저분해지고 속도가 조금 느려질 수는 있다.
+
+여기서 사용된 `List.of()` 정적 메서드도 가변 인수를 사용한 자바 라이브러리다.
+
+```java
+@SafeVarargs
+@SuppressWarnings("varargs")
+static <E> List<E> of(E... elements) {
+  switch (elements.length) { // implicit null check of elements
+    case 0:
+      @SuppressWarnings("unchecked")
+      var list = (List<E>) ImmutableCollections.EMPTY_LIST;
+      return list;
+    case 1:
+      return new ImmutableCollections.List12<>(elements[0]);
+    case 2:
+      return new ImmutableCollections.List12<>(elements[0], elements[1]);
+    default:
+      return new ImmutableCollections.ListN<>(elements);
+  }
+}
+```
+
+여기서도 @SsafeVarargs 어노테이션이 붙은걸 보니 `List.of()` 메서드도 타입 안전함을 보장하기 때문에 사용해도 괜찮다. 
+
