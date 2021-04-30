@@ -1,0 +1,150 @@
+I"d;<p>우리가 개발할 때 쓰는  <code class="language-plaintext highlighter-rouge">Set&lt;E&gt;</code> 과 <code class="language-plaintext highlighter-rouge">Map&lt;K,V&gt;</code> 등 컬렉션과 <code class="language-plaintext highlighter-rouge">ThreadLocal&lt;T&gt;</code> , <code class="language-plaintext highlighter-rouge">AtomicReference&lt;T&gt;</code> 등의 단일원소 컨테이너에도 제너릭이 많이 쓰인다.</p>
+
+<p><strong>하지만 하나의 컨테이너에서 매개변수화할 수 있는 타입의 수가 제한 된다.</strong></p>
+
+<p><strong>Interger 타입으로 제한되는 Set</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Set</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">set</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashSet</span><span class="o">&lt;&gt;();</span> <span class="c1">// Integer 타입 밖에 사용 못한다.</span>
+</code></pre></div></div>
+
+<p>하지만, 이런 제약조건들은 일반적인 용도에 맞게 설계되었기 때문에 문제가 없다.</p>
+
+<h1 id="다음의-구현-조건-있다고-가정해보자">다음의 구현 조건 있다고 가정해보자</h1>
+
+<p>예를 들어 타입별로(String,Integer 등) 즐겨 찾는 인스턴스를 저장하고 검색할 수 있는 Favorite 구현을 생각해보자.</p>
+
+<p><code class="language-plaintext highlighter-rouge">map.put(String.class,"밥")</code>  이렇게, <strong>key에는 타입 , value에는 타입의 값이 들어가야 한다.</strong></p>
+
+<p><strong>Favroite 구현</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+  <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">Class</span><span class="o">&lt;?&gt;,</span><span class="nc">Object</span><span class="o">&gt;</span> <span class="n">favorites</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;();</span>
+
+  <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="s">"밥"</span><span class="o">);</span>
+  <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="nc">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="s">"이것도 된다."</span><span class="o">);</span>
+
+  <span class="nc">Integer</span> <span class="n">o</span> <span class="o">=</span> <span class="o">(</span><span class="nc">Integer</span><span class="o">)</span> <span class="n">favorites</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="nc">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">);</span> <span class="c1">// ClassCastException</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>아무 생각 없이 위에 조건대로 만든 코드다.</p>
+
+<p>이 코드의 문제점은 <strong>타입 안전성</strong>이 없다는 것이 문제다.</p>
+
+<p>Key가 String 클래스라면, 값도 String이어야 한다.</p>
+
+<p>Integer로 key를 만들었으면 값도 Integer여야 한다.</p>
+
+<p><strong><u>하지만 내가만든 코드는 Key가 Integer인데, String 값이 들어갈 수 있다.</u></strong></p>
+
+<p>이러면 get으로 조회해올 때 <code class="language-plaintext highlighter-rouge">ClassCastException</code>이 발생한다.</p>
+
+<h1 id="타입-안전-이종-컨테이너를-쓰자">타입 안전 이종 컨테이너를 쓰자</h1>
+
+<p>위에 문제점인 타입 안전성을 해결하기 위해 타입 안전 이종 컨테이너를 사용하면 된다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="nc">Favorites</span> <span class="n">favorites</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Favorites</span><span class="o">();</span>
+
+        <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="s">"밥"</span><span class="o">);</span>
+        <span class="c1">//밑에 코드는 컴파일 에러가 난다. 타입안정성을 얻을 수 있음!</span>
+        <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="nc">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="s">"이것도 된다."</span><span class="o">);</span>
+
+        <span class="c1">//타입 형변환도 자동으로 해줘서 이런 코드가 필요 없다.</span>
+        <span class="nc">Integer</span> <span class="n">o</span> <span class="o">=</span> <span class="o">(</span><span class="nc">Integer</span><span class="o">)</span> <span class="n">favorites</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="nc">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="c1">//이렇게만 작성하면 된다.</span>
+        <span class="nc">Integer</span> <span class="n">o2</span> <span class="o">=</span> <span class="n">favorites</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="nc">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+    <span class="o">}</span>
+<span class="o">}</span>
+<span class="c1">//타입 안전 이종 컨테이너</span>
+<span class="kd">class</span> <span class="nc">Favorites</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="nc">Map</span><span class="o">&lt;</span><span class="nc">Class</span><span class="o">&lt;?&gt;,</span> <span class="nc">Object</span><span class="o">&gt;</span> <span class="n">favorites</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashMap</span><span class="o">&lt;&gt;();</span>
+
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">put</span><span class="o">(</span><span class="nc">Class</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">type</span><span class="o">,</span> <span class="no">T</span> <span class="n">instance</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">type</span><span class="o">),</span> <span class="n">instance</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="no">T</span> <span class="nf">get</span><span class="o">(</span><span class="nc">Class</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">type</span><span class="o">.</span><span class="na">cast</span><span class="o">(</span><span class="n">favorites</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">type</span><span class="o">));</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>위와 같이 타입 안전 이종 컨테이너를 사용하면 다음의 이점이 있다.</p>
+
+<ul>
+  <li><strong>컴파일타임에 타입안정성을 보장해준다.</strong></li>
+  <li><strong>map에서 꺼내올 때, 타입캐스팅을 클라이언트쪽에서 해주지 않아도 되서 더욱 깔끔하다.</strong></li>
+</ul>
+
+<h1 id="위에-코드의-단점">위에 코드의 단점</h1>
+
+<p>위에 코드도 완벽한 것 같지만 타입 안전성에 완전히 자유롭지는 않다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Favorites</span> <span class="n">favorites</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Favorites</span><span class="o">();</span>
+
+        <span class="c1">// raw 타입으로 넘기면 타입 안정성이 깨진다.</span>
+        <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">((</span><span class="nc">Class</span><span class="o">)</span><span class="nc">Integer</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="s">"이것도 된다."</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>위와 같이 악의적인 클라이언트가 Class 객체를 Raw 타입으로 넘겨버리면 타입 안전성이 깨진다.</strong></p>
+
+<p>하지만 컴파일할 때 비검사 경고가 뜨긴 한다.</p>
+
+<p>이 문제를 해결하기 위해서 Favorites.put() 메서드에서 형변환 검사를 한번더 해주자.</p>
+
+<p><strong>동적 형변환으로 런타임 타입 안전성 확보</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+public &lt;T&gt; void put(Class&lt;T&gt; type, T instance) {
+  favorites.put(Objects.requireNonNull(type), instance);
+}
+*/</span>
+
+<span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">put</span><span class="o">(</span><span class="nc">Class</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">type</span><span class="o">,</span> <span class="no">T</span> <span class="n">instance</span><span class="o">)</span> <span class="o">{</span>
+  <span class="n">favorites</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">type</span><span class="o">),</span> <span class="n">type</span><span class="o">.</span><span class="na">cast</span><span class="o">(</span><span class="n">instance</span><span class="o">));</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h1 id="단점-2">단점 2</h1>
+
+<p>Favorites 클래스는 실체화 불가 타입에는 사용할 수 없다. Key로 String이나, String[]은 가능하지만, <code class="language-plaintext highlighter-rouge">List&lt;String&gt;</code> 같은 실체화 불가 타입은 하지 못한다.</p>
+
+<p>생각해보면 <code class="language-plaintext highlighter-rouge">List&lt;String</code>&gt; 과 <code class="language-plaintext highlighter-rouge">List&lt;Integer&gt;</code> 는 둘다 서로 List.class 라는 같은 Class 객체이기 때문에, 둘다 똑같은 타입을 반환한다면 Favorites 객체의 내부는 아수라장이 된다.</p>
+
+<p>하지만 이 단점에 대해 완벽한 해법은 없다.</p>
+
+<p>http://gafter.blogspot.com/2006/12/super-type-tokens.html</p>
+
+<h2 id="그래서-타입-안전-이종-컨테이너란">그래서 타입 안전 이종 컨테이너란?</h2>
+
+<p>컨테이너 대신 키를 매개변수화한 다음, 컨테이너에 값을 넣거나 뺄 때 매개변수화한 키를 함께 제공한다. <strong>이렇게 하면 제너릭 타입 시스템이 값의 타입이 키와 같음을 보장해주는데, 이러한 설계 방식을 타입 안전 이종 컨테이너 패턴이라고 한다.</strong></p>
+
+<p>각 타입의 Class 객체를 매개변수화한 키 역할로 사용하면 되는데, 이 방식이 동작하는 이유는 class의 클래스가 제너릭이기 때문이다. class 리터럴의 타입은 Class가 아닌 <code class="language-plaintext highlighter-rouge">Class&lt;T&gt;</code> 다. 예를 들어 String.class의 타입은 <code class="language-plaintext highlighter-rouge">Class&lt;String&gt;</code> 이고, Integer.class의 타입은 <code class="language-plaintext highlighter-rouge">Class&lt;Integer&gt;</code> 이다.</p>
+
+<blockquote>
+  <p>한편 컴파일타임 타입 정보와 런타임 타입 정보를 알아내기 위해 메서드들이 주고받는 class 리터럴은 타입 토큰이라고 한다.</p>
+</blockquote>
+
+<h1 id="하나의-컨테이너에서-매개변수화할-수-있는-타입의-수가-제한-된다라는-뜻은">하나의 컨테이너에서 매개변수화할 수 있는 타입의 수가 제한 된다라는 뜻은?</h1>
+
+<p>Set의 경우 인스턴스 생성할 때 <code class="language-plaintext highlighter-rouge">Set&lt;Integer&gt;</code> 로 만들면 이 Set은 Integer 타입밖에 사용하지 못한다.</p>
+
+<p>하지만 여러 개의 타입을 사용하고 싶을 경우, 예를 들어 <code class="language-plaintext highlighter-rouge">Set&lt;Class&lt;?&gt;&gt;</code> 로 사용해도 된다.</p>
+
+<p>하지만 이렇게 사용하면, 타입안정성을 해치게 되므로, 타입안전성을 얻기 위해 <code class="language-plaintext highlighter-rouge">컨테이너</code> 를 하나 만들어야 한다.</p>
+
+<p>그 컨테이너가 바로, <strong>타입 안전 이종 컨테이너라고 부르게 되는 것이다.</strong></p>
+
+<h1 id="같이-보기-좋은-자료">같이 보기 좋은 자료</h1>
+
+<p><a href="https://homoefficio.github.io/2016/11/30/%ED%81%B4%EB%9E%98%EC%8A%A4-%EB%A6%AC%ED%84%B0%EB%9F%B4-%ED%83%80%EC%9E%85-%ED%86%A0%ED%81%B0-%EC%88%98%ED%8D%BC-%ED%83%80%EC%9E%85-%ED%86%A0%ED%81%B0/">참고자료</a></p>
+:ET

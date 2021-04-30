@@ -1,0 +1,72 @@
+I"�<p>소스 파일 하나에 탑레벨 클래스를 여러 개 선언하더라도 컴파일러 에러가 나진 않는다. 하지만 아무런 득도 없고, 심각한 위험을 감수해야 할 수도 있다. 이렇게 하면 한 클래스를 여러 가지로 정의할 수 있으며, 그 중 어느것을 사용할지는 어느 소스 파일을 먼저 컴파일 하냐에 따라 달라지기 때문이다.</p>
+
+<p>다음과 같은 Main 클래스가 있다고 가정해보자.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+       <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="nc">Utensil</span><span class="o">.</span><span class="na">NAME</span> <span class="o">+</span> <span class="nc">Dessert</span><span class="o">.</span><span class="na">NAME</span><span class="o">);</span>
+     <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>이 클래스는 Utensil 클래스에 있는 정적 변수인 NAME과 Dessert 클래스에 있는 정적 변수인 NAME을 조합해서 출력한다.</p>
+
+<p><strong>Utensil.java</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Utensil</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">NAME</span> <span class="o">=</span> <span class="s">"pan"</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">class</span> <span class="nc">Dessert</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">NAME</span> <span class="o">=</span> <span class="s">"cake"</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>Utensil 클래스</strong>를 만들어서 위와 같이 탑레벨 클래스를 두개 만들었다.</p>
+
+<p><strong>Dessert.java</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">Utensil</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">NAME</span> <span class="o">=</span> <span class="s">"pot"</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">class</span> <span class="nc">Dessert</span> <span class="o">{</span>
+    <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">NAME</span> <span class="o">=</span> <span class="s">"pie"</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>Dessert 클래스</strong>를 만들어서 위와 같이 탑레벨 클래스를 두개 만들었다.</p>
+
+<h2 id="문제점">문제점</h2>
+
+<p>위와 같이 <code class="language-plaintext highlighter-rouge">Utensil.java</code> 와  <code class="language-plaintext highlighter-rouge">Dessert.java</code> 를 두개 만들면, Intellij에서는 중복된 클래스가 있다고 컴파일 에러가 뜬다.</p>
+
+<p>하지만 javac로 컴파일한다면 문제가 생긴다.</p>
+
+<p>운좋게 <code class="language-plaintext highlighter-rouge">javac Main.java Deesert.java </code>  명령으로 컴파일한다면 중복 정의가 있다고 컴파일 오류가 난다. <u>컴파일러는 가장 먼저 Main.java를 컴파일 한 후 그 안에서 Utensil을 만나면, Utensil.java에 가서 Utensil과 Dessert를 모두 찾아내고, 그런 다음 Dessert를 처리하려고 할 때 같은 클래스의 정의가 이미 있음을 알게 된다.</u></p>
+
+<p>그러나, <code class="language-plaintext highlighter-rouge">javac Main.java</code> 나 <code class="language-plaintext highlighter-rouge">javac Main.java Utensil.java</code> 컴파일하면 <strong>pancake</strong>를 출력하고, <code class="language-plaintext highlighter-rouge">javac Dessert.java Main.java</code> 명령으로 컴파일하면 <strong>potpie</strong>이 출력된다.</p>
+
+<p>이처럼 컴파일러에 어느 소스 파일을 먼저 건네느냐에 따라 동작이 달라지므로 반드시 잡아야할 문제다.</p>
+
+<h2 id="해결하기">해결하기</h2>
+
+<p>해결법은 단순히 탑레벨 클래스들을 서로 다른 소스 파일로 분리하면 된다. 굳이 한 파일에 담고 싶으면 정적 멤버 클래스를 만드는게 일반적으로 더 나은 방법이다. 읽기도 좋고, private으로 선언하면 접근 범위도 최소로 관리할 수 있기 때문이다.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+     <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+          <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="nc">Utensil</span><span class="o">.</span><span class="na">NAME</span> <span class="o">+</span> <span class="nc">Dessert</span><span class="o">.</span><span class="na">NAME</span><span class="o">);</span>
+     <span class="o">}</span>
+     <span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Utensil</span> <span class="o">{</span>
+          <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">NAME</span> <span class="o">=</span> <span class="s">"pan"</span><span class="o">;</span>
+     <span class="o">}</span>
+     <span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Dessert</span> <span class="o">{</span>
+          <span class="kd">static</span> <span class="kd">final</span> <span class="nc">String</span> <span class="no">NAME</span> <span class="o">=</span> <span class="s">"cake"</span><span class="o">;</span>
+     <span class="o">}</span>     
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="정리">정리</h2>
+
+<p><strong>소스 파일 하나에는 반드시 탑레벨 클래스(혹은 탑레벨 인터페이스)를 하나만 담자.</strong></p>
+:ET

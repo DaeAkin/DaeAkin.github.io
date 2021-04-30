@@ -1,0 +1,64 @@
+I"� <p>제너릭을 사용하기 시작하면 수많은 컴파일러 경고를 보게 된다.</p>
+
+<ul>
+  <li>비검사 형변환 경고</li>
+  <li>비검사 메서드 호출 경고</li>
+  <li>비검사 매개변수화 가변인수 타입 경고</li>
+  <li>비검사 반환 경고</li>
+</ul>
+
+<p>등이 있다</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Set</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">set</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HashSet</span><span class="o">();</span>
+</code></pre></div></div>
+
+<p>이렇게 잘못작성한 코드를 javac -Xlint:uncheck 명령어로 컴파일하면 <code class="language-plaintext highlighter-rouge">unchecked conversion</code> 에러가 나온다.</p>
+
+<p>그럼 컴파일러가 올바른 실제 타입 매개변수를 추론해준다.</p>
+
+<p>이 외에도 제거하기 훨씬 어려운 경고도 있다. 하지만 포기하지말고 <strong>할 수 있는 한 모든 비검사 경고를 제거하라.</strong> 모두 제거한다면 그 코드는 타입 안전성이 보장된다. 즉 <strong>런타임에 ClassCastException이 발생할 일이 없고, 개발자가 의도한 대로 잘 동작하리라 확신할 수 있다.</strong></p>
+
+<h2 id="suppresswarnings">@suppressWarnings</h2>
+
+<p><strong>경고를 제거할 수는 없지만 타입이 안전하다고 확신할 수 있다면 @SuppressWarnings(“unchecked”) 어노테이션을 달아 경고를 숨기자.</strong> 하지만 타입 안전함을 검증하지 않은 채 경고를 숨기면 잘못된 보안 인식을 심어준다. 그 코드는 경고 없이 컴파일되겠지만, 런타임에는 여전히 ClassCastException을 던질 수 있다. 한편, 안전하다고 검증된 비검사 경고를 그대로 두면, <strong><u>진짜 문제를 알리는 새로운 경고가 나와도 눈치 채지 못할 수 있다</u></strong>. 제거하지 않는 수많은 거짓 경고 속에 새로운 경고가 파묻힐 수 있다.</p>
+
+<p>@SuppressWarnings 어노테이션은 개별 지역변수 선언부터 클래스 전체까지 어떤 선언에도 달 수 있다. 하지만 <strong>@SuppressWarnings 어노테이션은 항상 가능한 한 좁은 범위에 적용하자.</strong> 보통 변수 선언, 아주 짧은 메서드, 혹은 생성자가 될 것이다. 자칫 심각한 경고를 놓칠 수 있으니 절대로 클래스 전체에 적용해서는 안 된다.</p>
+
+<p><strong>ArrayList.toArray()</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="no">T</span><span class="o">[]</span> <span class="nf">toArray</span><span class="o">(</span><span class="no">T</span><span class="o">[]</span> <span class="n">a</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">length</span> <span class="o">&lt;</span> <span class="n">size</span><span class="o">)</span>
+        <span class="k">return</span> <span class="o">(</span><span class="no">T</span><span class="o">[])</span> <span class="nc">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="n">size</span><span class="o">,</span> <span class="n">a</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+    <span class="nc">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">a</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">size</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">length</span> <span class="o">&gt;</span> <span class="n">size</span><span class="o">)</span>
+        <span class="n">a</span><span class="o">[</span><span class="n">size</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>위에 코드는 변환된 T타입의 타입 검증을 하지 않아서 <code class="language-plaintext highlighter-rouge">unchecked cast</code> 경고가 발생한다. 이 경고를 없애기 위해  @SuppressWarnings를 메소드 전체에 달 수 있지만, 범위가 필요 이상으로 넓어지므로 좁은 범위에 적용하는 것이 좋다.</p>
+
+<p>어노테이션은 선언에만 달 수 있기 때문에, 반환값을 담을 지역변수를 하나 선언하고 그 변수에 어노테이션을 달아주자.</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="no">T</span><span class="o">[]</span> <span class="nf">toArray</span><span class="o">(</span><span class="no">T</span><span class="o">[]</span> <span class="n">a</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">length</span> <span class="o">&lt;</span> <span class="n">size</span><span class="o">)</span>
+      	<span class="c1">// 생성한 배열과 매개변수로 받은 배열의 타입이 모두 T[]로 같으므로 </span>
+      	<span class="c1">// 올바른 형변환이다.</span>
+      	<span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unchekced"</span><span class="o">)</span>
+      	<span class="no">T</span><span class="o">[]</span> <span class="n">result</span> <span class="o">=</span> <span class="o">(</span><span class="no">T</span><span class="o">[])</span> <span class="nc">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="n">size</span><span class="o">,</span> <span class="n">a</span><span class="o">.</span><span class="na">getClass</span><span class="o">());</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="nc">System</span><span class="o">.</span><span class="na">arraycopy</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">a</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">size</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">length</span> <span class="o">&gt;</span> <span class="n">size</span><span class="o">)</span>
+        <span class="n">a</span><span class="o">[</span><span class="n">size</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="k">return</span> <span class="n">a</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>이 코드는 깔끔하게 컴파일되고 비검사 경고를 숨기는 범위도 최소로 좁혔다.</p>
+
+<p><strong>@SuppressWarnings(“unchecked”)어노테이션을 사용할 때면 그 경고를 무시해도 안전한 이유를 항상 주석으로 남겨야 한다.</strong> 다른 사람이 그 코드를 이해 하는 데 도움이 되며, 더 중요하게는, 다른 사람이 그 코드를 잘못 수정하여 타입 안전성을 잃는 상황을 줄여 준다.</p>
+
+<h2 id="정리">정리</h2>
+
+<p>비검사 경고는 중요하니 무시하지 말자. 모든 비검사 경고는 런타임에 ClassCastException을 일으킬 수 있는 잠재적 기능성을 뜻하니 최선을 다해 제거하자.</p>
+:ET

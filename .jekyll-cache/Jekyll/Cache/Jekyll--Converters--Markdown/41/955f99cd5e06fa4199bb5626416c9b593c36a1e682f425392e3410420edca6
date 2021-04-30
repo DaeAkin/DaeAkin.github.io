@@ -1,0 +1,2 @@
+I"�<p>우리가 개발할 때 쓰는  <code class="language-plaintext highlighter-rouge">Set&lt;E&gt;</code> 과 <code class="language-plaintext highlighter-rouge">Map&lt;K,V&gt;</code> 등 컬렉션과 <code class="language-plaintext highlighter-rouge">ThreadLocal&lt;T&gt;</code> , <code class="language-plaintext highlighter-rouge">AtomicReference&lt;T&gt;</code> 등의 단일원소 컨테이너에도 제너릭이 많이 쓰인다.</p>
+:ET

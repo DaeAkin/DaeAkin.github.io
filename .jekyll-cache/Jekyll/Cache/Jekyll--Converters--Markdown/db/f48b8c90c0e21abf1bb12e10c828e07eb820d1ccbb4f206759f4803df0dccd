@@ -1,0 +1,2 @@
+I"<<p>앞에서 이야기 했듯이 매개변수화 타입 (ex: List&lt;String&gt; 등 )은 불공변이다. 즉 <code class="language-plaintext highlighter-rouge">List&lt;String&gt;</code> 과 <code class="language-plaintext highlighter-rouge">List&lt;Object&gt;</code> 의 하위타입이 아니라는 뜻이다.</p>
+:ET

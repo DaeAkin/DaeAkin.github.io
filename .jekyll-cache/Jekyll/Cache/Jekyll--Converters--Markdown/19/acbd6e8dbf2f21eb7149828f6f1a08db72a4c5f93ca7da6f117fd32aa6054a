@@ -1,0 +1,136 @@
+I"s)<h2 id="단어-정리">단어 정리</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>한글용어</th>
+      <th>영문용어</th>
+      <th>예</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>매개변수화 타입</td>
+      <td>parameterized type</td>
+      <td>List&lt;String&gt;</td>
+    </tr>
+    <tr>
+      <td>실제 타입 매개변수</td>
+      <td>actual type parameter</td>
+      <td>String</td>
+    </tr>
+    <tr>
+      <td>제너릭 타입</td>
+      <td>generic type</td>
+      <td>List&lt;E&gt;</td>
+    </tr>
+    <tr>
+      <td>정규 타입 매개변수</td>
+      <td>formal type parameter</td>
+      <td>E</td>
+    </tr>
+    <tr>
+      <td>비한정적 와일드카드 타입</td>
+      <td>unbounded wildcard type</td>
+      <td>List&lt;?&gt;</td>
+    </tr>
+    <tr>
+      <td>로 타입</td>
+      <td>raw type</td>
+      <td>List</td>
+    </tr>
+    <tr>
+      <td>한정적 타입 매개 변수</td>
+      <td>bounded type parameter</td>
+      <td>&lt;E extends Number&gt;</td>
+    </tr>
+    <tr>
+      <td>재귀적 타입 한정</td>
+      <td>recursive type bound</td>
+      <td>&lt;T extends Comparable&lt;T&gt;&gt;</td>
+    </tr>
+    <tr>
+      <td>한정적 와일드카드 타입</td>
+      <td>bounded wildcard type</td>
+      <td>List&lt;? extends Number&gt;</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>배열과 제너릭 타입에는 중요한 차이가 두 가지 있다. 첫 번째는 배열은 공변성이다. 반면에 제너릭은 불공변이다.</p>
+
+<p>Sub가 Super의 하위 타입이라면 배열 Sub[]는 배열 Super[]의 하위 타입이 되는 것이 공변이다.</p>
+
+<p>반면 제너릭은 서로 다른 타입 Type1과 Type2가 있을 때, List&lt;Type1&gt; 은 List&lt;Type2&gt;의 하위 타입도 아니고 상위 타입도 아니다.</p>
+
+<blockquote>
+  <p>S extends T 일 경우를 가정.</p>
+
+  <p>공변성(covariance) : S와 T 사이의 서브타입 관계가 그대로 유지된다. 이 경우 해당 위치에서 서브타입인 S가 슈퍼타입인 T 대신 사용될 수 있다. 우리가 흔히 이야기하는 리스코프 치환 원칙은 공변성과 관련된 원칙이라고 생각하면 된다.</p>
+
+  <p>비공변성(invariance) : S와 T 사이에는 아무런 관계가 존재하지 않는다. 따라서 S대신 T를 사용하거나 대신 S를 사용할 수 없다..</p>
+</blockquote>
+
+<h2 id="배열-vs-제너릭">배열 vs 제너릭</h2>
+
+<p><strong>런타임시 실패하는 배열</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Object</span><span class="o">[]</span> <span class="n">objectArray</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Long</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+<span class="n">objectArray</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="s">"타입이 달라서 넣을 수 없다."</span><span class="o">;</span> <span class="c1">// ArrayStoreException을 던진다.</span>
+</code></pre></div></div>
+
+<p><strong>컴파일시 실패하는 제너릭</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span><span class="o">&lt;</span><span class="nc">Object</span><span class="o">&gt;</span> <span class="n">ol</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">Long</span><span class="o">&gt;();</span> <span class="c1">// 호환되지 않는 타입이다.</span>
+<span class="n">ol</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"타입이 달라 넣을 수 없다."</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>배열은 다른 타입을 넣게 되면 런타임 시 실패하고, 제너릭은 컴파일시 실패해서 둘다 String 객체를 넣을 수는 없다. 다만 배열에서는 그 사실을 런타임에 알고, 제너릭은 컴파일 때 바로 알수 있다.</p>
+
+<p>두 번째로는 배열은 실체화가 된다. 배열은 런타임에도 자신이 담기로 한 원소의 타입을 알고 있다. 그러기 때문에 런타임시 ArrayStoreException이 나오게 되는 것이다.</p>
+
+<p>반대로 제너릭은 런타임시 제너릭 소거가 되기 때문에, 런타임 시 내가 어떤 타입만 담는 List였는지 알 수가 없다.</p>
+
+<p>만약 위에 코드가 정상적으로 실행 되었다면,</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span> <span class="n">o1</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">();</span>
+<span class="n">ol</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">"타입이 달라 넣을 수 없다."</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>이며, LIst의 타입 매개 변수인 E는 Object로 변경되었을 것이다.</p>
+
+<p>이렇게 둘의 차이로 인해 배열과 제너릭은 잘 함께 쓰지 못한다. 배열은 제너릭 타입, 매개변수화 타입, 타입 매개변수로 사용할 수 없다. 즉 코드를 new List&lt;E&gt;, new List&lt;String&gt; , new E[] 식으로 작성하면 컴파일 할 때 제너릭 배열 생성 오류를 일으 킨다.</p>
+
+<h2 id="제너릭-배열-생성을-허용하지-않는-이유">제너릭 배열 생성을 허용하지 않는 이유</h2>
+
+<p>제너릭 배열을 만들지 못하게 막은 이유는 타입이 안전하지 않기 때문이다. <strong>이를 허용한다면 컴파일러가 자동 생성한 형변환 코드에서 런타임에 ClassCastException이 발생할 수 있다. 런타임에 ClassCastException이 발생하는 일을 막아주겠다는 제너릭 타입 시스템의 취지에 어긋나는 것이다.</strong></p>
+
+<p>**제너릭 배열 생성을 허용하지 않는 이유의 코드 **  (컴파일은 되지 않음)</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;[]</span> <span class="n">stringLists</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">List</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;[</span><span class="mi">1</span><span class="o">];</span> <span class="c1">// (1)</span>
+<span class="nc">List</span><span class="o">&lt;</span><span class="nc">Integer</span><span class="o">&gt;</span> <span class="n">intList</span> <span class="o">=</span> <span class="nc">List</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">42</span><span class="o">);</span>							<span class="c1">// (2)</span>
+<span class="nc">Object</span><span class="o">[]</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">stringLists</span><span class="o">;</span>										<span class="c1">// (3)</span>
+<span class="n">objects</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">intList</span><span class="o">;</span> 														<span class="c1">// (4)</span>
+<span class="nc">String</span> <span class="n">s</span> <span class="o">=</span> <span class="n">stringLists</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>									<span class="c1">// (5)</span>
+</code></pre></div></div>
+
+<p><strong>만약의 컴파일 되었다면 아래의 모습을 가진다.</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">List</span><span class="o">[]</span> <span class="n">stringList</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">List</span><span class="o">[</span><span class="mi">1</span><span class="o">];</span>
+<span class="nc">List</span><span class="o">[]</span> <span class="n">intList</span> <span class="o">=</span> <span class="nc">List</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="mi">42</span><span class="o">);</span>
+<span class="nc">Object</span><span class="o">[]</span> <span class="n">objects</span> <span class="o">=</span> <span class="n">stringLists</span><span class="o">;</span>										
+<span class="n">objects</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">intList</span><span class="o">;</span> 														
+<span class="nc">String</span> <span class="n">s</span> <span class="o">=</span> <span class="n">stringLists</span><span class="o">[</span><span class="mi">0</span><span class="o">].</span><span class="na">get</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>	
+</code></pre></div></div>
+
+<p>이 코드를 천천히 읽어보자. 제너릭 소거 때문에 타입은 다 사라지게 되어, 결국 타입 안전성이 사라져서, 5번째 줄에서 ClassCastException이 발생하게 될 것이다.</p>
+
+<p>이런 일을 방지하려면 제너릭 배열이 생성되지 않도록 컴파일 오류를 내야 한다.</p>
+
+<p>E, List&lt;E&gt;, List&lt;String&gt; 같은 타입을 실체화 불가 타입(non-reifiable type)이라고 한다. <strong>쉽게 말해, 실체화 되지 않아서 런타임에는 컴파일타임 보다 타입 정보를 가지는 타입이다.</strong> 소거 메커니즘 때문에 매개변수화 타입 가운데 실체화될 수 있는 타입은 List&lt;?&gt; 와 Map&lt;?,?&gt; 같은 비한정적 와일드카드 타입 뿐이다. 배열을 비한정적 와일드카드 타입으로 만들 수는 있지만, 유용하게 쓰일 일은 거의 없다.</p>
+
+<h2 id="정리">정리</h2>
+
+<p>배열과 제너릭에는 매우 다른 타입 규칙이 적용된다. 배열은 공변이고 실체화되는 반면, 제너릭은 불공변이고 타입 정보가 소거 된다. 그 결과 배열은 런타임에는 타입이 안전하지만, 컴파일타임에는 그렇지 않다. 제너릭은 반대다. 그래서 둘을 섞어 쓰기란 쉽지 않다. 둘을 섞어 쓰다가 컴파일 오류나 경고를 만나면, 가장 먼저 배열을 리스트로 대체하는 방법을 적용해보자.</p>
+
+:ET
