@@ -241,7 +241,7 @@ public enum PayrollDay {
 
 ```java
 public enum PayrollDay {
-    MONDAY(WEEKEND), TUESDAY(WEEKEND), WEDNESDAY(WEEKEND), THURSDAY(WEEKEND), FRIDAY(WEEKEND),
+    MONDAY(WEEKDAY), TUESDAY(WEEKDAY), WEDNESDAY(WEEKDAY), THURSDAY(WEEKDAY), FRIDAY(WEEKDAY),
     SATURDAY(WEEKEND), SUNDAY(WEEKEND);
 
 
@@ -301,6 +301,66 @@ public static Operation inverse(Operation op) {
 종종 쓰이지만 열거 타입 안에 포함될 만큼 유용하지 않는 경우도 마찬가지다. 
 
 
+
+# 열거 타입 상수 초기화 순서
+
+열거타입의 초기화는 `textual order(선언된 순서)`순으로 초기화 된다. 
+
+세부적인 초기화 되는 순서는 아래와 같다.
+
+1. 열거 타입의 상수
+2. 해당 상수의 인스턴스 초기화 블럭
+3. 해당 상수의 생성자
+4. static field
+5. static 초기화 블럭
+
+```java
+public enum EnumInitialization {
+
+    FIRST,
+    SECOND;
+
+    private static final Map<String, EnumInitialization> stringToEnum = new HashMap<>();
+
+    EnumInitialization() {
+        System.out.println(this.name() + " constructor Block");
+    }
+
+    {
+        System.out.println(this.name() + " Instance Block");
+    }
+
+    static {
+        System.out.println("Static Block");
+    }
+}
+```
+
+상수의 순서인 FIRST, SECOND 순서로 초기화가 이루어 지며, 해당 상수들의 초기화가 완료된 뒤 static field 및 static 초기화 블럭이 호출된다.
+
+**결과**
+
+```
+FIRST Instance Block
+FIRST constructor Block
+SECOND Instance Block
+SECOND constructor Block
+Static Block
+```
+
+> 멤버변수의 초기화 시기와 순서
+>
+> 클래스변수의 초기화순서 : 기본값 → 명시적초기화 → 클래스 초기화 블럭
+>
+> 인스턴스변수의 초기화순서 : 기본값 → 명시적초기화 → 인스턴스 초기화 블럭 → 생성자
+
+
+
+# enum의 생성자
+
+**enum의 생성자는 public과 proteced로 선언하면 컴파일 에러가 난다.**
+
+왜냐하면 자바에서 enum은 상수 값으로 고정되어 있기 때문에, 새로운 enum의 인스턴스를 만들지 못하도록 막아놨기 때문이다.
 
 # 결론
 
